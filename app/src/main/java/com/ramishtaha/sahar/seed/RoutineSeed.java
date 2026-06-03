@@ -33,7 +33,8 @@ public final class RoutineSeed {
                 journal(),
                 threeRules(),
                 weekend(),
-                notes()
+                notes(),
+                dietPlan()
         );
     }
 
@@ -181,6 +182,31 @@ public final class RoutineSeed {
                 "Deload every 4th week: the body deloads, not the brain — MMA volume down ~40%, drop PM sessions, "
                         + "mains drilling only, spar light or skipped, add sleep.",
                 "Autoregulation: if resting HR is up 5–7 bpm over baseline, or grip/strength is down, Wednesday becomes full rest."
+        );
+    }
+
+    /**
+     * A suggested week of meals derived from the nutrition rules: heavy lunch / light dinner, organ meats
+     * scheduled (heart freely Wed, liver ~100g Thu, kidney Fri), oily fish dinners for omega-3 (Mon/Thu/Sat),
+     * red meat lunches ~2x and chicken ~2-3x, greens daily, and the Sunday batch-cook + D3. See
+     * docs/diet-plan.md for the full plan and the reasoning.
+     */
+    private static List<MealDay> dietPlan() {
+        return List.of(
+                new MealDay("Mon", "Beef/mutton stew (Sun batch) + leafy greens",
+                        "Oily fish — bangda/mackerel", "Muay Thai · omega-3"),
+                new MealDay("Tue", "Chicken (batch) + palak / greens",
+                        "Prawns or white fish", "Boxing"),
+                new MealDay("Wed", "Beef/mutton + heart + greens",
+                        "Light chicken or surmai", "Wrestling/BJJ · heart (eat freely)"),
+                new MealDay("Thu", "Chicken + liver (~100g, weekly) + greens",
+                        "Oily fish — rawas", "Muay Thai · liver day · omega-3"),
+                new MealDay("Fri", "Mutton/chicken (lighter) + kidney (weekly) + greens",
+                        "White fish / prawns (light)", "Padwork taper · kidney day · protect sleep"),
+                new MealDay("Sat", "Bigger refeed — beef/mutton + greens (post-spar)",
+                        "Oily fish + extra carbs (recovery)", "SPAR · hard body, eat well · omega-3"),
+                new MealDay("Sun", "Chicken / leftover stew + palak paneer",
+                        "Fresh fish", "Rest · BATCH-COOK red meat + chicken · D3 60K with this fatty meal")
         );
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.ramishtaha.sahar.domain.*;
 import com.ramishtaha.sahar.repo.*;
 import com.ramishtaha.sahar.seed.RoutineSeed;
+import com.ramishtaha.sahar.web.MealDayUpdate;
 import com.ramishtaha.sahar.web.WeekUpdate;
 
 import java.util.ArrayList;
@@ -32,10 +33,12 @@ public class RoutineService {
     private final GridRepository grid;
     private final SupplementRepository supplements;
     private final DietRepository diet;
+    private final MealPlanRepository mealPlan;
 
     public RoutineService(MetaRepository meta, PrayerTimesRepository prayerTimes, BlockRepository blocks,
                           ScheduleRepository schedule, GridRepository grid,
-                          SupplementRepository supplements, DietRepository diet) {
+                          SupplementRepository supplements, DietRepository diet,
+                          MealPlanRepository mealPlan) {
         this.meta = meta;
         this.prayerTimes = prayerTimes;
         this.blocks = blocks;
@@ -43,6 +46,7 @@ public class RoutineService {
         this.grid = grid;
         this.supplements = supplements;
         this.diet = diet;
+        this.mealPlan = mealPlan;
     }
 
     // ---- reads -------------------------------------------------------------
@@ -65,7 +69,19 @@ public class RoutineService {
                 reference.journal(),
                 reference.threeRules(),
                 reference.weekend(),
-                reference.notes());
+                reference.notes(),
+                mealPlan.findAll());
+    }
+
+    public List<MealDay> listMealPlan() {
+        return mealPlan.findAll();
+    }
+
+    public MealDay updateMealDay(String day, MealDayUpdate u) {
+        if (mealPlan.update(day, u.lunch(), u.dinner(), u.note()) == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "no meal-plan day '" + day + "' (use Mon..Sun)");
+        }
+        return mealPlan.findByDay(day).orElseThrow();
     }
 
     public PrayerTimes getPrayerTimes() {

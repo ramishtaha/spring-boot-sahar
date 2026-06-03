@@ -44,6 +44,7 @@ async function load() {
     $('methodNote').value = p.methodNote || '';
     $('blockLabel').textContent = (cfg.block && cfg.block.label) || '';
     renderWeeks(cfg.block ? cfg.block.weeks : []);
+    renderDietPlan(cfg.dietPlan || []);
 }
 
 // ---- month ----
@@ -67,6 +68,29 @@ $('savePrayer').addEventListener('click', async () => {
         $('prayerErr').textContent = errorText(res);
         toast('Validation failed', 'err');
     }
+});
+
+// ---- prayer times: calculate from device location ----
+$('locatePrayer').addEventListener('click', () => {
+    const note = $('prayerCalcNote');
+    if (!navigator.geolocation) { note.textContent = 'Geolocation is not available in this browser.'; return; }
+    note.textContent = 'Locating… allow the permission prompt.';
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        const tz = -new Date().getTimezoneOffset();           // minutes east of UTC
+        const date = new Date().toISOString().slice(0, 10);
+        const res = await api('GET', `/api/prayer-times/calculate?lat=${lat}&lng=${lng}&tz=${tz}&date=${date}`);
+        if (!res.ok) { note.textContent = 'Calculation failed: ' + errorText(res); return; }
+        const p = res.body;
+        ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'].forEach(k => { $(k).value = p[k] || ''; });
+        $('methodNote').value = p.methodNote || '';
+        note.textContent = 'Filled from your location — review, then Save prayer times to keep them.';
+        toast('Calculated ✓ review & save', 'ok');
+    }, (err) => {
+        note.textContent = err.code === 1
+            ? 'Location permission denied — you can still type the times in by hand.'
+            : 'Could not get your location.';
+    }, { timeout: 10000, maximumAge: 600000 });
 });
 
 // ---- block ----
@@ -135,6 +159,34 @@ $('rollForward').addEventListener('click', async () => {
 function afterBlock(block) {
     $('blockErr').textContent = '';
     if (block && block.weeks) { $('blockLabel').textContent = block.label || ''; renderWeeks(block.weeks); }
+}
+
+// ---- diet plan ----
+function renderDietPlan(days) {
+    const host = $('dietPlan');
+    host.innerHTML = '';
+    (days || []).forEach(m => {
+        const row = document.createElement('div');
+        row.className = 'week';
+        row.style.marginBottom = '0.7rem';
+        row.innerHTML = `
+            <div class="week-head"><span class="week-no">${attr(m.day)}</span></div>
+            <div class="field"><label>Lunch</label><input data-f="lunch" value="${attr(m.lunch)}"></div>
+            <div class="field"><label>Dinner</label><input data-f="dinner" value="${attr(m.dinner)}"></div>
+            <div class="field"><label>Note</label><input data-f="note" value="${attr(m.note)}"></div>
+            <button data-act="saveMeal">Save ${attr(m.day)}</button>`;
+        row.querySelector('[data-act="saveMeal"]').addEventListener('click', () => saveMealDay(m.day, row));
+        host.appendChild(row);
+    });
+}
+
+async function saveMealDay(day, row) {
+    $('dietErr').textContent = '';
+    const get = (f) => row.querySelector(`[data-f="${f}"]`).value;
+    const res = await api('PUT', '/api/diet-plan/' + encodeURIComponent(day),
+        { lunch: get('lunch'), dinner: get('dinner'), note: get('note') });
+    if (res.ok) { toast(day + ' meals saved ✓', 'ok'); }
+    else { $('dietErr').textContent = errorText(res); toast('Save failed', 'err'); }
 }
 
 load();

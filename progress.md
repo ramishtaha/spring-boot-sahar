@@ -47,6 +47,10 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done.
   - [ ] read  - [ ] deployed a public URL **or** finished a clean local stack  - [ ] understand the K8s mental model
 - [ ] **99 Roadmap** — [doc](docs/steps/99-roadmap.md) — picked my next topic: ______________________
 
+## Beyond the core course (in app/)
+- [ ] **15 Location-aware prayer times** — [doc](docs/steps/15-geolocation-prayer-times.md) — "use my location" computes & saves times
+- [ ] **16 UI polish, editable diet plan & PWA** — [doc](docs/steps/16-ui-and-pwa.md) — theming, weekly board, countdown, editable meals, installable offline
+
 ## Done?
 - [ ] The app serves and **edits** my routine, persisted in a database, runnable in Docker.
 - [ ] I can explain DI, the request lifecycle, the repository layer, migrations, and a multi-stage build.

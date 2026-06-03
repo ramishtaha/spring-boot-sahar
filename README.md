@@ -40,6 +40,7 @@ The recommended loop: read the step doc → build the change yourself in `app/` 
 - [PLAN.md](PLAN.md) — the multi-session plan mapped to the steps and a time budget.
 - [progress.md](progress.md) — your checklist, one box per step.
 - [questions.md](questions.md) — where to log questions for your mentor.
+- [docs/diet-plan.md](docs/diet-plan.md) — a suggested weekly meal plan derived from the domain (shown on the home page's *This week* board).
 
 ### The steps (build the app while learning)
 | # | Step | Doc | Checkpoint |
@@ -60,6 +61,12 @@ The recommended loop: read the step doc → build the change yourself in `app/` 
 | 13 | A taste of DevOps: GitHub Actions CI | [doc](docs/steps/13-ci-with-github-actions.md) | [step-13](checkpoints/step-13-ci-with-github-actions/) |
 | 14 | Deploy (optional) & orchestration overview | [doc](docs/steps/14-deploy.md) | [step-14](checkpoints/step-14-deploy/) |
 | 99 | Roadmap: where to go next | [doc](docs/steps/99-roadmap.md) | — |
+
+### Beyond the core course (built into [`app/`](app/))
+These features extend the finished app past the 14-step course; the checkpoints stay frozen as the course.
+- [15 - Location-aware prayer times](docs/steps/15-geolocation-prayer-times.md) — browser geolocation + a server-side prayer-time calculator (Karachi 18°, Hanafi Asr), with a unit test.
+- [16 - UI polish, editable diet plan & PWA](docs/steps/16-ui-and-pwa.md) — light/dark theming, the *This week* board, a live prayer countdown, an editable meal plan, and an installable offline PWA.
+- [Suggested diet plan](docs/diet-plan.md) — the generated weekly meal plan.
 
 ### Theory deep-dives ([docs/theory/](docs/theory/))
 - [Spring, servlets, and dependency injection](docs/theory/spring-and-di.md)

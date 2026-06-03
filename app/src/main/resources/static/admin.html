@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sahar — edit</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Same theme handling as the main page: apply saved/system choice before paint. -->
+    <script>
+        (function () {
+            const saved = localStorage.getItem('sahar-theme');
+            const theme = saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+        function syncThemeIcons() {
+            const dark = document.documentElement.getAttribute('data-theme') !== 'light';
+            document.querySelectorAll('.theme-toggle').forEach(b => b.textContent = dark ? '☀' : '☾');
+        }
+        function toggleTheme() {
+            const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('sahar-theme', next);
+            syncThemeIcons();
+        }
+        document.addEventListener('DOMContentLoaded', syncThemeIcons);
+    </script>
 </head>
 <body>
 <!--
@@ -25,7 +44,10 @@
         <h1>Sahar · edit</h1>
         <p class="tagline">change what the month changes</p>
     </div>
-    <nav class="nav"><a href="/">&larr; back to routine</a></nav>
+    <nav class="nav">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Light / dark" aria-label="Toggle theme">☀</button>
+        <a href="/">&larr; back to routine</a>
+    </nav>
 </header>
 
 <main id="app">
@@ -51,8 +73,12 @@
             <div class="field"><label for="isha">Isha</label><input id="isha" type="text" placeholder="20:36"></div>
         </div>
         <div class="field"><label for="methodNote">Method note</label><textarea id="methodNote" rows="2"></textarea></div>
-        <button id="savePrayer">Save prayer times</button>
+        <div class="nav">
+            <button id="savePrayer">Save prayer times</button>
+            <button id="locatePrayer" class="secondary" type="button">📍 Calculate from my location</button>
+        </div>
         <div id="prayerErr" class="err-text"></div>
+        <p class="subtle small" id="prayerCalcNote"></p>
     </section>
 
     <!-- Block -->
@@ -65,6 +91,14 @@
         </div>
         <div id="weeks"></div>
         <div id="blockErr" class="err-text"></div>
+    </section>
+
+    <!-- Diet plan -->
+    <section class="card">
+        <h2>Diet plan</h2>
+        <p class="subtle">Edit each day's lunch, dinner and cue. Breakfast is the same every morning.</p>
+        <div id="dietPlan"></div>
+        <div id="dietErr" class="err-text"></div>
     </section>
 </main>
 
