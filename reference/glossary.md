@@ -4,7 +4,7 @@
 
 **What you will get from this page:** a single alphabetical lookup for the jargon that shows up across the steps and theory pages. Each entry is one to three sentences, grounded in the Sahar app where that helps, and links to the step or theory page where the term appears. Read it cover-to-cover once, then keep it open in a tab.
 
-Sahar itself is a layered Spring Boot app: REST **controllers** in the `web` package call a `RoutineService`, which calls `JdbcTemplate`-based **repositories**, which talk to a database (H2 by default, PostgreSQL under the `postgres` profile). The base package is `win.l0ve.sahar`. Many definitions below point back at that pipeline.
+Sahar itself is a layered Spring Boot app: REST **controllers** in the `web` package call a `RoutineService`, which calls `JdbcTemplate`-based **repositories**, which talk to a database (H2 by default, PostgreSQL under the `postgres` profile). The base package is `com.ramishtaha.sahar`. Many definitions below point back at that pipeline.
 
 ---
 

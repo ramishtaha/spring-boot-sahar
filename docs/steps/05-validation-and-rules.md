@@ -70,7 +70,7 @@ The `spring-boot-starter-validation` dependency is already in the [pom](../../ch
 Open `domain/PrayerTimes.java` and put field constraints on each time component. A record's constructor parameters *are* its fields, so the annotations go right on the parameters:
 
 ```java
-package win.l0ve.sahar.domain;
+package com.ramishtaha.sahar.domain;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -103,7 +103,7 @@ The `message` is what the user eventually sees, so it is concrete ("a 24-hour ti
 Open `domain/Week.java`. These are the per-week field rules that will be reached by cascading from the block:
 
 ```java
-package win.l0ve.sahar.domain;
+package com.ramishtaha.sahar.domain;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -129,12 +129,12 @@ public record Week(
 Open `domain/BlockPlan.java`. This is where the three layers come together:
 
 ```java
-package win.l0ve.sahar.domain;
+package com.ramishtaha.sahar.domain;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import win.l0ve.sahar.validation.DeloadLast;
+import com.ramishtaha.sahar.validation.DeloadLast;
 
 import java.util.List;
 
@@ -164,10 +164,10 @@ The `length()` helper is just convenience for the service layer; it carries no v
 
 ### 4. Write the custom annotation `@DeloadLast`
 
-A custom constraint needs two files. First the annotation, in the new `win.l0ve.sahar.validation` package, in `DeloadLast.java`:
+A custom constraint needs two files. First the annotation, in the new `com.ramishtaha.sahar.validation` package, in `DeloadLast.java`:
 
 ```java
-package win.l0ve.sahar.validation;
+package com.ramishtaha.sahar.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -205,12 +205,12 @@ What each part does:
 The logic lives in `validation/DeloadLastValidator.java`:
 
 ```java
-package win.l0ve.sahar.validation;
+package com.ramishtaha.sahar.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import win.l0ve.sahar.domain.BlockPlan;
-import win.l0ve.sahar.domain.Week;
+import com.ramishtaha.sahar.domain.BlockPlan;
+import com.ramishtaha.sahar.domain.Week;
 
 import java.util.List;
 
@@ -276,7 +276,7 @@ public BlockPlan update(@Valid @RequestBody BlockPlan block) {
 Without a handler you would still get a `400`, but with Spring's verbose default body. Add one global handler so every controller gives the frontend the same tidy shape. Create `web/ApiExceptionHandler.java`:
 
 ```java
-package win.l0ve.sahar.web;
+package com.ramishtaha.sahar.web;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;

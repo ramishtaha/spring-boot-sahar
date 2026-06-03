@@ -2,7 +2,7 @@
 
 > Every Spring annotation that appears in the Sahar app, grouped by concern, with what it does, where it goes, and a real one-line example from the codebase.
 
-**What you will get from this page:** a fast, scannable reference for the annotations you have already met (or are about to meet) while building Sahar — bootstrap, web/MVC, dependency injection, validation, and data. Each row is grounded in real Sahar code (`win.l0ve.sahar.*`), and a few honest notes flag annotations you will *not* find in Sahar but are likely to reach for next, so you know the difference.
+**What you will get from this page:** a fast, scannable reference for the annotations you have already met (or are about to meet) while building Sahar — bootstrap, web/MVC, dependency injection, validation, and data. Each row is grounded in real Sahar code (`com.ramishtaha.sahar.*`), and a few honest notes flag annotations you will *not* find in Sahar but are likely to reach for next, so you know the difference.
 
 A quick mental model first: annotations in Spring are mostly *markers and metadata*. They do nothing by themselves. Something else — the Spring Boot auto-configuration, component scanning, the MVC dispatcher, the Bean Validation engine — reads them at startup or per-request and acts on them. That is the recurring "why" on this page: the annotation describes intent; a framework piece enforces it.
 
@@ -38,7 +38,7 @@ Sahar's flow is `web -> service -> repo -> database`. The annotations below foll
 
 | Annotation | What it does | Where it goes | Real Sahar example |
 |---|---|---|---|
-| `@SpringBootApplication` | Three annotations in one: `@SpringBootConfiguration` (this class is a bean-definition source), `@EnableAutoConfiguration` (configure beans by guessing from the classpath — sees Tomcat + Spring MVC, wires a web server), and `@ComponentScan` (scan this package and below for stereotypes). | On the single `main` class, at the **root** of your package tree. | `@SpringBootApplication public class SaharApplication { ... }` in `win.l0ve.sahar` |
+| `@SpringBootApplication` | Three annotations in one: `@SpringBootConfiguration` (this class is a bean-definition source), `@EnableAutoConfiguration` (configure beans by guessing from the classpath — sees Tomcat + Spring MVC, wires a web server), and `@ComponentScan` (scan this package and below for stereotypes). | On the single `main` class, at the **root** of your package tree. | `@SpringBootApplication public class SaharApplication { ... }` in `com.ramishtaha.sahar` |
 
 ```java
 // SaharApplication.java
@@ -50,7 +50,7 @@ public class SaharApplication {
 }
 ```
 
-**Why the package matters.** Component scanning starts at the package of the `@SpringBootApplication` class (`win.l0ve.sahar`) and walks *downward*. Every controller, service, and repository lives under that package (`.web`, `.service`, `.repo`), so the scan finds them. A class placed *outside* `win.l0ve.sahar` would be invisible — no bean, no wiring. (See step [00-baseline](../docs/steps/00-baseline.md) for the project skeleton.)
+**Why the package matters.** Component scanning starts at the package of the `@SpringBootApplication` class (`com.ramishtaha.sahar`) and walks *downward*. Every controller, service, and repository lives under that package (`.web`, `.service`, `.repo`), so the scan finds them. A class placed *outside* `com.ramishtaha.sahar` would be invisible — no bean, no wiring. (See step [00-baseline](../docs/steps/00-baseline.md) for the project skeleton.)
 
 ---
 

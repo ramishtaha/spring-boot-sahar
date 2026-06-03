@@ -26,7 +26,7 @@ Here is the boot sequence you trigger when you run the app:
 flowchart TD
     A["mvn spring-boot:run<br/>(or java -jar, or IntelliJ Run)"] --> B["main() calls<br/>SpringApplication.run(SaharApplication.class, args)"]
     B --> C["Create the ApplicationContext<br/>(the bean container)"]
-    C --> D["@ComponentScan finds @Component/@Service/@RestController<br/>under win.l0ve.sahar"]
+    C --> D["@ComponentScan finds @Component/@Service/@RestController<br/>under com.ramishtaha.sahar"]
     C --> E["@EnableAutoConfiguration wires beans<br/>guessed from the classpath"]
     D --> F["Start embedded Tomcat"]
     E --> F
@@ -44,7 +44,7 @@ You do not have to regenerate it yourself, but it is worth knowing what was sele
 - **Project**: Maven
 - **Language**: Java
 - **Spring Boot**: 4.0.6
-- **Group**: `win.l0ve.sahar`, **Artifact**: `sahar`, **Java**: 25
+- **Group**: `com.ramishtaha.sahar`, **Artifact**: `sahar`, **Java**: 25
 - **Dependencies**: Spring Web, Spring Boot DevTools, Validation, JDBC API, H2 Database, PostgreSQL Driver
 
 (Flyway is added later, in [./01-serve-static.md](./01-serve-static.md)'s successors - specifically step 10 - so it is deliberately absent here.)
@@ -71,7 +71,7 @@ This is the most important block. The Spring Boot **starter parent** is itself a
 Next, our own coordinates and the Java version:
 
 ```xml
-<groupId>win.l0ve.sahar</groupId>
+<groupId>com.ramishtaha.sahar</groupId>
 <artifactId>sahar</artifactId>
 <version>0.0.1-SNAPSHOT</version>
 ...
@@ -185,10 +185,10 @@ Its `repackage` goal turns the plain jar into an executable "fat jar" with the s
 
 ### 2. `SaharApplication.java` - the entry point
 
-This is the whole file (`src/main/java/win/l0ve/sahar/SaharApplication.java`):
+This is the whole file (`src/main/java/com/ramishtaha/sahar/SaharApplication.java`):
 
 ```java
-package win.l0ve.sahar;
+package com.ramishtaha.sahar;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -211,7 +211,7 @@ Two things to understand.
 - `@EnableAutoConfiguration` - tells Spring Boot to configure beans by guessing from the classpath (sees Tomcat + Spring MVC, wires up a web server).
 - `@ComponentScan` - scans **this package and below** for `@Component`, `@Service`, `@RestController`, etc., and registers them as beans.
 
-That last point is why the **base package matters**: `SaharApplication` lives in `win.l0ve.sahar`, so component scanning starts there. Every class you write later - `RoutineService`, your controllers, your repositories - must live under `win.l0ve.sahar` (or a sub-package like `win.l0ve.sahar.web`) or Spring will simply not find it. Put a controller in some sibling package and it silently does nothing. There is a quick lookup for these annotations in [../../reference/cheatsheet-spring-annotations.md](../../reference/cheatsheet-spring-annotations.md).
+That last point is why the **base package matters**: `SaharApplication` lives in `com.ramishtaha.sahar`, so component scanning starts there. Every class you write later - `RoutineService`, your controllers, your repositories - must live under `com.ramishtaha.sahar` (or a sub-package like `com.ramishtaha.sahar.web`) or Spring will simply not find it. Put a controller in some sibling package and it silently does nothing. There is a quick lookup for these annotations in [../../reference/cheatsheet-spring-annotations.md](../../reference/cheatsheet-spring-annotations.md).
 
 `SpringApplication.run(SaharApplication.class, args)` is the line that does everything in the diagram above: it builds the application context (the bean container), starts embedded Tomcat, and then **blocks** until the app is shut down. That blocking is intentional - it is what keeps the server alive and listening.
 
@@ -229,10 +229,10 @@ server.port=8080
 
 ### 4. `SaharApplicationTests.java` - the smoke test
 
-`src/test/java/win/l0ve/sahar/SaharApplicationTests.java`:
+`src/test/java/com/ramishtaha/sahar/SaharApplicationTests.java`:
 
 ```java
-package win.l0ve.sahar;
+package com.ramishtaha.sahar;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -257,12 +257,12 @@ Maven's standard layout, which Spring Boot relies on:
 sahar/
 ├── pom.xml
 ├── mvnw, mvnw.cmd          # the Maven wrapper (see below)
-├── src/main/java/win/l0ve/sahar/SaharApplication.java
+├── src/main/java/com/ramishtaha/sahar/SaharApplication.java
 ├── src/main/resources/
 │   ├── application.properties
 │   ├── static/             # served as-is at / (CSS, JS, html) - used in step 01
 │   └── templates/          # server-rendered templates (we won't use these)
-└── src/test/java/win/l0ve/sahar/SaharApplicationTests.java
+└── src/test/java/com/ramishtaha/sahar/SaharApplicationTests.java
 ```
 
 `src/main/resources/static` is the folder Boot serves static files from - that is the hook the very next step uses to put up an `index.html`. `templates/` exists for view engines like Thymeleaf, which this app does not use.
@@ -295,9 +295,9 @@ The app boots and serves HTTP on `http://localhost:8080`. There are no controlle
 Files in play this step (all generated, none hand-edited):
 
 - `pom.xml`
-- `src/main/java/win/l0ve/sahar/SaharApplication.java`
+- `src/main/java/com/ramishtaha/sahar/SaharApplication.java`
 - `src/main/resources/application.properties`
-- `src/test/java/win/l0ve/sahar/SaharApplicationTests.java`
+- `src/test/java/com/ramishtaha/sahar/SaharApplicationTests.java`
 - the Maven wrapper (`mvnw`, `mvnw.cmd`, `.mvn/`)
 
 The exact, runnable snapshot is in the checkpoint folder: [../../checkpoints/step-00-baseline/](../../checkpoints/step-00-baseline/).
@@ -309,12 +309,12 @@ The exact, runnable snapshot is in the checkpoint folder: [../../checkpoints/ste
 - **`Web server failed to start. Port 8080 was already in use.`** Something else owns the port (often a previous run of this app that did not shut down). Stop it, or change `server.port` in `application.properties`. On Windows: `netstat -ano | findstr :8080` to find the PID, then `taskkill /PID <pid> /F`.
 - **Seeing the whitelabel 404 and thinking it failed.** It did not. 404 = server up, no route. Connection refused = server down. Check the console for `Tomcat started on port 8080`.
 - **"Release version 25 not supported" / wrong JDK.** Your active JDK is older than 25. In IntelliJ set Project SDK to 25; on the CLI check `java -version`. Boot 4 needs 17+, and this pom asks for 25.
-- **Putting a future class outside `win.l0ve.sahar`.** Component scanning only sees the base package and below. A `@RestController` in, say, `win.l0ve.controllers` is invisible and will 404 with no warning. Keep everything under the base package.
+- **Putting a future class outside `com.ramishtaha.sahar`.** Component scanning only sees the base package and below. A `@RestController` in, say, `com.ramishtaha.controllers` is invisible and will 404 with no warning. Keep everything under the base package.
 - **Running `mvn` when only the wrapper is set up.** If you get "mvn: command not found", use `./mvnw` (or `mvnw.cmd` on Windows) instead - that is the whole point of the wrapper.
 
 ## Check yourself
 
-1. What three annotations does `@SpringBootApplication` combine, and which one explains why every class must live under `win.l0ve.sahar`?
+1. What three annotations does `@SpringBootApplication` combine, and which one explains why every class must live under `com.ramishtaha.sahar`?
 2. Why do most dependencies in `pom.xml` have no `<version>` element?
 3. Name three artifacts that were renamed or restructured between Spring Boot 3.x and 4.x, with their old and new names.
 4. When you hit `http://localhost:8080` on the baseline and get a 404 whitelabel page, is the app working? How would the symptom differ if it were not?

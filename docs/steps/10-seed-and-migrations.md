@@ -53,7 +53,7 @@ For the bigger picture of where Flyway sits among migration tools and ORMs, see 
 Continue from the previous step, [09 - Swap to Postgres](./09-swap-to-postgres.md). At that point you had:
 
 - A portable `schema.sql` (with `IF NOT EXISTS`) under `src/main/resources`.
-- A Java `DataSeeder` in `win.l0ve.sahar.seed` that inserted the routine when tables were empty.
+- A Java `DataSeeder` in `com.ramishtaha.sahar.seed` that inserted the routine when tables were empty.
 - `application.properties` (H2 file mode) and `application-postgres.properties` (the `postgres` profile).
 
 We will retire `schema.sql` and the Java seeder and hand both jobs to Flyway. The full result is in the checkpoint folder: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-and-migrations/).
@@ -191,7 +191,7 @@ This is a standard SQL gotcha (it is the same in H2, Postgres, and most other en
 Flyway now owns **both** the schema and the seed, so the two old mechanisms must go or they will collide with Flyway over the same tables:
 
 - Delete `src/main/resources/schema.sql`.
-- Delete the Java seeder under `win.l0ve.sahar.seed` (the `DataSeeder` that ran on startup). The reference content that was never in the DB in the first place — journal prompts, the three rules, the weekend protocol, sleep/deload notes — still lives in `win.l0ve.sahar.seed.RoutineSeed` and is merged into the `/api/config` response by `RoutineService`. Only the _database_ seeding moved to Flyway.
+- Delete the Java seeder under `com.ramishtaha.sahar.seed` (the `DataSeeder` that ran on startup). The reference content that was never in the DB in the first place — journal prompts, the three rules, the weekend protocol, sleep/deload notes — still lives in `com.ramishtaha.sahar.seed.RoutineSeed` and is merged into the `/api/config` response by `RoutineService`. Only the _database_ seeding moved to Flyway.
 
 ### 5. Tell Spring's basic initializer to stand down
 

@@ -66,10 +66,10 @@ The full checkpoint for **this** step is [`step-02-first-rest-endpoint`](../../c
 
 ### 1. Create the controller package and class
 
-Create `src/main/java/win/l0ve/sahar/web/ConfigController.java`. The `web` package is the top layer of our architecture (web -> service -> repo -> database); REST controllers live here. Start with the declaration and the imports:
+Create `src/main/java/com/ramishtaha/sahar/web/ConfigController.java`. The `web` package is the top layer of our architecture (web -> service -> repo -> database); REST controllers live here. Start with the declaration and the imports:
 
 ```java
-package win.l0ve.sahar.web;
+package com.ramishtaha.sahar.web;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -251,7 +251,7 @@ You should get JSON beginning `{"title":"Sahar","tagline":"recover, build, fight
 
 The app is now **server-driven**. The same page renders the same routine, but the data is produced by a Spring MVC endpoint and fetched at load time.
 
-- **Added:** `src/main/java/win/l0ve/sahar/web/ConfigController.java` — `@RestController` with `GET /api/config` returning a hardcoded `Map<String, Object>`.
+- **Added:** `src/main/java/com/ramishtaha/sahar/web/ConfigController.java` — `@RestController` with `GET /api/config` returning a hardcoded `Map<String, Object>`.
 - **Changed:** `src/main/resources/static/index.html` — removed `<script src="data.js">`, replaced `render(window.SAHAR)` with `fetch('/api/config').then(...).then(render)`.
 - **Deleted:** `src/main/resources/static/data.js`.
 
@@ -261,7 +261,7 @@ Full code: [`step-02-first-rest-endpoint`](../../checkpoints/step-02-first-rest-
 
 ## Common mistakes and how to debug them
 
-- **Endpoint returns `404`.** The controller probably is not being component-scanned. `ConfigController` must live under the base package `win.l0ve.sahar` (here `win.l0ve.sahar.web`). `@SpringBootApplication` scans its own package and below — a class outside that tree is invisible. Also confirm the path is exactly `/api/config` (case-sensitive) and the verb is `GET`.
+- **Endpoint returns `404`.** The controller probably is not being component-scanned. `ConfigController` must live under the base package `com.ramishtaha.sahar` (here `com.ramishtaha.sahar.web`). `@SpringBootApplication` scans its own package and below — a class outside that tree is invisible. Also confirm the path is exactly `/api/config` (case-sensitive) and the verb is `GET`.
 - **JSON comes back HTML-wrapped or you get a "view not found" error.** You used `@Controller` instead of `@RestController` (or forgot `@ResponseBody`). Without it, the return value is treated as a *view name*, not body content.
 - **Keys come out in a random order.** You used `HashMap` instead of `LinkedHashMap`. Functionally valid JSON, but harder to read and diff. Use `LinkedHashMap` for stable order.
 - **The page shows "Loading…" forever or "Could not load /api/config".** Open the browser devtools Network tab and look at the `/api/config` request: a `404` means the endpoint is not mapped; a `500` means the handler threw (check the server console stack trace). Remember `fetch` does **not** throw on 4xx/5xx — the `if (!resp.ok)` check is what surfaces it.

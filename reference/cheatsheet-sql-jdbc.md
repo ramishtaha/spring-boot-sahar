@@ -2,7 +2,7 @@
 
 > The SQL Sahar actually uses, and the handful of `JdbcTemplate` methods that run it: portable DDL, bind parameters (and why they stop SQL injection), `query`/`queryForObject`/`update`, the `RowMapper`, the generated-key pattern, transactions, and which repository owns which table.
 
-**What you will get from this page:** a dense, scannable reference you can keep open while writing or reading a repository. Every snippet here is copied or distilled from the real Sahar code under `app/src/main/java/win/l0ve/sahar/repo/` and `app/src/main/resources/db/migration/`, so it matches what you will see in the checkpoints exactly.
+**What you will get from this page:** a dense, scannable reference you can keep open while writing or reading a repository. Every snippet here is copied or distilled from the real Sahar code under `app/src/main/java/com/ramishtaha/sahar/repo/` and `app/src/main/resources/db/migration/`, so it matches what you will see in the checkpoints exactly.
 
 This is a reference, not a tutorial. The guided walkthroughs of these ideas live in [step 06 - JdbcTemplate + H2](../docs/steps/06-jdbctemplate-h2.md), [step 07 - full CRUD](../docs/steps/07-full-crud.md), and [step 10 - seed and migrations](../docs/steps/10-seed-and-migrations.md). The *why JdbcTemplate at all* discussion is in [theory: persistence landscape](../docs/theory/persistence-landscape.md) and [theory: JDBC vs JPA](../docs/theory/jdbc-vs-jpa.md).
 

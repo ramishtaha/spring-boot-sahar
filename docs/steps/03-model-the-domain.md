@@ -93,14 +93,14 @@ Continue from the step 02 checkpoint (the working `Map`-based `/api/config`). If
 
 ## Build it
 
-### 1. Create the leaf records in `win.l0ve.sahar.domain`
+### 1. Create the leaf records in `com.ramishtaha.sahar.domain`
 
 Start with the small, self-contained records - the leaves of the tree. Each lives in its own file in the new `domain` package.
 
 `PrayerTimes` - the five daily prayers plus sunrise and the calculation note:
 
 ```java
-package win.l0ve.sahar.domain;
+package com.ramishtaha.sahar.domain;
 
 public record PrayerTimes(
         String fajr,
@@ -119,7 +119,7 @@ Why `String`, not `LocalTime`? These are display values typed by hand ("HH:mm"),
 `GridDay` - one row of the weekly training grid. `note` is nullable:
 
 ```java
-package win.l0ve.sahar.domain;
+package com.ramishtaha.sahar.domain;
 
 public record GridDay(
         String day,
@@ -132,7 +132,7 @@ public record GridDay(
 `ScheduleItem` - one slot in the daily timeline. `category` drives the frontend colour-coding; `detail` may be `null`:
 
 ```java
-package win.l0ve.sahar.domain;
+package com.ramishtaha.sahar.domain;
 
 public record ScheduleItem(
         String time,
@@ -147,7 +147,7 @@ public record ScheduleItem(
 `Supplement`, `DietSection`, `JournalPrompts`, and `WeekendProtocol` follow the same pattern. `JournalPrompts` is worth noting because it holds two lists rather than scalars:
 
 ```java
-package win.l0ve.sahar.domain;
+package com.ramishtaha.sahar.domain;
 
 import java.util.List;
 
@@ -165,7 +165,7 @@ A record component can be any type, including `List<String>` or another record -
 `Week` is a plain leaf, but its `deload` flag carries a domain rule (the last week of a block is always the deload):
 
 ```java
-package win.l0ve.sahar.domain;
+package com.ramishtaha.sahar.domain;
 
 public record Week(
         int ordinal,
@@ -182,7 +182,7 @@ public record Week(
 `BlockPlan` composes a `List<Week>` **and** adds a computed method - proof that records can hold behaviour as long as it does not introduce mutable state:
 
 ```java
-package win.l0ve.sahar.domain;
+package com.ramishtaha.sahar.domain;
 
 import java.util.List;
 
@@ -203,7 +203,7 @@ public record BlockPlan(
 This single record pulls everything together. It is the exact list of things `GET /api/config` returns:
 
 ```java
-package win.l0ve.sahar.domain;
+package com.ramishtaha.sahar.domain;
 
 import java.util.List;
 
@@ -229,12 +229,12 @@ The order of components here is the order the keys appear in the JSON. Some fiel
 
 ### 4. Build the real data in `RoutineSeed.defaultConfig()`
 
-Create the `win.l0ve.sahar.seed` package and a `RoutineSeed` utility. It is a `final` class with a private constructor and one static factory - the "no instances, just a factory" idiom. `defaultConfig()` returns a fresh tree on every call:
+Create the `com.ramishtaha.sahar.seed` package and a `RoutineSeed` utility. It is a `final` class with a private constructor and one static factory - the "no instances, just a factory" idiom. `defaultConfig()` returns a fresh tree on every call:
 
 ```java
-package win.l0ve.sahar.seed;
+package com.ramishtaha.sahar.seed;
 
-import win.l0ve.sahar.domain.*;
+import com.ramishtaha.sahar.domain.*;
 
 import java.util.List;
 
@@ -353,12 +353,12 @@ private static WeekendProtocol weekend() {
 Finally, rewrite `ConfigController` so the `Map` is gone and the method returns the typed tree:
 
 ```java
-package win.l0ve.sahar.web;
+package com.ramishtaha.sahar.web;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import win.l0ve.sahar.domain.RoutineConfig;
-import win.l0ve.sahar.seed.RoutineSeed;
+import com.ramishtaha.sahar.domain.RoutineConfig;
+import com.ramishtaha.sahar.seed.RoutineSeed;
 
 @RestController
 public class ConfigController {
@@ -390,9 +390,9 @@ The app serves the full Sahar routine from a strongly typed domain model. `GET /
 
 Files added or changed in this step:
 
-- **New** `win.l0ve.sahar.domain` package: `RoutineConfig`, `PrayerTimes`, `Week`, `BlockPlan`, `ScheduleItem`, `Supplement`, `DietSection`, `JournalPrompts`, `GridDay`, `WeekendProtocol`.
-- **New** `win.l0ve.sahar.seed.RoutineSeed` with `defaultConfig()` and its private factory helpers, holding the real June 2026 content.
-- **Changed** `win.l0ve.sahar.web.ConfigController`: returns `RoutineConfig` instead of `Map<String, Object>`.
+- **New** `com.ramishtaha.sahar.domain` package: `RoutineConfig`, `PrayerTimes`, `Week`, `BlockPlan`, `ScheduleItem`, `Supplement`, `DietSection`, `JournalPrompts`, `GridDay`, `WeekendProtocol`.
+- **New** `com.ramishtaha.sahar.seed.RoutineSeed` with `defaultConfig()` and its private factory helpers, holding the real June 2026 content.
+- **Changed** `com.ramishtaha.sahar.web.ConfigController`: returns `RoutineConfig` instead of `Map<String, Object>`.
 
 See the full, working source in [the step 03 checkpoint](../../checkpoints/step-03-model-the-domain/).
 
@@ -402,7 +402,7 @@ See the full, working source in [the step 03 checkpoint](../../checkpoints/step-
 - **Adding a `get` prefix.** Record accessors are `fajr()`, not `getFajr()`. If you write `config.getMonth()` it will not compile. Use the bare component name.
 - **Trying to mutate a record.** There are no setters. `prayerTimes.fajr("05:00")` is not a thing. To "change" a value you build a new record. This is intentional and matters in step 04.
 - **`List.of(...)` with a `null` element throws.** `List.of` rejects nulls. The seed only ever puts `null` in *nullable record components* (like a `GridDay.note` or `ScheduleItem.detail`), never as a list element. Symptom: `NullPointerException` at startup from `List.of`. Fix: nulls go inside an element, not as the element.
-- **Wrong package import in the seed.** `RoutineSeed` uses `import win.l0ve.sahar.domain.*;`. If the records are in a different package the wildcard import will not resolve and `new Week(...)` will not compile.
+- **Wrong package import in the seed.** `RoutineSeed` uses `import com.ramishtaha.sahar.domain.*;`. If the records are in a different package the wildcard import will not resolve and `new Week(...)` will not compile.
 - **Expecting `length` to be settable.** `BlockPlan.length()` is derived from `weeks.size()`. Jackson serializes it but there is no field behind it; you cannot set it, and on deserialization (step 04) Jackson ignores it because it is not a constructor component.
 - **JSON shape changed unexpectedly.** If a field name in the response is wrong, check the record component name - the component name *is* the JSON key. Renaming the component renames the field.
 

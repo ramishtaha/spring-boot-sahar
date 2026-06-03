@@ -68,7 +68,7 @@ public record Week(int ordinal, String name, String startDate, String endDate,
 
 ### The JdbcTemplate way (real Sahar code)
 
-This is the actual `BlockRepository` from `win.l0ve.sahar.repo`:
+This is the actual `BlockRepository` from `com.ramishtaha.sahar.repo`:
 
 ```java
 @Repository

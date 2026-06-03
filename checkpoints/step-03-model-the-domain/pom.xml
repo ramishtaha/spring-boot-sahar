@@ -27,7 +27,7 @@
     </parent>
 
     <!-- The "coordinates" that uniquely identify THIS artifact. -->
-    <groupId>win.l0ve.sahar</groupId>
+    <groupId>com.ramishtaha.sahar</groupId>
     <artifactId>sahar</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>sahar</name>

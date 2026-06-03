@@ -401,9 +401,9 @@ Files added or changed in this step:
 
 - `src/main/resources/application.properties` - data source, `spring.sql.init.mode=always`, H2 console enabled.
 - `src/main/resources/schema.sql` - the eight tables.
-- `src/main/java/win/l0ve/sahar/repo/` - new package: `MetaRepository`, `PrayerTimesRepository`, `BlockRepository`, `ScheduleRepository`, `GridRepository`, `SupplementRepository`, `DietRepository`.
-- `src/main/java/win/l0ve/sahar/service/RoutineService.java` - rewired from in-memory field to repositories.
-- `src/main/java/win/l0ve/sahar/seed/DataSeeder.java` - new `ApplicationRunner` that seeds an empty DB.
+- `src/main/java/com/ramishtaha/sahar/repo/` - new package: `MetaRepository`, `PrayerTimesRepository`, `BlockRepository`, `ScheduleRepository`, `GridRepository`, `SupplementRepository`, `DietRepository`.
+- `src/main/java/com/ramishtaha/sahar/service/RoutineService.java` - rewired from in-memory field to repositories.
+- `src/main/java/com/ramishtaha/sahar/seed/DataSeeder.java` - new `ApplicationRunner` that seeds an empty DB.
 - `src/test/resources/application.properties` - in-memory H2 for isolated tests.
 - `pom.xml` - `spring-boot-starter-jdbc`, `h2`, `spring-boot-h2console`.
 - **Unchanged:** every controller in the web layer, the domain records, and `RoutineSeed`.

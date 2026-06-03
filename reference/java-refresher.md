@@ -12,7 +12,7 @@ We target **Java 25** (the current LTS; Spring Boot 4 needs Java 17 as a minimum
 
 Spring Boot does not invent its own language; it is "just" a library of annotated classes you wire together. So the more comfortable you are with modern Java, the less of Spring feels like magic. Two themes recur:
 
-- **Records make the domain model honest.** Almost every type in `win.l0ve.sahar.domain` is a `record`. They are immutable, value-based, and serialize to JSON for free. That single choice shapes how the whole app reads and writes data.
+- **Records make the domain model honest.** Almost every type in `com.ramishtaha.sahar.domain` is a `record`. They are immutable, value-based, and serialize to JSON for free. That single choice shapes how the whole app reads and writes data.
 - **Functional Java makes the plumbing short.** A `RowMapper` is a one-line lambda. The service filters and renumbers weeks with streams. `Optional` keeps null out of the read path. None of this is required — but the idiomatic version is the readable version.
 
 ```mermaid

@@ -141,12 +141,12 @@ Below is Sahar's actual file, in the order it appears. Read it top to bottom onc
 ### 2. Coordinates - what THIS project is
 
 ```xml
-<groupId>win.l0ve.sahar</groupId>
+<groupId>com.ramishtaha.sahar</groupId>
 <artifactId>sahar</artifactId>
 <version>0.0.1-SNAPSHOT</version>
 ```
 
-The triple `groupId:artifactId:version` (GAV) uniquely identifies an artifact in every Maven repo on earth. `SNAPSHOT` means "in-development, may change" - Maven treats snapshot versions specially (it will re-fetch them). Sahar's base package matches the groupId: `win.l0ve.sahar`.
+The triple `groupId:artifactId:version` (GAV) uniquely identifies an artifact in every Maven repo on earth. `SNAPSHOT` means "in-development, may change" - Maven treats snapshot versions specially (it will re-fetch them). Sahar's base package matches the groupId: `com.ramishtaha.sahar`.
 
 ### 3. Properties
 

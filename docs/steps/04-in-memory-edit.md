@@ -100,7 +100,7 @@ Notice there is no field, no constructor, no state. Every call rebuilds the rout
 The record is immutable, so editing means copying. Add one wither per editable field. Each one calls the canonical constructor, passing the **new** value for one component and the existing accessor for the rest.
 
 ```java
-// src/main/java/win/l0ve/sahar/domain/RoutineConfig.java
+// src/main/java/com/ramishtaha/sahar/domain/RoutineConfig.java
 public RoutineConfig withMonth(String newMonth) {
     return new RoutineConfig(title, tagline, newMonth, prayerTimes, block, weeklyGrid, schedule,
             supplements, diet, journal, threeRules, weekend, notes);
@@ -131,7 +131,7 @@ Line by line: inside `withMonth`, `newMonth` is the parameter; `title`, `tagline
 This is the new state-holder. It loads the seed **once** at startup into a field, and every edit replaces that field.
 
 ```java
-// src/main/java/win/l0ve/sahar/service/RoutineService.java
+// src/main/java/com/ramishtaha/sahar/service/RoutineService.java
 @Service
 public class RoutineService {
 
@@ -175,7 +175,7 @@ Note what is *not* here: no `@GetMapping`, no URLs, no status codes. The service
 Replace the direct seed call with a service call, injected through the constructor.
 
 ```java
-// src/main/java/win/l0ve/sahar/web/ConfigController.java
+// src/main/java/com/ramishtaha/sahar/web/ConfigController.java
 @RestController
 public class ConfigController {
 
@@ -201,7 +201,7 @@ Three controllers, one per editable area. They follow the same shape: inject the
 **Prayer times** — `GET` returns them, `PUT` replaces them with the body:
 
 ```java
-// src/main/java/win/l0ve/sahar/web/PrayerTimesController.java
+// src/main/java/com/ramishtaha/sahar/web/PrayerTimesController.java
 @RestController
 public class PrayerTimesController {
 
@@ -228,7 +228,7 @@ public class PrayerTimesController {
 **The training block** — same pattern, on `/api/block`:
 
 ```java
-// src/main/java/win/l0ve/sahar/web/BlockController.java
+// src/main/java/com/ramishtaha/sahar/web/BlockController.java
 @PutMapping("/api/block")
 public BlockPlan update(@RequestBody BlockPlan block) {
     return routine.updateBlock(block).block();
@@ -240,7 +240,7 @@ public BlockPlan update(@RequestBody BlockPlan block) {
 **The month label** — this one takes a tiny JSON object, not a whole domain record, so it uses a small request type and echoes the result:
 
 ```java
-// src/main/java/win/l0ve/sahar/web/MetaController.java
+// src/main/java/com/ramishtaha/sahar/web/MetaController.java
 @PutMapping("/api/month")
 public Map<String, String> updateMonth(@RequestBody MonthUpdate body) {
     routine.updateMonth(body.month());
@@ -306,7 +306,7 @@ Full source: [step-04-in-memory-edit checkpoint](../../checkpoints/step-04-in-me
 ## Common mistakes and how to debug them
 
 - **Calling `new RoutineService()` in a controller.** You then get a *second* service with its own empty `config`, and edits made through it are invisible elsewhere. Symptom: a PUT "works" (200 OK) but the next GET ignores it. Fix: never `new` a bean — declare it as a constructor parameter and let Spring inject the singleton.
-- **`No qualifying bean of type 'RoutineService'` at startup.** Usually the class is missing `@Service`, or it sits outside the `win.l0ve.sahar` base package so component-scan never finds it. Fix: add the annotation; keep the class under the base package.
+- **`No qualifying bean of type 'RoutineService'` at startup.** Usually the class is missing `@Service`, or it sits outside the `com.ramishtaha.sahar` base package so component-scan never finds it. Fix: add the annotation; keep the class under the base package.
 - **`415 Unsupported Media Type` on PUT.** You forgot `-H "Content-Type: application/json"`. `@RequestBody` only deserializes JSON when the request advertises JSON. Fix: send the header.
 - **`400 Bad Request` with a parse error.** Malformed JSON (trailing comma, single quotes, a key that does not match a record component). Jackson cannot map it to the record. Fix: validate your JSON and match the field names exactly (`fajr`, `methodNote`, ...).
 - **Editing a record "in place".** There is no setter; `config.month() = "..."` does not compile. You must build a new copy with a `with*` helper and reassign the field. If you forget to reassign (`config.withMonth(x);` with no `config =`), the edit is computed and thrown away — the GET shows the old value.

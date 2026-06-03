@@ -254,9 +254,9 @@ Read the arrows as "needs": `ConfigController` needs `RoutineService`, which nee
 
 ## 5. Component scanning and stereotypes
 
-How does the context *know* `RoutineService` should be a bean? You told it, with an annotation. `@SpringBootApplication` includes `@ComponentScan`, which at startup scans the package of `SaharApplication` (`win.l0ve.sahar`) **and every sub-package** for classes carrying a *stereotype* annotation, and registers each one as a bean definition.
+How does the context *know* `RoutineService` should be a bean? You told it, with an annotation. `@SpringBootApplication` includes `@ComponentScan`, which at startup scans the package of `SaharApplication` (`com.ramishtaha.sahar`) **and every sub-package** for classes carrying a *stereotype* annotation, and registers each one as a bean definition.
 
-> **This is why the base package matters.** Component scanning starts at `win.l0ve.sahar` and goes down. Every Sahar class lives under that package, so it gets found. A class placed *outside* the base package would be silently ignored — a classic "why isn't my controller working?" trap.
+> **This is why the base package matters.** Component scanning starts at `com.ramishtaha.sahar` and goes down. Every Sahar class lives under that package, so it gets found. A class placed *outside* the base package would be silently ignored — a classic "why isn't my controller working?" trap.
 
 The stereotypes are all `@Component` under the hood; the specialised names document a class's role and, in some cases, add behaviour:
 
