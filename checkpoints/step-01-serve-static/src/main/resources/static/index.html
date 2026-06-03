@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahar</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!--
+  Sahar - the static shell (step 01).
+
+  This page knows how to RENDER a routine config but holds no data of its own.
+  In step 01 the data is loaded from the bundled data.js file (window.SAHAR).
+  In step 02 that script tag is removed and render() is fed by fetch('/api/config')
+  instead - the same shape, but now owned by the server.
+
+  The render() function is written defensively: every section guards on whether
+  its data is present, so as later steps enrich the config (schedule, supplements,
+  diet, journal, ...) those sections light up automatically with no HTML change.
+-->
+<header class="topbar">
+    <div class="brand">
+        <h1 id="title">Sahar</h1>
+        <p class="tagline" id="tagline"></p>
+    </div>
+    <div class="month-badge"><span id="month"></span></div>
+</header>
+
+<main id="app">
+    <p class="loading">Loading your routine…</p>
+</main>
+
+<footer class="footer">
+    <span>Sahar &mdash; the pre-dawn hours, when the day is won.</span>
+</footer>
+
+<!-- Step 01: data is bundled with the page. Step 02 deletes this line. -->
+<script src="data.js"></script>
+<script>
+    // -------- tiny DOM helpers (no framework, on purpose) --------
+    function el(tag, className, html) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (html != null) node.innerHTML = html;
+        return node;
+    }
+    function section(title) {
+        const s = el('section', 'card');
+        s.appendChild(el('h2', null, title));
+        return s;
+    }
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // -------- the renderer --------
+    function render(cfg) {
+        document.getElementById('title').textContent = cfg.title || 'Sahar';
+        document.getElementById('tagline').textContent = cfg.tagline || '';
+        document.getElementById('month').textContent = cfg.month || '';
+        document.title = (cfg.title || 'Sahar') + ' — ' + (cfg.month || '');
+
+        const app = document.getElementById('app');
+        app.innerHTML = '';
+
+        // Prayer times
+        if (cfg.prayerTimes) {
+            const p = cfg.prayerTimes;
+            const s = section('Prayer times');
+            const row = el('div', 'prayer-row');
+            [['Fajr', p.fajr], ['Sunrise', p.sunrise], ['Dhuhr', p.dhuhr],
+             ['Asr', p.asr], ['Maghrib', p.maghrib], ['Isha', p.isha]]
+                .forEach(([name, time]) => {
+                    if (time == null) return;
+                    const c = el('div', 'prayer' + (name === 'Sunrise' ? ' muted' : ''));
+                    c.appendChild(el('span', 'prayer-name', esc(name)));
+                    c.appendChild(el('span', 'prayer-time', esc(time)));
+                    row.appendChild(c);
+                });
+            s.appendChild(row);
+            if (p.methodNote) s.appendChild(el('p', 'note', esc(p.methodNote)));
+            app.appendChild(s);
+        }
+
+        // Training block (4 or 5 weeks)
+        if (cfg.block && cfg.block.weeks) {
+            const s = section('Training block');
+            if (cfg.block.label) s.appendChild(el('p', 'subtle', esc(cfg.block.label)));
+            const grid = el('div', 'weeks');
+            cfg.block.weeks.forEach(w => {
+                const c = el('div', 'week' + (w.deload ? ' deload' : ''));
+                c.appendChild(el('div', 'week-head',
+                    '<span class="week-no">W' + esc(w.ordinal) + '</span>' +
+                    '<span class="week-name">' + esc(w.name) + '</span>' +
+                    (w.deload ? '<span class="pill">deload</span>' : '')));
+                if (w.startDate) c.appendChild(el('div', 'week-dates', esc(w.startDate) + ' – ' + esc(w.endDate)));
+                if (w.trainingFocus) c.appendChild(el('p', 'week-line', '<b>Train:</b> ' + esc(w.trainingFocus)));
+                if (w.backendFocus) c.appendChild(el('p', 'week-line', '<b>Backend:</b> ' + esc(w.backendFocus)));
+                grid.appendChild(c);
+            });
+            s.appendChild(grid);
+            app.appendChild(s);
+        }
+
+        // Weekly training grid
+        if (cfg.weeklyGrid) {
+            const s = section('Weekly grid');
+            const g = el('div', 'days');
+            cfg.weeklyGrid.forEach(d => {
+                const c = el('div', 'day');
+                c.appendChild(el('span', 'day-name', esc(d.day)));
+                c.appendChild(el('span', 'day-disc', esc(d.discipline)));
+                if (d.note) c.appendChild(el('span', 'day-note', esc(d.note)));
+                g.appendChild(c);
+            });
+            s.appendChild(g);
+            app.appendChild(s);
+        }
+
+        // Daily timeline (added in step 03)
+        if (cfg.schedule) {
+            const s = section('Daily timeline');
+            const tl = el('div', 'timeline');
+            cfg.schedule.forEach(it => {
+                const c = el('div', 'tl-item cat-' + esc(it.category || 'admin'));
+                c.appendChild(el('span', 'tl-time', esc(it.time)));
+                const body = el('div', 'tl-body');
+                body.appendChild(el('span', 'tl-title', esc(it.title)));
+                if (it.detail) body.appendChild(el('span', 'tl-detail', esc(it.detail)));
+                if (it.category) body.appendChild(el('span', 'tag', esc(it.category)));
+                c.appendChild(body);
+                tl.appendChild(c);
+            });
+            s.appendChild(tl);
+            app.appendChild(s);
+        }
+
+        // Supplements (added in step 03)
+        if (cfg.supplements) {
+            const s = section('Supplements');
+            cfg.supplements.forEach(sup => {
+                const c = el('div', 'list-row');
+                c.appendChild(el('span', 'list-when', esc(sup.timeLabel)));
+                const b = el('div', 'list-body');
+                b.appendChild(el('span', 'list-name', esc(sup.name) + (sup.dose ? ' · ' + esc(sup.dose) : '')));
+                if (sup.purpose) b.appendChild(el('span', 'list-sub', esc(sup.purpose)));
+                if (sup.note) b.appendChild(el('span', 'list-sub muted', esc(sup.note)));
+                c.appendChild(b);
+                s.appendChild(c);
+            });
+            app.appendChild(s);
+        }
+
+        // Diet (added in step 03)
+        if (cfg.diet) {
+            const s = section('Nutrition');
+            cfg.diet.forEach(d => {
+                const c = el('div', 'diet');
+                c.appendChild(el('h3', null, esc(d.title)));
+                c.appendChild(el('p', null, esc(d.body)));
+                s.appendChild(c);
+            });
+            app.appendChild(s);
+        }
+
+        // Journal prompts (added in step 03)
+        if (cfg.journal) {
+            const s = section('Bullet journal');
+            const two = el('div', 'two-col');
+            [['Morning · 04:50', cfg.journal.morning], ['Night · 21:00', cfg.journal.night]]
+                .forEach(([label, items]) => {
+                    if (!items) return;
+                    const col = el('div', 'col');
+                    col.appendChild(el('h3', null, esc(label)));
+                    const ul = el('ul', 'ticks');
+                    items.forEach(i => ul.appendChild(el('li', null, esc(i))));
+                    col.appendChild(ul);
+                    two.appendChild(col);
+                });
+            s.appendChild(two);
+            app.appendChild(s);
+        }
+
+        // The three rules + notes (added in step 03)
+        if (cfg.threeRules) {
+            const s = section('The three rules');
+            const ol = el('ol', 'rules');
+            cfg.threeRules.forEach(r => ol.appendChild(el('li', null, esc(r))));
+            s.appendChild(ol);
+            app.appendChild(s);
+        }
+        if (cfg.weekend) {
+            const s = section('Weekend protocol');
+            if (cfg.weekend.saturday) s.appendChild(el('p', null, '<b>Saturday.</b> ' + esc(cfg.weekend.saturday)));
+            if (cfg.weekend.sunday) s.appendChild(el('p', null, '<b>Sunday.</b> ' + esc(cfg.weekend.sunday)));
+            app.appendChild(s);
+        }
+        if (cfg.notes && cfg.notes.length) {
+            const s = section('Notes — sleep, deload, autoregulation');
+            const ul = el('ul', 'ticks');
+            cfg.notes.forEach(n => ul.appendChild(el('li', null, esc(n))));
+            s.appendChild(ul);
+            app.appendChild(s);
+        }
+    }
+
+    // Step 01: the data ships with the page.
+    render(window.SAHAR);
+</script>
+</body>
+</html>

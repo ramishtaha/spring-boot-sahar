@@ -1,0 +1,17 @@
+# Normalize line endings: store text as LF in the repo regardless of OS.
+* text=auto eol=lf
+
+# Windows batch/cmd must keep CRLF to run correctly.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Shell scripts and the Maven wrapper MUST stay LF so they run on macOS/Linux.
+mvnw   text eol=lf
+*.sh   text eol=lf
+
+# Binaries: never touch.
+*.jar  binary
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.mv.db binary

@@ -1,0 +1,17 @@
+# ILLUSTRATIVE ONLY - see deployment.yaml.
+#
+# A Service is a stable network name + load balancer in front of a set of Pods (chosen by label).
+# Pods come and go and change IPs; the Service address does not. type: LoadBalancer asks the cloud
+# for an external IP (for learning on a laptop you would more likely use ClusterIP + `kubectl port-forward`,
+# or an Ingress).
+apiVersion: v1
+kind: Service
+metadata:
+  name: sahar
+spec:
+  type: LoadBalancer
+  selector:
+    app: sahar          # routes to every Pod labelled app=sahar (the Deployment's Pods)
+  ports:
+    - port: 80          # the port the Service exposes
+      targetPort: 8080  # the port the container listens on

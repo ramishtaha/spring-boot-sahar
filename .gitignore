@@ -1,0 +1,48 @@
+# --- Build output (Maven) ---
+target/
+build/
+
+# --- H2 file database created when you run the app/checkpoints ---
+data/
+*.mv.db
+*.trace.db
+
+# --- Maven wrapper: keep the scripts + .properties, ignore the downloaded jar ---
+.mvn/wrapper/maven-wrapper.jar
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# --- Eclipse / Spring Tool Suite ---
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+.sts4-cache/
+bin/
+
+# --- NetBeans ---
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# --- VS Code ---
+.vscode/
+
+# --- OS noise ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+
+# --- start.spring.io leftover ---
+HELP.md

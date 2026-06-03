@@ -1,0 +1,38 @@
+# CI for the spring-boot-sahar teaching repository.
+#
+# This repo bundles many things (docs + 15 checkpoint projects + the main app/). The real, running
+# app is in app/, so this workflow builds and tests THAT. Each checkpoint also carries its own
+# .github/workflows/ci.yml as a teaching snapshot, but GitHub only runs workflows from the repo root -
+# this file.
+#
+# This is the "green CI on push" the codealong's step 13 is about, pointed at app/.
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app      # build the main application
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build and test app/
+        run: mvn -B -ntp verify
+
+      - name: Build the Docker image
+        run: docker build -t sahar:ci .
