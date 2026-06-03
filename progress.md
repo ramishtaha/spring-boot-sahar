@@ -47,9 +47,11 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done.
   - [ ] read  - [ ] deployed a public URL **or** finished a clean local stack  - [ ] understand the K8s mental model
 - [ ] **99 Roadmap** — [doc](docs/steps/99-roadmap.md) — picked my next topic: ______________________
 
-## Beyond the core course (in app/)
-- [ ] **15 Location-aware prayer times** — [doc](docs/steps/15-geolocation-prayer-times.md) — "use my location" computes & saves times
-- [ ] **16 UI polish, editable diet plan & PWA** — [doc](docs/steps/16-ui-and-pwa.md) — theming, weekly board, countdown, editable meals, installable offline
+## Beyond the core course
+- [ ] **15 Location-aware prayer times** — [doc](docs/steps/15-geolocation-prayer-times.md) · [checkpoint](checkpoints/step-15-geolocation-prayer-times/) — prayer-time calculator + geocoding + persisted location (API)
+  - [ ] read  - [ ] calculate from coords  - [ ] geocode search/reverse  - [ ] location persists
+- [ ] **16 Location picker, UI polish & PWA** — [doc](docs/steps/16-ui-and-pwa.md) · [checkpoint](checkpoints/step-16-ui-and-pwa/) — theming, board, countdown, location picker (device/search/map), editable meals, installable offline
+  - [ ] read  - [ ] set location by search/map/device  - [ ] light/dark  - [ ] installed as PWA
 
 ## Done?
 - [ ] The app serves and **edits** my routine, persisted in a database, runnable in Docker.

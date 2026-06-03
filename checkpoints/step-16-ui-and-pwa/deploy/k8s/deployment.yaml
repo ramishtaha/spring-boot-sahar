@@ -1,0 +1,53 @@
+# ILLUSTRATIVE ONLY - the Kubernetes mental model for Sahar.
+#
+# You do NOT need Kubernetes for a personal app; this file exists so the words have shapes.
+# A Deployment says "keep N copies (Pods) of this container running, and if one dies, replace it."
+# A Pod is one running instance (here, one Sahar container). The Service (service.yaml) gives the
+# Pods one stable address and load-balances across them.
+#
+# Apply with: kubectl apply -f deploy/k8s/   (against a real cluster). Hands-on K8s is a later block.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sahar
+  labels:
+    app: sahar
+spec:
+  replicas: 2                      # two Pods - the Deployment keeps both alive
+  selector:
+    matchLabels:
+      app: sahar
+  template:
+    metadata:
+      labels:
+        app: sahar
+    spec:
+      containers:
+        - name: sahar
+          image: ghcr.io/YOUR_USER/sahar:latest   # the image CI built/pushed
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "postgres"
+            - name: SAHAR_DB_URL
+              value: "jdbc:postgresql://sahar-db:5432/sahar"   # 'sahar-db' = a Postgres Service in-cluster
+            - name: SAHAR_DB_USERNAME
+              value: "sahar"
+            - name: SAHAR_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:        # secrets do not belong in YAML; K8s Secrets keep them out
+                  name: sahar-db
+                  key: password
+          readinessProbe:           # "is it ready for traffic yet?" - we reuse the config endpoint
+            httpGet:
+              path: /api/config
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:            # "is it still alive, or should K8s restart it?"
+            httpGet:
+              path: /api/config
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15

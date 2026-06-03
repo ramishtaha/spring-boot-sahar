@@ -1,126 +1,95 @@
-# 16 - UI polish, an editable diet plan, and a PWA
+# 16 - The location picker, UI polish, an editable diet plan & a PWA
 
-_Beyond the core course: theming, a weekly board, a live prayer countdown, an editable meal plan, and
-turning the app into an installable, offline-capable PWA._
+_Beyond the core course: the browser side — theming, a weekly board, a live prayer countdown, a
+user-controlled location picker (device / search / map pin), an editable meal plan, and an installable,
+offline PWA._
 
-> **Where this lives.** All in [`app/`](../../app/). Frontend in `src/main/resources/static/`; one new
-> backend slice for the editable diet plan.
+> **Checkpoint:** [`step-16-ui-and-pwa`](../../checkpoints/step-16-ui-and-pwa/) — the finished, enhanced
+> app (identical to [`app/`](../../app/)). It builds on the [step 15](./15-geolocation-prayer-times.md)
+> backend.
 
 ## Why this matters
 
-A routine app you actually open every morning has to be *fast to scan* and *pleasant*. This step is the
-"make it good software, not just correct software" pass: a real design system (theming), progressive
-disclosure (so the page is concise), live interactivity (a ticking countdown, today highlighted), and the
-modern web baseline — an installable, offline PWA. It also adds one more honest backend slice: the diet
-plan becomes **editable**, which is a clean recap of the CRUD + Flyway-migration patterns from
-[step 07](./07-full-crud.md) and [step 10](./10-seed-and-migrations.md).
+A routine you open every morning has to be fast to scan and pleasant to use. This step is the "make it
+good software, not just correct software" pass, and it wires the [step 15](./15-geolocation-prayer-times.md)
+backend (calculation + geocoding + saved location) to a UI the user actually controls.
 
-## What changed, and the ideas behind it
+## What changed, and the ideas
 
-### 1. Light / dark theming with no flash
+### 1. Light / dark theming, no flash
+Every colour is a CSS variable; `:root[data-theme="light"]` overrides the dark defaults. A tiny script in
+`<head>` sets `data-theme` from `localStorage` or the OS preference *before paint*, so there's no flash.
+The ☀/☾ button flips and saves it; the editor inherits it. `<meta name="theme-color">` tints the mobile
+address bar to match.
 
-The whole stylesheet is driven by **CSS custom properties** (variables). Dark is the default `:root`; a
-`:root[data-theme="light"]` block overrides the same variables. A tiny script in the `<head>` (runs
-*before* paint) reads the saved choice or the OS preference and sets `data-theme`, so there's **no flash**
-of the wrong theme:
+### 2. Concise by default
+The page leads with prayer times, a **This week** board, and the block; the long reference content
+(timeline, supplements, nutrition, journal, rules) collapses into native `<details>` foldables — scannable
+in one screen, no framework.
 
-```html
-<script>
-  const saved = localStorage.getItem('sahar-theme');
-  document.documentElement.setAttribute('data-theme',
-      saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
-</script>
-```
+### 3. The weekly board + live prayer countdown
+[`app.js`](../../checkpoints/step-16-ui-and-pwa/src/main/resources/static/app.js) merges the training grid
+with the meal plan into a 7-day board, highlights **today**, and opens a **modal** with a day's detail on
+tap. A timer finds the **next** prayer and shows "Next · Maghrib in 2h 14m", dimming the ones that passed;
+the timeline gets a "◀ now" marker.
 
-The ☀/☾ button flips it and saves to `localStorage`. Because every colour is a variable, switching is
-instant and the editor (`admin.html`) inherits it for free. (`<meta name="theme-color">` also matches, so
-the mobile address bar tints correctly.)
+### 4. The user-controlled location picker
+This is the heart of the step. The editor's **Location** card lets the user set location three ways, then
+calculate prayer times from it:
 
-### 2. Concise by default: progressive disclosure
+- **Device** — "📍 My location" calls the Geolocation API, then `GET /api/geocode/reverse` to label it.
+- **Search** — a box that calls `GET /api/geocode?q=` and lists matches to pick from.
+- **Map pin** — a [Leaflet](https://leafletjs.com/) map (OpenStreetMap tiles) with a draggable marker;
+  dragging or clicking sets the coordinates and reverse-geocodes the name.
 
-The page leads with what you need at a glance — prayer times, a **This week** board, the block — and tucks
-the long reference content (daily timeline, supplements, nutrition principles, journal prompts, rules)
-into native `<details>`/`<summary>` foldables that are **collapsed by default**. No framework, fully
-keyboard-accessible, and the page is scannable in one screen.
-
-### 3. The weekly board: training + meals, today highlighted, tap for detail
-
-[`app.js`](../../app/src/main/resources/static/app.js) merges the weekly training grid with the meal plan
-into one 7-day board, highlights **today** (`new Date().getDay()`), scrolls it into view on mobile, and
-opens a **modal** with that day's full detail (and, for today, the timeline) when tapped. Each day is a
-`<button>` — accessible and obvious.
-
-### 4. A live prayer countdown + a "now" marker
-
-A small timer (`setInterval`, every 20 s) finds the **next** prayer from the times, shows
-"Next · Maghrib in 2h 14m", highlights it in the strip and dims the ones that have passed. The daily
-timeline marks the **current slot** ("◀ now") and dims earlier ones. Pure client-side, computed from the
-times already in `/api/config`.
-
-### 5. The diet plan becomes editable (backend recap)
-
-Previously the meal plan was static seed content. Now it's a table you can edit, using exactly the
-patterns from earlier steps:
-
-- **A Flyway migration**,
-  [`V3__meal_plan.sql`](../../app/src/main/resources/db/migration/V3__meal_plan.sql), creates and seeds a
-  `meal_plan` table. Being a *new versioned* migration, it runs once — on a fresh DB after V1/V2, and on
-  an existing DB on the next startup (no manual steps). This is the payoff of [step 10](./10-seed-and-migrations.md).
-- **A repository**,
-  [`MealPlanRepository`](../../app/src/main/java/com/ramishtaha/sahar/repo/MealPlanRepository.java)
-  (`findAll`, `findByDay`, `update`) — same `JdbcTemplate` + `RowMapper` shape as [step 06](./06-jdbctemplate-h2.md).
-- **A controller**,
-  [`DietPlanController`](../../app/src/main/java/com/ramishtaha/sahar/web/DietPlanController.java):
-  `GET /api/diet-plan` and `PUT /api/diet-plan/{day}` — the CRUD verbs from [step 07](./07-full-crud.md).
-- The service now reads the plan from the DB (instead of the seed) and the editor grew a per-day form.
-
-The reference content that *isn't* meant to be edited (journal prompts, the three rules) still comes from
-`RoutineSeed` — the same "not everything belongs in a table" judgement from [step 06](./06-jdbctemplate-h2.md).
-
-### 6. A Progressive Web App (installable + offline)
-
-Three pieces make it a PWA:
-
-- [`manifest.json`](../../app/src/main/resources/static/manifest.json) — name, colours, and icons, so the
-  browser offers **"Install app"** and it launches standalone.
-- [`service-worker.js`](../../app/src/main/resources/static/service-worker.js) — a background script the
-  browser keeps. Its caching strategy: **cache-first** for the app shell (HTML/CSS/JS load instantly and
-  offline), **network-first** for `GET /api/*` (fresh when online, last-known data when offline). Writes
-  (PUT/POST/DELETE) are never cached.
-- Icons (`icon.svg`, `icon-192.png`, `icon-512.png`).
+Latitude/longitude/UTC-offset inputs stay in sync with all three, so it degrades gracefully if the map (a
+CDN script) or Nominatim is offline. "Save location" does `PUT /api/location`; "Calculate prayer times
+from here" calls the step-15 endpoint and fills the prayer-time form to review and save. The home page
+shows the saved location and a one-tap "📍 my location" that remembers it.
 
 ```mermaid
 flowchart LR
-  R[request] --> M{path}
-  M -- /api/* --> N[try network] -->|ok| C1[(update cache)] --> Resp[response]
-  N -->|offline| H[(cache fallback)] --> Resp
-  M -- shell --> Cc[(cache)] -->|hit| Resp
-  Cc -->|miss| Net[network] --> C2[(cache)] --> Resp
+  subgraph picker [Location card]
+    D[device] --- S[search] --- M[map pin]
+  end
+  picker --> LL[lat / lng / tz inputs]
+  LL -->|Save location| PUT[(PUT /api/location)]
+  LL -->|Calculate| CALC[GET /api/prayer-times/calculate] --> Form[prayer-time form] --> Save[(PUT /api/prayer-times)]
 ```
 
-> Service workers, like geolocation ([step 15](./15-geolocation-prayer-times.md)), only run on **HTTPS or
-> `localhost`**.
+### 5. Editable diet plan
+The meal plan moved into a table (Flyway V3) with a repository and `GET/PUT /api/diet-plan/{day}` — the
+same CRUD + migration patterns as [step 07](./07-full-crud.md) and [step 10](./10-seed-and-migrations.md) —
+and the editor grew a per-day form. Reference content that isn't meant to be edited (journal, rules) still
+comes from the seed.
+
+### 6. A Progressive Web App
+[`manifest.json`](../../checkpoints/step-16-ui-and-pwa/src/main/resources/static/manifest.json) +
+[`service-worker.js`](../../checkpoints/step-16-ui-and-pwa/src/main/resources/static/service-worker.js) +
+icons make it installable and offline-capable: **cache-first** for the app shell, **network-first** for
+`GET /api/*` (fresh online, last-known offline). Writes are never cached.
+
+> Geolocation, the service worker, and (for tiles) the map all want **HTTPS or `localhost`**.
+
+## Start from
+[`step-15`](../../checkpoints/step-15-geolocation-prayer-times/) (the backend). This step is the frontend
+for it, plus the editable-diet-plan slice and the PWA files.
 
 ## Common mistakes and how to debug them
 
-- **Theme flashes on load.** The theme script must be **inline in `<head>`**, before the stylesheet paints
-  — not in a deferred file.
-- **Old UI after a deploy.** The service worker cached the previous shell. Bump `CACHE` in
-  `service-worker.js` (e.g. `sahar-v2`); the `activate` handler deletes old caches.
-- **Manifest ignored.** Serve it as JSON. We use `manifest.json` (served `application/json`); a
-  `.webmanifest` file needs the server to send `application/manifest+json`.
-- **`PUT /api/diet-plan/{day}` returns 404.** Use a real day key (`Mon`..`Sun`); the lookup is
-  case-insensitive but the day must exist.
-- **Countdown stuck.** It recomputes every 20 s from `CONFIG.prayerTimes`; if you change times, re-render
-  (the Save flow already re-fetches `/api/config`).
+- **Theme flashes on load** — the theme script must be inline in `<head>`, before the stylesheet.
+- **Old UI after deploy** — bump `CACHE` in `service-worker.js`; the `activate` handler clears old caches.
+- **Map is blank / no pin** — Leaflet loads from a CDN and tiles need internet; offline, use search-less
+  manual lat/lng entry (it still works).
+- **`PUT /api/diet-plan/{day}` 404** — use a real day key (`Mon`..`Sun`).
+- **Manifest ignored** — serve it as JSON; we use `manifest.json` (`application/json`).
 
 ## Check yourself
 
-1. How does theming avoid a flash of the wrong colours on first paint?
-2. Why are `<details>` elements a good fit for "concise by default"?
-3. What's the service worker's caching rule for the shell vs. for `/api/*`, and why the difference?
-4. Which earlier steps' patterns does the editable diet plan reuse?
-5. Why must geolocation and the service worker run on HTTPS or localhost?
+1. How does theming avoid a flash of the wrong colours?
+2. What are the three ways the user can set location, and which endpoints back each?
+3. What's the service worker's rule for the shell vs `/api/*`, and why?
+4. Why does the location picker keep working when the map or Nominatim is unavailable?
 
 ---
-Prev: [15 - Geolocation prayer times](./15-geolocation-prayer-times.md) | Next: [99 - Roadmap](./99-roadmap.md) | Lives in: [app/](../../app/) | See also: [the diet plan](../diet-plan.md), [Containers & DevOps](../theory/containers-and-devops.md)
+Prev: [15 - Location-aware prayer times](./15-geolocation-prayer-times.md) | Next: [99 - Roadmap](./99-roadmap.md) | Checkpoint: [step-16](../../checkpoints/step-16-ui-and-pwa/) | See also: [the diet plan](../diet-plan.md), [Containers & DevOps](../theory/containers-and-devops.md)
