@@ -2,6 +2,12 @@
 
 _Every monthly-editable field now has working create / read / update / delete endpoints backed by the database._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-07-full-crud`](../../checkpoints/step-07-full-crud/) — the Sahar app with full CRUD over
+> the daily schedule and the targeted block operations: GET/POST(201)/PUT/DELETE on `/api/schedule`, plus
+> roll-forward / add-week / edit-week / drop-week on `/api/block`, all invariant-checked inside `@Transactional`
+> service methods. Package is `com.ramishtaha.sahar`.
+
 > [!TIP]
 > **IntelliJ IDEA Ultimate** — exercise all five CRUD verbs from the **HTTP Client** ([`app/requests.http`](../../app/requests.http)) or the **Endpoints** tool window. [More →](../../reference/intellij-ultimate.md)
 
@@ -12,6 +18,15 @@ Step 06 put the routine in a real H2 file and wired up `JdbcTemplate` repositori
 This step turns Sahar into something you can _operate_. We add the classic five REST verbs over the daily schedule (a collection resource), and a handful of focused operations on the training block. In doing so you will learn the parts of Spring MVC that every real controller uses: `@PathVariable`, class-level `@RequestMapping`, returning the right status code (201/204/400/404), and the small but important mechanics of getting a database-generated id back after an INSERT.
 
 We will also confront a real design decision: when a write breaks a business rule ("a block must be 4 or 5 weeks, deload last"), _who_ rejects it, and as _what_ HTTP status? See [HTTP and REST](../theory/http-and-rest.md) for the verbs-and-status-codes background this step leans on.
+
+> [!NOTE]
+> **What changed from Spring Boot 3.x.** The MVC annotations in this step (`@RestController`, `@GetMapping`,
+> `@PathVariable`, `@RequestBody`, `@ResponseStatus`) are unchanged across the Boot 3 → 4 jump — that vocabulary
+> has been stable for years. Two things differ on Boot 4 / Java 25: validation annotations like `@NotBlank`
+> live under `jakarta.validation.*` (they were `javax.validation.*` before Boot 3), and JSON binding is now
+> **Jackson 3** under `tools.jackson` rather than Jackson 2's `com.fasterxml.jackson` — which is why this `ScheduleItem`
+> record serializes (turning a Java object into JSON — see [Serialization & JSON](../theory/serialization-and-json.md))
+> with zero annotations. The full older-vs-newer table lives in [Version deltas](../../reference/cheatsheet-version-deltas.md).
 
 ## 🧠 Theory
 
@@ -78,7 +93,7 @@ public record ScheduleItem(
 
 - `Long` (not `long`) so it can be `null` on create - the database assigns it.
 - The validation constraints from step 05 still apply, so creating a slot with a bad time or blank title is rejected with a **400** before any SQL runs.
-- Because this is a record, Jackson 3 (Boot 4 ships `tools.jackson`) serializes and deserializes it automatically - including the new `id` field - with no annotations and no Jackson import on your side.
+- Because this is a record, Jackson 3 (the JSON library Boot 4 ships, under `tools.jackson` — see the version callout above) serializes and deserializes it automatically - including the new `id` field - with no annotations and no Jackson import on your side. ([Serialization & JSON](../theory/serialization-and-json.md) explains the object↔JSON round-trip.)
 
 ### 2. Full CRUD in the repository, including the generated key
 
@@ -343,7 +358,7 @@ if (target.deload()) {
 }
 ```
 
-Each of these methods is `@Transactional` because a block replace is several statements - if validation or a write fails partway, the whole thing rolls back rather than leaving a half-edited block.
+Each of these methods is `@Transactional` (Spring wraps the whole method in one database transaction — a group of writes that all commit together or all roll back) because a block replace is several statements - if validation or a write fails partway, the whole thing rolls back rather than leaving a half-edited block. This aggregate write — read the block, rebuild it, replace every week — is the textbook reason transactions exist; see [Transactions & ACID](../theory/transactions-and-acid.md) for the full story (including the proxy self-invocation trap).
 
 ### 7. Make the reasons visible
 
@@ -396,6 +411,38 @@ Files changed in this step:
 
 Checkpoint for this step: [step-07-full-crud/](../../checkpoints/step-07-full-crud/).
 
+## 💼 Interview angle
+
+**Q: How do you return a database-generated id from an INSERT with `JdbcTemplate`?**
+A: Build the `PreparedStatement` yourself with `Statement.RETURN_GENERATED_KEYS` and pass a `GeneratedKeyHolder`
+to `jdbc.update(...)`. The plain `jdbc.update(sql, args...)` form cannot return keys; read the id back with
+`keys.getKey().longValue()`, then re-read the row so the returned object matches the database exactly.
+
+**Q: When do you use `PUT` versus `POST`, and why does it matter?**
+A: `PUT` is idempotent — sending it twice leaves the same final state, so it fits "replace this resource."
+`POST` is not idempotent — twice means two creates or two runs — so it fits "add a week" or "roll forward."
+Picking the wrong verb makes retries (which clients and proxies do freely) unsafe.
+
+**Q: How do you map a "row not found" to a 404 without leaking HTTP concerns into the repository?**
+A: The repository's `update`/`delete` return an `int` row-count and stay ignorant of HTTP. The service treats
+`== 0` as "no such id" and throws `ResponseStatusException(NOT_FOUND, ...)`. The dumb repository stays reusable
+and unit-testable without a web context.
+
+**Q: Why are the block operations `@Transactional`, and what would break without it?**
+A: A block edit is several statements — read, rebuild, validate, replace every week. `@Transactional` makes
+them one atomic unit: if validation or a write fails partway, everything rolls back instead of leaving a
+half-edited, invariant-violating block. Without it a mid-operation failure could persist 3 of 5 weeks.
+
+**Q: Where should a business rule like "4–5 weeks, deload last" be enforced — and why both annotations and code?**
+A: Bean-validation annotations (`@Size`, `@DeloadLast`) only check a client-supplied request body. Operations
+that build the block server-side (add/drop/roll-forward) never hit those, so the same invariant must also live
+in code — `requireValidBlock(...)` in the service — run before every persist.
+
+**Q: Why give the create DTO a boxed `Long id` instead of `long`?**
+A: On create the client doesn't know the id yet — the database assigns it — so the field must be `null` inbound.
+A primitive `long` can't be null and would default to `0`, silently masking "no id yet." Boxed `Long` models
+the genuinely-absent value.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **POST returns the row but `id` is `null`.** You used the plain `jdbc.update(sql, args...)` form, which cannot return keys. You must build a `PreparedStatement` with `Statement.RETURN_GENERATED_KEYS` and pass a `GeneratedKeyHolder`, as `create` does.
@@ -415,6 +462,5 @@ Checkpoint for this step: [step-07-full-crud/](../../checkpoints/step-07-full-cr
 5. `WeekUpdate` omits `ordinal` and `deload`. What problem does omitting them prevent, compared with accepting a full `Week`?
 6. The service throws `ResponseStatusException` directly. What is the cleaner alternative, and what does the shortcut couple together?
 
-## ---
-
-⬅️ Prev: [06 - JdbcTemplate and H2](./06-jdbctemplate-h2.md) · ➡️ Next: [08 - Editable admin UI](./08-editable-admin-ui.md) · 📍 Checkpoint: [step-07-full-crud/](../../checkpoints/step-07-full-crud/)
+---
+⬅️ Prev: [06 - JdbcTemplate and H2](./06-jdbctemplate-h2.md) · ➡️ Next: [08 - Editable admin UI](./08-editable-admin-ui.md) · 📍 Checkpoint: [step-07-full-crud](../../checkpoints/step-07-full-crud/) · 🔗 See also: [HTTP and REST](../theory/http-and-rest.md) · [Transactions & ACID](../theory/transactions-and-acid.md) · [Interview-prep](../../reference/interview-prep.md)

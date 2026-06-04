@@ -408,6 +408,9 @@ flowchart LR
 | H2 console | `spring-boot-h2console` |
 | Tests | modular `spring-boot-starter-{webmvc,jdbc,validation,flyway}-test` |
 
+> [!TIP]
+> Several of these names changed from Spring Boot 3.x (and Jackson moved from `com.fasterxml` to `tools.jackson` in Jackson 3). The full before/after story lives in the [version deltas cheatsheet](./cheatsheet-version-deltas.md) so you can map any 3.x tutorial onto this code.
+
 **The fat jar.** `mvn package` produces an *executable* jar under `target/` that bundles your classes, your resources (including Flyway's `V1__*.sql` migrations), and all dependency jars, plus a small launcher. `java -jar target/sahar-*.jar` then needs nothing but a JVM — which is exactly why the Docker image in [step 11](../docs/steps/11-dockerize.md) is so small. See the [Maven cheatsheet](./cheatsheet-maven.md) for the day-to-day commands.
 
 > [!NOTE]
@@ -435,8 +438,10 @@ So none of this is bleeding-edge; it is just "modern Java" that accumulated whil
 - Step: [05 — Validation & rules](../docs/steps/05-validation-and-rules.md) — the custom `@DeloadLast` annotation
 - Theory: [Spring & dependency injection](../docs/theory/spring-and-di.md) — how Spring reads stereotype annotations
 - Theory: [HTTP & REST](../docs/theory/http-and-rest.md) — the web-mapping annotations
-- Theory: [Validation & rules](../docs/steps/05-validation-and-rules.md) — Bean Validation in depth
+- Step: [05 — Validation & rules](../docs/steps/05-validation-and-rules.md) — Bean Validation in practice
 - Reference: [SQL & JDBC cheatsheet](./cheatsheet-sql-jdbc.md) — the SQL inside those text blocks
 - Reference: [Maven cheatsheet](./cheatsheet-maven.md) — building the classpath and the fat jar
+- Reference: [Version deltas cheatsheet](./cheatsheet-version-deltas.md) — the Boot 3.x→4 module renames and Jackson 3 story behind the notes above
+- Reference: [Interview prep](./interview-prep.md) — turn these records/streams/`Optional` ideas into talking points
 - Reference: [Glossary](./glossary.md) — quick definitions
 - [Project README](../README.md)

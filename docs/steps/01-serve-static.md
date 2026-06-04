@@ -2,6 +2,12 @@
 
 _Drop a hand-written HTML/CSS/JS site into Spring Boot and watch it render at `http://localhost:8080` with zero controllers._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-01-serve-static`](../../checkpoints/step-01-serve-static/) — a Spring Boot 4.0.6 project that serves the hand-written Sahar site (`index.html`, `styles.css`, `data.js`) straight from `src/main/resources/static/`, no controllers yet. Package is `com.ramishtaha.sahar`.
+
+> [!TIP]
+> **IntelliJ IDEA** — drop the three files into `src/main/resources/static/`, then run `SaharApplication` from the green gutter arrow (or the **Run** ▶️ toolbar). IntelliJ recompiles resources on save; if a tweaked file does not show up, **Build → Rebuild Project** forces the copy to `target/classes/`.
+
 ## 🎯 Why this matters
 
 Before we write a single line of Java, we are going to make Spring Boot serve a real, good-looking web page. That sounds almost too easy — and that is the point. One of Spring Boot's strongest "batteries included" defaults is that **any file you put under `src/main/resources/static/` is served at the web root, automatically, with no code.**
@@ -18,7 +24,7 @@ This step is deliberately the "wrong" architecture: the data lives in the browse
 
 ### Where do static files come from?
 
-When you generated this project from start.spring.io with the `spring-boot-starter-webmvc` starter, you got an **auto-configured resource handler**. On startup Spring Boot registers a `ResourceHttpRequestHandler` that maps incoming URLs to files on a set of classpath locations. The default locations, in order, are:
+When you generated this project from start.spring.io with the `spring-boot-starter-webmvc` starter, you got an **auto-configured resource handler**. On startup Spring Boot registers a `ResourceHttpRequestHandler` that maps incoming URLs to files on a set of classpath locations (the *classpath* is the set of folders and JARs the JVM searches for compiled classes and bundled resources — see [Fundamentals](../../reference/cheatsheet-fundamentals.md)). The default locations, in order, are:
 
 ```text
 classpath:/static/      <- we use this one
@@ -29,8 +35,8 @@ classpath:/META-INF/resources/
 
 `src/main/resources/static/styles.css` ends up on the classpath as `/static/styles.css`, so a browser request for `GET /styles.css` is matched and the file is streamed back. No annotation, no `@Controller`, no mapping that you wrote.
 
-> [!IMPORTANT]
-> Spring Boot 4 note: the web starter was **renamed**. In Boot 3.x it was `spring-boot-starter-web`; in Boot 4.x the servlet (MVC) starter is `spring-boot-starter-webmvc` (the reactive one is `spring-boot-starter-webflux`). The static-resource behaviour described here is identical — only the starter's coordinates changed. See the [Boot 4.0.6 docs](https://docs.spring.io/spring-boot/4.0.6/reference/web/servlet.html).
+> [!NOTE]
+> **What changed from Spring Boot 3.x** — the web starter was **renamed**. In Boot 3.x the servlet stack was `spring-boot-starter-web`; in Boot 4.x it is `spring-boot-starter-webmvc` (the reactive one is `spring-boot-starter-webflux`). We also build on **Java 25** (the current LTS — long-term-support release; Boot 4 needs Java 17+). The static-resource behaviour described here is identical across both — only the coordinates changed. For the full older-vs-newer table (Boot 3→4, Spring 6→7, Java 17→25, `javax`→`jakarta`, Jackson 2→3, starter renames), see [Version deltas](../../reference/cheatsheet-version-deltas.md). Boot's own reference: [Boot 4.0.6 docs](https://docs.spring.io/spring-boot/4.0.6/reference/web/servlet.html).
 
 ### Why does `/` show `index.html`?
 
@@ -150,7 +156,7 @@ For the exact, complete values, read the checkpoint copy: [`data.js`](../../chec
 
 ### 3. Add `index.html` — the defensive renderer
 
-The HTML is a thin shell — a header, an empty `<main id="app">`, and a footer — plus a small inline script that turns the data object into DOM. The top-of-file comment is the design statement for the whole front end:
+The HTML is a thin shell — a header, an empty `<main id="app">`, and a footer — plus a small inline script that turns the data object into DOM (the **D**ocument **O**bject **M**odel: the live, in-memory tree of elements the browser renders, which JavaScript creates and mutates — see [Browser JS basics](../foundations/browser-javascript-basics.md)). The top-of-file comment is the design statement for the whole front end:
 
 ```html
 <!--
@@ -321,6 +327,23 @@ No Java changed. No controller exists. The whole step rides on Spring Boot's sta
 
 Checkpoint for this step: [step-01-serve-static](../../checkpoints/step-01-serve-static/).
 
+## 💼 Interview angle
+
+**Q: How does Spring Boot serve static content without any controller?**
+A: The web starter auto-configures a `ResourceHttpRequestHandler` that maps URLs to files on default classpath locations (`/static/`, `/public/`, `/resources/`, `/META-INF/resources/`). A request for `/styles.css` is matched and streamed before it ever reaches your code — no `@Controller` needed.
+
+**Q: Why does `http://localhost:8080/` return `index.html`?**
+A: Spring Boot registers a `WelcomePageHandlerMapping`. If it finds an `index.html` on any static location, it serves it at the root `/`. It is a Boot convenience, not part of the HTTP spec — no route maps `/` to the file.
+
+**Q: When do you actually need a controller, then?**
+A: When the response is *dynamic* — computed JSON, a request body to read, validation, or anything the resource handler can't serve from a file. Static assets need none of that, so this step writes zero controllers.
+
+**Q: What is an embedded server, and how does it differ from the old WAR-on-Tomcat model?**
+A: Boot bundles Tomcat *inside* the runnable fat jar, so `main()` starts the server (you saw `Tomcat started on port 8080`). The classic model built a WAR and deployed it into an externally-installed servlet container — Boot inverts that, shipping the container with the app.
+
+**Q: The starter is `spring-boot-starter-webmvc` here — wasn't it `spring-boot-starter-web`?**
+A: That was Boot 3.x. In Boot 4.x the blocking/servlet starter is `spring-boot-starter-webmvc` and the reactive one is `spring-boot-starter-webflux`. The static-resource behaviour is unchanged; only the artifact name moved.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **404 at `http://localhost:8080/`.** Almost always the folder is wrong. It must be `src/main/resources/static/` (singular `static`, under `resources`), not `src/main/static` or `src/main/resources/public/index.html` mis-typed. Confirm the file is on the classpath: after a build, look for `target/classes/static/index.html`. If it is not there, your IDE did not copy resources — re-run `./mvnw spring-boot:run` from the command line.
@@ -339,8 +362,5 @@ Checkpoint for this step: [step-01-serve-static](../../checkpoints/step-01-serve
 5. What is the single line in `index.html` that step 02 will change, and what does it change it to?
 6. Boot 3.x used `spring-boot-starter-web`. What is the equivalent servlet starter name in Boot 4.x, and what is the reactive alternative?
 
-## ---
-
-⬅️ Prev: [00 - Baseline](./00-baseline.md) · ➡️ Next: [02 - First REST endpoint](./02-first-rest-endpoint.md) · 🚩 Checkpoint: [step-01-serve-static](../../checkpoints/step-01-serve-static/)
-
-_See also: [HTTP and REST](../theory/http-and-rest.md) · [Spring and DI](../theory/spring-and-di.md) · [HTTP/REST cheatsheet](../../reference/cheatsheet-http-rest.md)_
+---
+⬅️ Prev: [00 - Baseline](./00-baseline.md) · ➡️ Next: [02 - First REST endpoint](./02-first-rest-endpoint.md) · 📍 Checkpoint: [step-01-serve-static](../../checkpoints/step-01-serve-static/) · 🔗 See also: [HTTP and REST](../theory/http-and-rest.md) · [Spring and DI](../theory/spring-and-di.md) · [HTTP/REST cheatsheet](../../reference/cheatsheet-http-rest.md) · [Interview-prep](../../reference/interview-prep.md)

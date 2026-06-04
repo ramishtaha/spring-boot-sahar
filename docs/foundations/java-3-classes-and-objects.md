@@ -23,13 +23,15 @@ class Greeter {
 }
 ```
 
+### 🧩 Fields and methods
+
+A **field** is a piece of data stored inside the object (here, `name`). A **method** is an action the object can perform (here, `sayHello`).
+
 ```java
 Greeter g = new Greeter();       // make an object with new
 g.name = "Sahar";                // set its field
 g.sayHello();                    // call its method -> prints "Hello, Sahar"
 ```
-
-A **field** is a piece of data stored inside the object (here, `name`). A **method** is an action the object can perform (here, `sayHello`).
 
 ## ⚙️ Methods: data in, result out
 
@@ -55,6 +57,9 @@ A **record** is a tiny, fixed data holder. You write one line and Java fills in 
 record PrayerTimes(String fajr, String dhuhr) {}
 ```
 
+> [!NOTE]
+> Records are a modern Java feature (standard since Java 16), so they're a normal part of everyday code on Java 25 — no extra setup needed.
+
 That single line automatically gives you:
 - a **constructor** (the thing you call with `new` to build it),
 - **getters** (methods to read each value, named `fajr()` and `dhuhr()`).
@@ -63,6 +68,8 @@ That single line automatically gives you:
 PrayerTimes pt = new PrayerTimes("05:12", "12:45");
 System.out.println(pt.fajr());   // prints 05:12
 ```
+
+### 🔒 Why records are immutable
 
 Records are **immutable** — once created, their values never change. That makes them safe and predictable, which is exactly what you want for data.
 
@@ -100,4 +107,4 @@ An **annotation** is a label starting with `@`, like `@Service`. It's just metad
 - A **record** is a one-line, **immutable** data holder that auto-generates its constructor and getters — Sahar's domain leans on these.
 - `null`/`Optional`, exceptions/stack traces, and `@annotations` are tools you'll meet again in context.
 
-Next: [What is Maven?](./what-is-maven.md) · Go deeper: the [Java refresher](../../reference/java-refresher.md) and [step 03](../steps/03-model-the-domain.md)
+⬅️ Prev: [Java 2 — types & logic](./java-2-types-and-logic.md) · Next: [What is Maven?](./what-is-maven.md) · Go deeper: the [Java refresher](../../reference/java-refresher.md) and [step 03](../steps/03-model-the-domain.md)

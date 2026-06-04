@@ -2,6 +2,12 @@
 
 _Put Sahar on the public internet with one command - or stop at a clean local stack and call it done._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-14-deploy`](../../checkpoints/step-14-deploy/) — the full Sahar app plus a new
+> `deploy/` folder (`deploy/cloud-run.md`, `deploy/k8s/deployment.yaml`, `deploy/k8s/service.yaml`). It
+> changes **nothing** in the running app — no Java, no `application.properties` edits — only adds deploy
+> recipes. Package is `com.ramishtaha.sahar`.
+
 ## 🎯 Why this matters
 
 You have built a real Spring Boot 4 app: layered web -> service -> repo, Flyway migrations, a Docker image, and CI that builds it on every push ([step 13](./13-ci-with-github-actions.md)). The honest last question is: **how does it actually run somewhere other than your laptop?**
@@ -14,6 +20,16 @@ This step answers that twice, at two very different scales:
 The deploy is a victory lap, not a gate. `docker compose up` on your own machine is already a complete, production-shaped result. If you never push to the cloud, you have still finished the course.
 
 ## 🧠 Theory
+
+> [!NOTE]
+> **What changed from Spring Boot 3.x.** This step is mostly platform tooling, so very little of the
+> *deploy* mechanics depend on the framework version — `gcloud`, `kubectl`, and the `Dockerfile` are
+> the same regardless. The two things to keep straight: the **container** runs a **fat jar** (one
+> self-contained JAR with the embedded server and all dependencies on its classpath — see
+> [Fundamentals](../../reference/cheatsheet-fundamentals.md)), and Sahar pins **Java 25 (an LTS — Long-Term
+> Support — release)**, so your base image must ship a JRE 25, not the JRE 17 most Boot 3.x tutorials assume.
+> For the full older-vs-newer story (starter renames, `javax`→`jakarta`, Jackson 2→3, etc.), see
+> [Version deltas](../../reference/cheatsheet-version-deltas.md).
 
 ### Why Kubernetes exists at all
 
@@ -62,13 +78,13 @@ For the containers/orchestration background, see [containers-and-devops](../theo
 
 ## 🚦 Start from
 
-Continue from your working tree after [step 13 - CI with GitHub Actions](./13-ci-with-github-actions.md). You need the `Dockerfile` and `compose.yaml` from earlier steps and the `application.properties` that reads `PORT` (step 10). The reference checkpoint for this step is in [`checkpoints/step-14-deploy/`](../../checkpoints/step-14-deploy/); it adds a `deploy/` folder (`deploy/cloud-run.md`, `deploy/k8s/deployment.yaml`, `deploy/k8s/service.yaml`) and changes nothing in the running app.
+Continue from your working tree after [step 13 - CI with GitHub Actions](./13-ci-with-github-actions.md). You need the `Dockerfile` and `docker-compose.yml` from earlier steps and the `application.properties` that reads `PORT` (step 10). The reference checkpoint for this step is in [`checkpoints/step-14-deploy/`](../../checkpoints/step-14-deploy/); it adds a `deploy/` folder (`deploy/cloud-run.md`, `deploy/k8s/deployment.yaml`, `deploy/k8s/service.yaml`) and changes nothing in the running app.
 
 ## 🛠️ Build it
 
 ### 1. Confirm the app already binds the platform port
 
-This is the one application-level requirement for almost any PaaS, and it is **already done**. Open `src/main/resources/application.properties`:
+This is the one application-level requirement for almost any PaaS (Platform-as-a-Service — a host that runs your container or app for you and hands you a URL, no servers to manage), and it is **already done**. Open `src/main/resources/application.properties`:
 
 ```properties
 # Listen on the port the platform tells us to. Cloud Run (and many PaaS) inject a PORT env var and
@@ -271,6 +287,39 @@ Files that this step adds (none of the app's Java or `application.properties` ch
 
 See the full reference in [`checkpoints/step-14-deploy/`](../../checkpoints/step-14-deploy/). Hands-on Kubernetes is intentionally a **later block** - see the [roadmap](./99-roadmap.md).
 
+## 💼 Interview angle
+
+**Q: In Kubernetes, what's the difference between a Pod, a Deployment, and a Service?**
+A: A **Pod** is one running instance of your container. A **Deployment** is the controller that keeps N
+Pods alive (replaces dead ones, rolls out new versions). A **Service** is one stable address that
+load-balances across the Pods by label. The Deployment owns the Pods; the Service fronts them.
+
+**Q: When is Kubernetes overkill, and what does a serverless platform like Cloud Run give you instead?**
+A: K8s pays the operational cost of orchestrating a *fleet*; for a one-user app that's a bicycle on a
+freight train. Cloud Run runs a single container, hands you a public HTTPS URL, self-heals, and **scales
+to zero** when idle — the self-healing/HTTPS/scaling you'd otherwise build, for ~no cost when unused.
+
+**Q: How does a container end up listening on the right port without hard-coding it?**
+A: The platform injects a `PORT` env var and the app binds it — `server.port=${PORT:8080}` reads `PORT`
+if set, else falls back to `8080` locally. Hard-coding `8080` makes the platform's `PORT` ignored and the
+startup probe fails with "container failed to start and listen on the port."
+
+**Q: What's the difference between a readiness probe and a liveness probe?**
+A: **Readiness** asks "should the load balancer send this Pod traffic *yet*?" — a booting Pod is alive but
+not ready, so traffic is held off. **Liveness** asks "is this Pod still healthy, or should it be
+restarted?" — if it stops answering, K8s kills and replaces it.
+
+**Q: How do you move the same app from H2 locally to managed Postgres in the cloud?**
+A: Zero Java changes — only configuration. The `postgres` profile reads `SAHAR_DB_*` env vars, so you set
+`SPRING_PROFILES_ACTIVE=postgres` plus the connection vars at deploy time. That's the payoff of
+externalized 12-factor config: the same JAR runs on H2 or Postgres depending purely on the environment.
+
+**Q: Why keep secrets out of YAML manifests, and where do they go instead?**
+A: Anything committed to Git is effectively public to everyone with repo access, forever. K8s **Secrets**
+(referenced via `secretKeyRef`) keep credentials out of manifests and history; on a PaaS you inject them as
+env vars at deploy time. (K8s Secrets are only base64-encoded at rest by default, not encrypted — but they
+keep plaintext out of your manifests.)
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Hard-coding the port.** If you set `server.port=8080` literally and remove the `${PORT:8080}` placeholder, Cloud Run's injected `PORT` is ignored, the container never binds the expected port, and the deploy fails the startup probe with "container failed to start and listen on the port". Keep `server.port=${PORT:8080}`.
@@ -289,7 +338,5 @@ See the full reference in [`checkpoints/step-14-deploy/`](../../checkpoints/step
 5. To switch a Cloud Run deploy from ephemeral H2 to durable Postgres, how much **Java** code must change - and what changes instead?
 6. The probes in `deployment.yaml` point at `/api/config`. Why that endpoint and not `/actuator/health`?
 
-## ---
-⬅️ Prev: [13 - CI with GitHub Actions](./13-ci-with-github-actions.md) · ➡️ Next: [99 - Roadmap](./99-roadmap.md) · 📍 Checkpoint: [step-14-deploy](../../checkpoints/step-14-deploy/)
-
-🔗 See also: [containers and DevOps](../theory/containers-and-devops.md) · [Docker/Podman cheatsheet](../../reference/cheatsheet-docker-podman.md)
+---
+⬅️ Prev: [13 - CI with GitHub Actions](./13-ci-with-github-actions.md) · ➡️ Next: [99 - Roadmap](./99-roadmap.md) · 📍 Checkpoint: [step-14-deploy](../../checkpoints/step-14-deploy/) · 🔗 See also: [Containers & DevOps](../theory/containers-and-devops.md) · [Docker/Podman cheatsheet](../../reference/cheatsheet-docker-podman.md) · [Interview-prep](../../reference/interview-prep.md)

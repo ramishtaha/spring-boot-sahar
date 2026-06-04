@@ -6,6 +6,9 @@
 
 For the *why* behind all of this, read the theory page [HTTP & REST](../docs/theory/http-and-rest.md). This page is the lookup table you keep open while you work.
 
+> [!NOTE]
+> The error-body shapes below are the early, hand-rolled versions. Boot 4 standardises on **`ProblemDetail`** (RFC 9457, `application/problem+json`). For the old-vs-new error contract story, see [Version deltas](cheatsheet-version-deltas.md).
+
 ---
 
 ## 🌐 HTTP methods at a glance
@@ -337,4 +340,5 @@ The editable admin UI in [step 08](../docs/steps/08-editable-admin-ui.md) reads 
 - Step 05: [Validation and rules](../docs/steps/05-validation-and-rules.md) — Bean Validation, `@DeloadLast`, the `400` handler.
 - Step 07: [Full CRUD](../docs/steps/07-full-crud.md) — the five schedule endpoints and status codes `201`/`204`/`404`.
 - Step 08: [Editable admin UI](../docs/steps/08-editable-admin-ui.md) — the browser client that calls these endpoints and renders the error body.
-- Back to the [README](../README.md).
+
+**Reference:** [Spring annotations cheatsheet](cheatsheet-spring-annotations.md) — `@RestController`, `@GetMapping`, `@ResponseStatus`, `@RestControllerAdvice` that wire these endpoints up · [Version deltas](cheatsheet-version-deltas.md) — `ProblemDetail`/RFC 9457 and other Boot 3.x→4 changes · [Interview-prep](interview-prep.md) — HTTP/REST questions in the central bank · back to the [README](../README.md).

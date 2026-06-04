@@ -50,6 +50,9 @@ flowchart LR
 
 Keep that diagram in mind; almost every trade-off below falls out of it.
 
+> [!NOTE]
+> **Version heads-up.** The JPA annotations in this page (`@Entity`, `@OneToMany`, `@Id`) live in the `jakarta.persistence` package on Spring Boot 4 / Spring 6 — older Boot 3.x-era tutorials and Java 17 code you find online still import them from `javax.persistence`. (`jakarta` is the renamed namespace after Jakarta EE took over from Java EE; *namespace* just means the package prefix an `import` uses.) The `JdbcTemplate` API itself is unchanged. For the full Boot 3.x→4 / Spring 5-6 / Java 17 / `javax`→`jakarta` story in one place, see [Version deltas](../../reference/cheatsheet-version-deltas.md).
+
 ---
 
 ## 🗄️ A representative Sahar operation: the block and its weeks
@@ -301,7 +304,7 @@ JPA *additionally* tempts you with `spring.jpa.hibernate.ddl-auto`, which genera
 | `update` | Alters tables to fit entities | Convenient in toy apps; **dangerous** in prod (silent, un-reviewed, no down path) |
 | `create` / `create-drop` | Drops & recreates on startup | Tests / throwaway demos only |
 
-The honest position: `ddl-auto=update` feels magical for the first week and becomes a liability the moment two people share a database or you need to know *what* changed. Sahar uses Flyway from [step 10](../steps/06-jdbctemplate-h2.md) precisely so the schema is explicit and version-controlled — that discipline is independent of JdbcTemplate vs JPA, and you should keep it if you adopt JPA later (`ddl-auto: validate` + Flyway is a fine combo).
+The honest position: `ddl-auto=update` feels magical for the first week and becomes a liability the moment two people share a database or you need to know *what* changed. Sahar uses Flyway from [step 10](../steps/10-seed-and-migrations.md) precisely so the schema is explicit and version-controlled — that discipline is independent of JdbcTemplate vs JPA, and you should keep it if you adopt JPA later (`ddl-auto: validate` + Flyway is a fine combo).
 
 ---
 
@@ -352,16 +355,42 @@ Sahar is a teaching codealong, and the choice is pedagogical first:
 3. **The schema shape is honest.** Sahar's `BlockPlan` is a true aggregate written via wipe-and-reinsert under one `@Transactional`. That makes transaction boundaries, not annotations, the thing you reason about.
 4. **The app is small.** Eight tables and mostly tailored reads sit squarely in JdbcTemplate's sweet spot; JPA's CRUD savings wouldn't pay for its learning cost here.
 
-**JPA is on the [roadmap](../steps/99-roadmap.md)** — not because JdbcTemplate "ran out," but because re-implementing one slice (likely the block aggregate) as entities is the *best possible way to learn JPA*: you already know the exact SQL it should produce, so you can turn on `spring.jpa.show-sql=true`, watch Hibernate's queries, and immediately spot an N+1 or an extra UPDATE. Learning the abstraction *after* the fundamentals is the whole pedagogical bet of this repo.
+**JPA arrives in [step 23](../steps/23-spring-data-jpa.md)** — not because JdbcTemplate "ran out," but because adding one slice (a new `journal` module) as JPA `@Entity` classes is the *best possible way to learn JPA*: you already know the exact SQL it should produce, so you can turn on `spring.jpa.show-sql=true`, watch Hibernate's queries, and immediately spot an N+1 or an extra UPDATE. Learning the abstraction *after* the fundamentals is the whole pedagogical bet of this repo — and step 23 keeps both styles side by side so you can compare them directly.
 
 > [!TIP]
 > Rule of thumb: **learn JdbcTemplate to understand the database; reach for JPA to stop repeating yourself — once you can predict the SQL it will generate.**
 
 ---
 
+## 💼 Interview angle
+
+Persistence is a perennial interview topic. These come straight from the material above — practice saying them out loud.
+
+**Q: What is the difference between `JdbcTemplate` and Spring Data JPA?**
+`JdbcTemplate` is a thin wrapper over plain JDBC: you write the SQL and a `RowMapper` to turn each row into an object, and the SQL you read is exactly the SQL that runs. Spring Data JPA is an abstraction over JPA/Hibernate: you describe tables as `@Entity` classes and queries as method names on a repository interface, and Hibernate generates the SQL and manages objects in a *persistence context* (an in-memory cache of loaded entities). JPA trades control for far less boilerplate on repetitive CRUD.
+
+**Q: What is the N+1 select problem and how do you fix it?**
+With a lazy `@OneToMany`, loading N parents and then touching each parent's child collection fires 1 query for the parents plus 1 more per parent — `1 + N` round-trips — and nothing in your code looks wrong. You fix it by fetching the children up front: a `JOIN FETCH` in a JPQL `@Query`, an `@EntityGraph`, batch fetching, or a DTO projection. With `JdbcTemplate` it cannot happen accidentally, because no query fires unless you write it.
+
+**Q: When would you pick `JdbcTemplate` over JPA, and vice versa?**
+Pick `JdbcTemplate` for a small, stable schema with hand-tuned reads where predictable performance and full SQL control matter — and for learning the fundamentals, since nothing is hidden. Pick JPA when you have a rich object graph you navigate as objects, you are CRUD-heavy across many tables, or a large team benefits from a declarative, low-SQL repository style. Spring Data JDBC and `JdbcClient` are a middle ground: repository ergonomics without Hibernate's persistence context.
+
+**Q: How does each approach handle transactions and a partial write?**
+Both rely on Spring's `@Transactional`, which wraps the work in a single database transaction so a half-finished change never becomes visible — see [Transactions and ACID](./transactions-and-acid.md). In Sahar's `BlockRepository.replace()` the `UPDATE` + `DELETE` + N `INSERT`s commit atomically. JPA adds *dirty checking* and flush-at-commit, so a managed entity is written back automatically when the transaction commits without an explicit `save()`.
+
+**Q: What is `LazyInitializationException` and why does `JdbcTemplate` never throw it?**
+It happens in JPA when you touch a lazily-loaded association *after* the persistence context (session) has closed — for example in a controller or during JSON serialization — so Hibernate can no longer fetch it. `JdbcTemplate` returns fully-built objects (Sahar uses immutable records); there is no session to close and nothing left to lazy-load, so the exception cannot occur.
+
+---
+
 ## 🔗 Related
 
 - [Step 06 — JdbcTemplate + H2](../steps/06-jdbctemplate-h2.md) — the hands-on build of the repositories quoted here.
-- [Step 99 — Roadmap](../steps/99-roadmap.md) — where the JPA re-implementation slice lives.
+- [Step 23 — Spring Data JPA](../steps/23-spring-data-jpa.md) — JPA implemented alongside JdbcTemplate (the new `journal` module), so you can compare the two styles directly.
+- [Step 99 — Roadmap](../steps/99-roadmap.md) — what's still beyond once both persistence styles are in place.
 - [Theory — The persistence landscape](./persistence-landscape.md) — the full map: JDBC, JdbcTemplate, JdbcClient, Spring Data JDBC, JPA/Hibernate, R2DBC, MyBatis.
+- [Theory — Transactions and ACID](./transactions-and-acid.md) — what `@Transactional` actually guarantees around the reads and writes above.
+- [Step 10 — Seed and migrations](../steps/10-seed-and-migrations.md) — where Sahar's Flyway-owned schema lives.
+- [Reference — Interview prep](../../reference/interview-prep.md) — the central bank of questions, including the persistence ones above.
+- [Reference — Version deltas](../../reference/cheatsheet-version-deltas.md) — Boot 3.x→4, Spring 5-6, Java 17, `javax`→`jakarta`, Jackson 2 in one place.
 - [README](../../README.md) — project overview and the full step list.

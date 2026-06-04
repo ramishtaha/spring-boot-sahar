@@ -4,6 +4,9 @@ _Spring Boot is a toolkit that hands you a ready-made web app skeleton, so you o
 
 Why care? Because with it, a handful of short notes in your code turn into a real, running web application. That is a wonderful feeling, and you'll have it by step 02.
 
+> [!NOTE]
+> This course uses Spring Boot 4 (many older tutorials online are still on Boot 3.x). If you ever follow along elsewhere, see [what changed from 3.x → 4](../../reference/cheatsheet-version-deltas.md).
+
 ## 🧰 First, what is a "framework"?
 
 A **framework** is prewritten structure and machinery you build on top of. Think of it like a kitchen that already has a stove, sink, and counters installed. You don't build the kitchen; you just cook your own dish.
@@ -68,4 +71,6 @@ That is exactly the feeling you'll get in step 02, when your first Sahar endpoin
 - **Beans** are objects Spring creates and hands to whoever needs them, no `new` required.
 - **Starters** bundle the libraries you need, and a few **annotations** turn into a running web API.
 
-Next: [HTTP in five minutes](./http-basics.md) · Go deeper: [Spring, servlets & DI](../theory/spring-and-di.md)
+---
+
+⬅️ Prev: [Foundations overview](./README.md) · Next: [HTTP in five minutes](./http-basics.md) · Go deeper: [Spring, servlets & DI](../theory/spring-and-di.md)

@@ -26,15 +26,15 @@ The set of HTTP endpoints a client can call to use the app. Sahar's API lives un
 Any object that Spring creates, wires, and manages for you inside the application context. `RoutineService` is a bean; so is every `@Repository` and `@RestController`. You ask for beans (usually via the constructor) rather than calling `new` yourself. See [Spring and dependency injection](../docs/theory/spring-and-di.md).
 
 **Bean Validation (Jakarta Validation)**
-The Java standard (in the `jakarta.validation` namespace) for declaring constraints on objects with annotations like `@NotNull` and `@Size`, then asking the framework to check them. Sahar pulls it in via `spring-boot-starter-validation` and adds a custom `@DeloadLast` rule. See [Validation and rules](../docs/steps/05-validation-and-rules.md) and [Validation theory](../docs/steps/05-validation-and-rules.md).
+The Java standard (in the `jakarta.validation` namespace) for declaring constraints on objects with annotations like `@NotNull` and `@Size`, then asking the framework to check them. Sahar pulls it in via `spring-boot-starter-validation` and adds a custom `@DeloadLast` rule. See [Validation and rules step](../docs/steps/05-validation-and-rules.md) and [JSON serialization theory](../docs/theory/serialization-and-json.md) for how validated DTOs become request/response bodies.
 
 **BOM (Bill of Materials)**
-A special Maven POM that pins a curated, mutually-tested set of dependency versions so you do not have to. Sahar inherits `spring-boot-starter-parent` (version `4.0.6`), whose BOM is why almost every dependency in `pom.xml` omits its own `<version>`. See [Baseline](../docs/steps/00-baseline.md) and [the Maven cheatsheet](./cheatsheet-maven.md).
+A special Maven POM that pins a curated, mutually-tested set of dependency versions so you do not have to. Sahar inherits `spring-boot-starter-parent` (version `4.0.6`), whose BOM is why almost every dependency in `pom.xml` omits its own `<version>`. See [Baseline](../docs/steps/00-baseline.md), [the Maven cheatsheet](./cheatsheet-maven.md), and [the fundamentals cheatsheet](./cheatsheet-fundamentals.md).
 
 ## 🔤 C
 
 **Classpath**
-The list of places (jars and compiled-class folders) where the JVM looks for classes at runtime. Spring Boot's auto-configuration is driven by "what is on the classpath": adding `spring-boot-starter-webmvc` puts embedded Tomcat on the classpath, which is why a web server appears. See [Baseline](../docs/steps/00-baseline.md).
+The list of places (jars and compiled-class folders) where the JVM looks for classes at runtime. Spring Boot's auto-configuration is driven by "what is on the classpath": adding `spring-boot-starter-webmvc` puts embedded Tomcat on the classpath, which is why a web server appears. See [Baseline](../docs/steps/00-baseline.md) and [the fundamentals cheatsheet](./cheatsheet-fundamentals.md).
 
 **Connection pool**
 A cache of already-open database connections that are borrowed and returned instead of opened fresh per query, because opening a TCP+auth connection is slow. Sahar uses HikariCP (Boot's default), auto-configured from `spring.datasource.*`. See [JdbcTemplate and H2](../docs/steps/06-jdbctemplate-h2.md).
@@ -88,7 +88,7 @@ A single `.jar` that bundles your code, all dependencies, *and* an embedded web 
 ## 🦅 F
 
 **Flyway**
-A database migration tool that runs versioned SQL scripts (`V1__...`, `V2__...`) in order and records what it has applied, so every environment converges on the same schema. In Boot 4 you add `spring-boot-starter-flyway` plus `flyway-database-postgresql` (not `flyway-core`). Sahar uses `V1`/`V2` after seeding. See [Seed and migrations](../docs/steps/10-seed-and-migrations.md), [Migrations theory](../docs/steps/10-seed-and-migrations.md), and [flywaydb.org](https://flywaydb.org/).
+A database migration tool that runs versioned SQL scripts (`V1__...`, `V2__...`) in order and records what it has applied, so every environment converges on the same schema. In Boot 4 you add `spring-boot-starter-flyway` plus `flyway-database-postgresql` (not `flyway-core`). Sahar uses `V1`/`V2` after seeding. See [Seed and migrations step](../docs/steps/10-seed-and-migrations.md), [the version-deltas cheatsheet](./cheatsheet-version-deltas.md) for the Boot 4 Flyway module changes, and [flywaydb.org](https://flywaydb.org/).
 
 ## 🛢️ H
 
@@ -112,10 +112,10 @@ The principle that the framework, not your code, controls object creation and th
 ## ☕ J
 
 **Jackson**
-The library Spring MVC uses to convert between Java objects and JSON. When `ConfigController` returns a `RoutineConfig`, Jackson serializes it to the JSON the browser receives, and deserializes request bodies back into records. Boot 4 ships **Jackson 3** under the `tools.jackson` package. See [HTTP and REST](../docs/theory/http-and-rest.md).
+The library Spring MVC uses to convert between Java objects and JSON. When `ConfigController` returns a `RoutineConfig`, Jackson serializes it to the JSON the browser receives, and deserializes request bodies back into records. Boot 4 ships **Jackson 3** under the `tools.jackson` package. See [HTTP and REST](../docs/theory/http-and-rest.md) and [Serialization and JSON theory](../docs/theory/serialization-and-json.md).
 
 **Jakarta EE**
-The vendor-neutral set of Java enterprise specifications (Servlet, Validation, Persistence, etc.) now governed by the Eclipse Foundation. The big rename happened in the Spring 5→6 / Boot 2→3 jump: packages moved from `javax.*` to `jakarta.*`. Boot 4 targets Jakarta EE 11, so Sahar's imports are `jakarta.validation.*`, not `javax`. See [Validation theory](../docs/steps/05-validation-and-rules.md).
+The vendor-neutral set of Java enterprise specifications (Servlet, Validation, Persistence, etc.) now governed by the Eclipse Foundation. The big rename happened in the Spring 5→6 / Boot 2→3 jump: packages moved from `javax.*` to `jakarta.*`. Boot 4 targets Jakarta EE 11, so Sahar's imports are `jakarta.validation.*`, not `javax`. See [Validation and rules step](../docs/steps/05-validation-and-rules.md) and [the version-deltas cheatsheet](./cheatsheet-version-deltas.md) for the `javax` → `jakarta` rename story.
 
 **JDBC (Java Database Connectivity)**
 The low-level Java API for talking to relational databases: connections, statements, result sets. It is powerful but verbose, which is why Sahar uses `JdbcTemplate` on top of it. See [JdbcTemplate and H2](../docs/steps/06-jdbctemplate-h2.md) and [the SQL/JDBC cheatsheet](./cheatsheet-sql-jdbc.md).
@@ -136,7 +136,7 @@ The Java standard for object-relational mapping; its reference implementation is
 ## 🧱 L
 
 **Layer (web / service / repository)**
-The three-tier split that keeps Sahar maintainable: the **web** layer (controllers) handles HTTP, the **service** layer (`RoutineService`) holds business rules, and the **repository** layer (the `*Repository` classes) is the only place that knows SQL. Each layer depends only on the one below it, so swapping H2 for Postgres touches only wiring, not controllers. See [Model the domain](../docs/steps/03-model-the-domain.md) and [Layers theory](../docs/theory/spring-and-di.md).
+The three-tier split that keeps Sahar maintainable: the **web** layer (controllers) handles HTTP, the **service** layer (`RoutineService`) holds business rules, and the **repository** layer (the `*Repository` classes) is the only place that knows SQL. Each layer depends only on the one below it, so swapping H2 for Postgres touches only wiring, not controllers. See [Model the domain step](../docs/steps/03-model-the-domain.md) and [Spring and DI theory §7 — the layered architecture](../docs/theory/spring-and-di.md#-7-the-layered-architecture--and-why-it-pays-off).
 
 ```mermaid
 flowchart LR
@@ -146,13 +146,16 @@ flowchart LR
     Repo --> DB[("H2 / PostgreSQL")]
 ```
 
+**LTS (Long-Term Support)**
+A release line that vendors commit to patching for years, so you can build on it without a forced upgrade every few months. Sahar targets Java 25 (an LTS release) and Spring Boot 4 — the combination you would pick for a real project precisely because both are supported for the long haul. See [the fundamentals cheatsheet](./cheatsheet-fundamentals.md) and [the version-deltas cheatsheet](./cheatsheet-version-deltas.md).
+
 ## 🏗️ M
 
 **Maven**
 Sahar's build tool: it reads `pom.xml`, downloads dependencies, compiles, runs tests, and packages the executable jar. The wrapper scripts `mvnw` / `mvnw.cmd` let teammates build with the exact pinned Maven version. See [Baseline](../docs/steps/00-baseline.md) and [the Maven cheatsheet](./cheatsheet-maven.md).
 
 **Migration**
-A single, versioned, ordered change to the database schema (or seed data) applied by Flyway, e.g. `V1__init.sql`. Migrations make schema changes repeatable and reviewable instead of ad-hoc `ALTER TABLE` typed into a console. See [Seed and migrations](../docs/steps/10-seed-and-migrations.md) and [Migrations theory](../docs/steps/10-seed-and-migrations.md).
+A single, versioned, ordered change to the database schema (or seed data) applied by Flyway, e.g. `V1__init.sql`. Migrations make schema changes repeatable and reviewable instead of ad-hoc `ALTER TABLE` typed into a console. See [Seed and migrations step](../docs/steps/10-seed-and-migrations.md).
 
 **Multi-stage build**
 A Dockerfile technique that uses one stage (with the full JDK + Maven) to build the jar and a second, slim stage (JRE only) to run it, so the final image stays small and contains no build tools. Sahar's `Dockerfile` is multi-stage. See [Dockerize](../docs/steps/11-dockerize.md).
@@ -171,7 +174,7 @@ A daemonless, drop-in alternative to Docker for building images and running cont
 A mature, production-grade open-source relational database; Sahar's "real" datastore, activated by the `postgres` Spring profile from step 09. Boot auto-configures the `DataSource` from `spring.datasource.*` and Flyway loads the Postgres module. See [Swap to PostgreSQL](../docs/steps/09-swap-to-postgres.md) and [postgresql.org](https://www.postgresql.org/).
 
 **Profile (Spring)**
-A named set of configuration that can be switched on per environment, e.g. activate `postgres` to use PostgreSQL instead of the default H2. Beans and `application-{profile}.properties` files can be profile-specific. See [Swap to PostgreSQL](../docs/steps/09-swap-to-postgres.md) and [Configuration and profiles theory](../docs/steps/09-swap-to-postgres.md).
+A named set of configuration that can be switched on per environment, e.g. activate `postgres` to use PostgreSQL instead of the default H2. Beans and `application-{profile}.properties` files can be profile-specific. See [Swap to PostgreSQL step](../docs/steps/09-swap-to-postgres.md).
 
 ## 🌐 R
 
@@ -193,13 +196,13 @@ A small function you give `JdbcTemplate` that turns one result-set row into one 
 The initial rows an app needs to be usable on a fresh database (Sahar's starting routine, prayer times, blocks). Sahar seeds via `RoutineSeed` and then evolves the schema with Flyway `V1`/`V2`. See [Seed and migrations](../docs/steps/10-seed-and-migrations.md).
 
 **Servlet**
-The Java standard (`jakarta.servlet`) for a component that handles HTTP requests inside a web server; Spring MVC's `DispatcherServlet` is one servlet that fronts your whole app. "Servlet stack" is why Boot's blocking web starter is `spring-boot-starter-webmvc` (vs. the reactive `webflux`). See [HTTP and REST](../docs/theory/http-and-rest.md).
+The Java standard (`jakarta.servlet`) for a component that handles HTTP requests inside a web server; Spring MVC's `DispatcherServlet` is one servlet that fronts your whole app. "Servlet stack" is why Boot's blocking web starter is `spring-boot-starter-webmvc` (vs. the reactive `webflux`). See [HTTP and REST](../docs/theory/http-and-rest.md) and [the fundamentals cheatsheet](./cheatsheet-fundamentals.md).
 
 **Spring Boot**
-The framework Sahar is built on: it layers auto-configuration, starters, an embedded server, and an executable-jar packaging model on top of the Spring Framework so you can ship a runnable app fast. Sahar pins **Spring Boot 4.0.6** (Spring Framework 7, Jakarta EE 11). See [Baseline](../docs/steps/00-baseline.md), [Spring Boot and auto-configuration](../docs/theory/spring-and-di.md), and [docs.spring.io/spring-boot/4.0.6](https://docs.spring.io/spring-boot/4.0.6/).
+The framework Sahar is built on: it layers auto-configuration, starters, an embedded server, and an executable-jar packaging model on top of the Spring Framework so you can ship a runnable app fast. Sahar pins **Spring Boot 4.0.6** (Spring Framework 7, Jakarta EE 11). See [Baseline](../docs/steps/00-baseline.md), [Spring Boot and auto-configuration](../docs/theory/spring-and-di.md), [the version-deltas cheatsheet](./cheatsheet-version-deltas.md) for the Boot 3.x → 4 story, and [docs.spring.io/spring-boot/4.0.6](https://docs.spring.io/spring-boot/4.0.6/).
 
 **Starter**
-A curated "umbrella" dependency that pulls in everything needed for one capability with versions already aligned by the BOM. Sahar uses `spring-boot-starter-webmvc` (web + Tomcat + Jackson), `-validation`, `-jdbc`, and `-flyway`. Note the Boot 4 renames: `spring-boot-starter-web` → `spring-boot-starter-webmvc`, and the single `spring-boot-starter-test` split into modular `-{webmvc,jdbc,validation,flyway}-test` starters. See [Baseline](../docs/steps/00-baseline.md).
+A curated "umbrella" dependency that pulls in everything needed for one capability with versions already aligned by the BOM. Sahar uses `spring-boot-starter-webmvc` (web + Tomcat + Jackson), `-validation`, `-jdbc`, and `-flyway`. Note the Boot 4 renames: `spring-boot-starter-web` → `spring-boot-starter-webmvc`, and the single `spring-boot-starter-test` split into modular `-{webmvc,jdbc,validation,flyway}-test` starters. See [Baseline](../docs/steps/00-baseline.md) and [the version-deltas cheatsheet](./cheatsheet-version-deltas.md).
 
 **Stereotype annotation**
 A marker that tells Spring "this class is a bean, and here is its role": `@Component`, `@Service`, `@Repository`, `@RestController`. They drive component scanning so the application context picks the class up automatically. Sahar tags `RoutineService` with `@Service` and each repository with `@Repository`. See [Spring and dependency injection](../docs/theory/spring-and-di.md).
@@ -210,12 +213,12 @@ A marker that tells Spring "this class is a bean, and here is its role": `@Compo
 The default web server Spring Boot embeds inside your jar (via `spring-boot-starter-webmvc`), so the app *contains* its server instead of being deployed into an external one. This is what makes `java -jar sahar.jar` serve HTTP on its own. See [Baseline](../docs/steps/00-baseline.md) and [HTTP and REST](../docs/theory/http-and-rest.md).
 
 **Transaction**
-A group of database operations that succeed or fail as one unit (all-or-nothing), so a partial update never leaves the data inconsistent. In Spring you typically mark a service method `@Transactional`; relevant for Sahar's multi-row block/week operations. See [Full CRUD](../docs/steps/07-full-crud.md) and [Layers theory](../docs/theory/spring-and-di.md).
+A group of database operations that succeed or fail as one unit (all-or-nothing), so a partial update never leaves the data inconsistent. In Spring you typically mark a service method `@Transactional`; relevant for Sahar's multi-row block/week operations. See [Full CRUD step](../docs/steps/07-full-crud.md) and [Transactions and ACID theory](../docs/theory/transactions-and-acid.md).
 
 ## ✅ V
 
 **Validation**
-Checking that incoming data obeys the rules before you act on it. Sahar validates request DTOs with Bean Validation annotations plus a custom `@DeloadLast` constraint (enforced by `DeloadLastValidator`), and the controller triggers it with `@Valid`. See [Validation and rules](../docs/steps/05-validation-and-rules.md) and [Validation theory](../docs/steps/05-validation-and-rules.md).
+Checking that incoming data obeys the rules before you act on it. Sahar validates request DTOs with Bean Validation annotations plus a custom `@DeloadLast` constraint (enforced by `DeloadLastValidator`), and the controller triggers it with `@Valid`. See [Validation and rules step](../docs/steps/05-validation-and-rules.md).
 
 **Volume (Docker)**
 A storage mechanism that lives outside a container's writable layer so data survives container restarts and rebuilds. Sahar uses a volume for PostgreSQL's data (and can persist the H2 file) so your routine is not wiped when the container is recreated. See [Compose](../docs/steps/12-compose.md).
@@ -223,13 +226,14 @@ A storage mechanism that lives outside a container's writable layer so data surv
 ## 🔢 Numbers
 
 **12-factor**
-A set of twelve guidelines for building portable, cloud-friendly apps (config in the environment, stateless processes, dev/prod parity, logs as streams, etc.). Sahar leans on several: externalized config via Spring profiles and environment variables, an executable jar as a single deployable, and a container as the unit of deploy. See [Deploy](../docs/steps/14-deploy.md) and [Configuration and profiles theory](../docs/steps/09-swap-to-postgres.md), and the canonical [12factor.net](https://12factor.net/).
+A set of twelve guidelines for building portable, cloud-friendly apps (config in the environment, stateless processes, dev/prod parity, logs as streams, etc.). Sahar leans on several: externalized config via Spring profiles and environment variables, an executable jar as a single deployable, and a container as the unit of deploy. See [Deploy step](../docs/steps/14-deploy.md) and [Swap to PostgreSQL step (profiles)](../docs/steps/09-swap-to-postgres.md), and the canonical [12factor.net](https://12factor.net/).
 
 ---
 
 ## 🔗 Related
 
-- 🚦 Steps index: [Setup](../docs/00-setup.md) → then [Baseline](../docs/steps/00-baseline.md) onward
-- [HTTP and REST](../docs/theory/http-and-rest.md) · [Spring and dependency injection](../docs/theory/spring-and-di.md) · [Layers](../docs/theory/spring-and-di.md) · [Validation](../docs/steps/05-validation-and-rules.md) · [Migrations](../docs/steps/10-seed-and-migrations.md) · [Containers](../docs/theory/containers-and-devops.md) · [Configuration and profiles](../docs/steps/09-swap-to-postgres.md)
-- Cheatsheets: [Maven](./cheatsheet-maven.md) · [SQL/JDBC](./cheatsheet-sql-jdbc.md)
-- [Project README](../README.md)
+- 🚦 Steps index: [Setup](../docs/00-setup.md) → then [Baseline step](../docs/steps/00-baseline.md) onward
+- Theory: [HTTP and REST](../docs/theory/http-and-rest.md) · [Spring and DI](../docs/theory/spring-and-di.md) · [Layered architecture (§7)](../docs/theory/spring-and-di.md#-7-the-layered-architecture--and-why-it-pays-off) · [Serialization and JSON](../docs/theory/serialization-and-json.md) · [Transactions and ACID](../docs/theory/transactions-and-acid.md) · [Containers and DevOps](../docs/theory/containers-and-devops.md)
+- Steps: [Validation and rules](../docs/steps/05-validation-and-rules.md) · [Seed and migrations](../docs/steps/10-seed-and-migrations.md) · [Swap to PostgreSQL (profiles)](../docs/steps/09-swap-to-postgres.md)
+- Cheatsheets: [Fundamentals](./cheatsheet-fundamentals.md) · [Version deltas (Boot 3.x → 4)](./cheatsheet-version-deltas.md) · [Maven](./cheatsheet-maven.md) · [SQL/JDBC](./cheatsheet-sql-jdbc.md)
+- [Interview prep](./interview-prep.md) · [Project README](../README.md)

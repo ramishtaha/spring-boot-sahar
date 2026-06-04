@@ -2,6 +2,9 @@
 
 _The empty-but-runnable Spring Boot 4 project from start.spring.io, taken apart piece by piece so nothing later is magic._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-00-baseline`](../../checkpoints/step-00-baseline/) — the exact, runnable snapshot this step dissects: the generated `pom.xml`, entry point, `application.properties`, smoke test, and Maven wrapper, with nothing hand-edited. Package is `com.ramishtaha.sahar`.
+
 > [!NOTE]
 > **First time with Java, Maven, or Spring Boot?** Skim the [Foundations primers](../foundations/) first (~1 hour) — this step assumes you know what a class, a method, and a build tool are. Already comfortable? Carry on.
 
@@ -41,6 +44,16 @@ flowchart TD
 
 The thing tying it all together is one annotation, `@SpringBootApplication`, which is itself three annotations bundled (we dissect it below). Keep that diagram in mind - every later step plugs into one of these stages.
 
+> [!NOTE]
+> **What changed from Spring Boot 3.x** — this is the step where the renames bite hardest, so here is the whole story in one place (only the bits relevant to the baseline):
+> - `spring-boot-starter-web` → **`spring-boot-starter-webmvc`** (the blocking servlet stack; the reactive one is `-webflux`).
+> - The single `spring-boot-starter-test` → **modular per-feature test starters** (`-webmvc-test`, `-jdbc-test`, `-validation-test`).
+> - The H2 console moved out of the driver into its own module, **`spring-boot-h2console`**.
+> - Boot 4 ships **Jackson 3** (package `tools.jackson`, was `com.fasterxml.jackson` in Jackson 2) — transparent here, records just serialize.
+> - Floor is **Java 17**; we use **Java 25**. (The `javax.*` → `jakarta.*` namespace move was the *earlier* Boot 2 → 3 change, but you'll still meet it in old answers.)
+>
+> Keep the full table handy: [Version deltas](../../reference/cheatsheet-version-deltas.md). If a copied dependency "Could not be found," it's almost always one of these renames.
+
 ## 🚦 Start from
 
 Nothing - this is the first code step. If you have not installed the JDK, Maven, and IntelliJ yet, do [../00-setup.md](../00-setup.md) first, then come back. The starting point for this step is literally the zip that [start.spring.io](https://start.spring.io) produces, which is preserved in the checkpoint folder for this step (linked at the end).
@@ -61,7 +74,17 @@ There is nothing to *write* in this step; the work is *reading*. Go through the 
 
 ### 1. `pom.xml` - the build descriptor
 
-The Project Object Model is the single source of truth for how the project is built and what it depends on. Start at the top:
+The Project Object Model is the single source of truth for how the project is built and what it depends on. It is a longish file, so here is the map before we walk it line by line — three groups of dependencies plus the parent and the build plugin:
+
+| Group | Artifacts | First used | Why it's here on day one |
+| --- | --- | --- | --- |
+| **Parent / coordinates** | `spring-boot-starter-parent` 4.0.6, our `groupId`/`artifactId`, Java 25 | now | Pins every version; sets the compiler target |
+| **Core web** | `spring-boot-starter-webmvc`, `spring-boot-starter-validation` | now / step 05 | Tomcat + Spring MVC + Jackson; Bean Validation |
+| **Database** | `spring-boot-starter-jdbc`, `spring-boot-h2console`, `h2`, `postgresql` | step 06 / 09 | `JdbcTemplate`, console, two DB engines |
+| **Dev & test** | `spring-boot-devtools`, `-webmvc-test`, `-jdbc-test`, `-validation-test` | now / tests | Auto-restart; modular JUnit 5 test slices |
+| **Build** | `spring-boot-maven-plugin` | now | Builds the executable fat jar; `spring-boot:run` |
+
+Now read it top to bottom. Start at the top:
 
 ```xml
 <parent>
@@ -72,7 +95,7 @@ The Project Object Model is the single source of truth for how the project is bu
 </parent>
 ```
 
-This is the most important block. The Spring Boot **starter parent** is itself a pom that we inherit from. It carries a curated, version-tested set of dependency versions (the "bill of materials" / BOM) plus sensible plugin defaults. Because of it, almost every dependency below omits its `<version>` - the parent decides the version that is known to work with Boot 4.0.6. This is why you should never pin Spring versions by hand: let the parent do it. The `4.0.6` here is the one knob that pins everything else.
+This is the most important block. The Spring Boot **starter parent** is itself a pom that we inherit from. It carries a curated, version-tested set of dependency versions (a **BOM** — *bill of materials*, one shared list that pins compatible versions so you never set them yourself; see [Fundamentals](../../reference/cheatsheet-fundamentals.md)) plus sensible plugin defaults. Because of it, almost every dependency below omits its `<version>` - the parent decides the version that is known to work with Boot 4.0.6. This is why you should never pin Spring versions by hand: let the parent do it. The `4.0.6` here is the one knob that pins everything else.
 
 Next, our own coordinates and the Java version:
 
@@ -86,9 +109,11 @@ Next, our own coordinates and the Java version:
 </properties>
 ```
 
-`groupId` + `artifactId` + `version` uniquely identify this artifact. `<java.version>25</java.version>` is a property the parent reads to set the compiler source/target. We use Java 25 (current LTS); Spring Boot 4 needs Java 17 as a floor. Quick reminder of any rusty Java syntax lives in [../../reference/java-refresher.md](../../reference/java-refresher.md).
+`groupId` + `artifactId` + `version` uniquely identify this artifact. `<java.version>25</java.version>` is a property the parent reads to set the compiler source/target. We use Java 25 (current **LTS** — a *Long-Term Support* release that gets years of updates, the kind you build on in production; see [Fundamentals](../../reference/cheatsheet-fundamentals.md)); Spring Boot 4 needs Java 17 as a floor. Quick reminder of any rusty Java syntax lives in [../../reference/java-refresher.md](../../reference/java-refresher.md).
 
-Now the dependencies - and this is where the **Spring Boot 3 -> 4 renames** bite. Read each comment in the real file; here are the four that matter:
+Now the dependencies - and this is where the **Spring Boot 3 -> 4 renames** bite (see the version callout above). Read each comment in the real file. We'll take them in the three groups from the table.
+
+#### Core web
 
 ```xml
 <!-- spring-boot-starter-webmvc: embedded Tomcat + Spring MVC + Jackson (JSON). -->
@@ -98,7 +123,7 @@ Now the dependencies - and this is where the **Spring Boot 3 -> 4 renames** bite
 </dependency>
 ```
 
-In Boot 3.x this was `spring-boot-starter-web`. In 4.x the blocking servlet stack is **`spring-boot-starter-webmvc`** (and the reactive stack is `spring-boot-starter-webflux`). This one starter pulls in embedded Tomcat, Spring MVC, and Jackson for JSON. Note: Boot 4 ships **Jackson 3** (package `tools.jackson`), but you never import it directly - records serialize automatically, so it stays transparent.
+In Boot 3.x this was `spring-boot-starter-web`. In 4.x the blocking servlet (a *servlet* is the Java standard for handling one HTTP request/response — Tomcat speaks it, and Spring MVC is built on top; see [Fundamentals](../../reference/cheatsheet-fundamentals.md)) stack is **`spring-boot-starter-webmvc`** (and the reactive stack is `spring-boot-starter-webflux`). This one starter pulls in embedded Tomcat, Spring MVC, and Jackson for JSON. Note: Boot 4 ships **Jackson 3** (package `tools.jackson`), but you never import it directly - records serialize automatically, so it stays transparent.
 
 ```xml
 <dependency>
@@ -107,7 +132,9 @@ In Boot 3.x this was `spring-boot-starter-web`. In 4.x the blocking servlet stac
 </dependency>
 ```
 
-Bean Validation (the `jakarta.validation` namespace - note `jakarta`, not `javax`; that rename was actually the Boot 2 -> 3 change). Unused until step 05, but it is on the classpath from day one.
+Bean Validation (the `jakarta.validation` namespace - note `jakarta`, not `javax`; that rename was actually the Boot 2 -> 3 change). Unused until step 05, but it is on the classpath (the *classpath* is simply the set of JARs and class folders the JVM can load from at compile and run time; see [Fundamentals](../../reference/cheatsheet-fundamentals.md)) from day one.
+
+#### Database
 
 ```xml
 <dependency>
@@ -142,6 +169,8 @@ The two database engines come next, both `runtime` scope because your code never
     <scope>runtime</scope>
 </dependency>
 ```
+
+#### Dev & test
 
 DevTools gives you automatic restart on code change. Note the two scopes:
 
@@ -178,6 +207,8 @@ Finally, the **modular test starters** - the biggest test-side Boot 4 change:
 
 In Boot 3.x there was a single aggregate `spring-boot-starter-test`. In 4.x it was split per feature; each starter pulls JUnit 5 + AssertJ + the matching Spring test slice. (A fourth, `spring-boot-starter-flyway-test`, joins them in step 10.)
 
+#### Build
+
 The `<build>` section has exactly one plugin:
 
 ```xml
@@ -187,7 +218,7 @@ The `<build>` section has exactly one plugin:
 </plugin>
 ```
 
-Its `repackage` goal turns the plain jar into an executable "fat jar" with the server embedded, and `spring-boot:run` lets you start the app straight from Maven. A fuller command reference is in [../../reference/cheatsheet-maven.md](../../reference/cheatsheet-maven.md).
+Its `repackage` goal turns the plain jar into an executable **fat jar** (one self-contained JAR that bundles your code *and* every dependency *and* the embedded server, so `java -jar` is all you need — no separate server install; see [Fundamentals](../../reference/cheatsheet-fundamentals.md)), and `spring-boot:run` lets you start the app straight from Maven. A fuller command reference is in [../../reference/cheatsheet-maven.md](../../reference/cheatsheet-maven.md).
 
 ### 2. `SaharApplication.java` - the entry point
 
@@ -314,6 +345,26 @@ Files in play this step (all generated, none hand-edited):
 
 The exact, runnable snapshot is in the checkpoint folder: [../../checkpoints/step-00-baseline/](../../checkpoints/step-00-baseline/).
 
+## 💼 Interview angle
+
+**Q: What does `@SpringBootApplication` actually do?**
+A: It bundles three annotations: `@SpringBootConfiguration` (this class defines beans), `@EnableAutoConfiguration` (configure beans by guessing from the classpath), and `@ComponentScan` (scan this package and below for `@Component`/`@Service`/`@RestController`). That last one is why the base package matters.
+
+**Q: How does Spring Boot run a web app without a separate Tomcat install?**
+A: The `webmvc` starter puts embedded Tomcat on the classpath; auto-configuration sees it and wires up a server on port 8080. `spring-boot-maven-plugin` repackages everything into a fat jar, so `java -jar` starts both your app and the server.
+
+**Q: Why do the dependencies have no `<version>`?**
+A: The project inherits `spring-boot-starter-parent`, which supplies a BOM — a curated, version-tested set of dependency versions. Pinning only Boot's version (4.0.6) pins everything else to a known-good combination, so you never resolve versions by hand.
+
+**Q: What is auto-configuration, in one sentence?**
+A: Spring Boot inspects the classpath and creates sensible default beans for what it finds (Tomcat + MVC → a web server, an H2 driver → a datasource), and you override only the guesses you disagree with via `application.properties`.
+
+**Q: A `@RestController` returns 404 even though the code looks right — what's a common cause?**
+A: It lives outside the base package. Component scanning only sees `com.ramishtaha.sahar` and below, so a controller in a sibling package is never registered as a bean — no error, just an invisible endpoint.
+
+**Q: What does the empty `contextLoads()` test prove?**
+A: That the full application context starts and every bean wires successfully. Starting the context *is* the assertion; if any bean fails to construct or inject, the test goes red — the cheapest "did I break the wiring?" check.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Copying a `spring-boot-starter-web` dependency from an old tutorial.** On Boot 4 the artifact does not exist under that name; Maven fails with "Could not find artifact". Use `spring-boot-starter-webmvc`.
@@ -333,5 +384,5 @@ The exact, runnable snapshot is in the checkpoint folder: [../../checkpoints/ste
 5. What does the empty `contextLoads()` test actually assert, given it has no body?
 6. What problem does the Maven wrapper (`mvnw`) solve that plain `mvn` does not?
 
-## ---
-⬅️ Prev: [README](../../README.md) · [Setup](../00-setup.md) · ➡️ Next: [01 - Serve static](./01-serve-static.md) · 📍 Checkpoint: [step-00-baseline](../../checkpoints/step-00-baseline/)
+---
+⬅️ Prev: [README](../../README.md) · [Setup](../00-setup.md) · ➡️ Next: [01 - Serve static](./01-serve-static.md) · 📍 Checkpoint: [step-00-baseline](../../checkpoints/step-00-baseline/) · 🔗 See also: [Version deltas](../../reference/cheatsheet-version-deltas.md) · [Fundamentals](../../reference/cheatsheet-fundamentals.md) · [Interview-prep](../../reference/interview-prep.md)

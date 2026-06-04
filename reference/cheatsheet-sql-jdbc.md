@@ -173,7 +173,7 @@ public int update(Long id, ScheduleItem item) {
                SET slot_time = ?, title = ?, detail = ?, category = ?, day_type = ?
              WHERE id = ?
             """,
-            item.time(), item.title(), item.detail(), item.category(), dayType, id);
+            item.time(), item.title(), item.detail(), item.category(), item.dayType(), id);
 }
 ```
 
@@ -343,6 +343,9 @@ The general fix when you cannot rename is to quote identifiers (`"order"`), but 
 
 Steps 06-09 create the tables with a single `schema.sql` that Spring runs on every boot (`spring.sql.init.mode=always`); it uses `CREATE TABLE IF NOT EXISTS` so re-running is harmless and your H2 file data survives. That is fine for one developer but has no record of *what changed when*. Step 10 graduates to **Flyway**: each `db/migration/V<n>__name.sql` file runs **once**, in version order, and is recorded in a `flyway_schema_history` table - so the schema evolves the same way on every machine and in production, and `IF NOT EXISTS` is dropped (each migration runs exactly once by design). Sahar's `V1__init_schema.sql` is the *same portable DDL* the old `schema.sql` held; `V2__seed_routine.sql` adds the starter data. In Spring Boot 4 you wire Flyway with `spring-boot-starter-flyway` plus `flyway-database-postgresql` (not the old `flyway-core`). See [step 10](../docs/steps/10-seed-and-migrations.md) for the full migration story.
 
+> [!NOTE]
+> The Flyway wiring is the one thing on this page that changed from Boot 3.x to 4 (starter instead of raw `flyway-core`, plus a separate Postgres dialect module). See [Version deltas](./cheatsheet-version-deltas.md) for the older-vs-newer story.
+
 ---
 
 ## 📋 Quick reference card
@@ -383,7 +386,12 @@ long id = keys.getKey().longValue();
 - [Step 10 - seed and migrations](../docs/steps/10-seed-and-migrations.md) - moving from `schema.sql` to Flyway.
 - [Theory - persistence landscape](../docs/theory/persistence-landscape.md) - the spectrum from raw JDBC to ORMs, and where JdbcTemplate sits.
 - [Theory - JDBC vs JPA](../docs/theory/jdbc-vs-jpa.md) - why Sahar chooses JdbcTemplate over an ORM.
+- [Theory - transactions & ACID](../docs/theory/transactions-and-acid.md) - what `@Transactional` actually buys you, and why block-replace must be atomic.
+- [Theory - serialization & JSON](../docs/theory/serialization-and-json.md) - what happens to the records your `RowMapper` builds once they leave the repository.
 - [HTTP & REST cheatsheet](./cheatsheet-http-rest.md) - the layer above the repositories.
+- [Maven cheatsheet](./cheatsheet-maven.md) - the starters (`spring-boot-starter-jdbc`, `spring-boot-starter-flyway`) that put `JdbcTemplate` and Flyway on the classpath.
+- [Version deltas cheatsheet](./cheatsheet-version-deltas.md) - the consolidated Boot 3.x->4 story (including the Flyway starter change above).
+- [Interview prep](interview-prep.md) - the central question bank; the JDBC, transactions, and SQL-injection sections build on this page.
 - [README](../README.md) - project overview and the full step list.
 
 ### 📚 Official docs

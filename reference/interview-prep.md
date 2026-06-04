@@ -286,4 +286,4 @@ Without one, every client guesses your error shapes, field names, and status cod
 
 ---
 
-⬅️ [README](../README.md) · 📚 [Steps](../docs/steps/) · 🗺️ [Roadmap](../docs/steps/99-roadmap.md) · 📖 [Glossary](glossary.md)
+⬅️ [README](../README.md) · 📚 [Steps](../docs/steps/) · 🗺️ [Roadmap](../docs/steps/99-roadmap.md) · 📖 [Glossary](glossary.md) · 🧭 [IntelliJ IDEA tips](intellij-ultimate.md)

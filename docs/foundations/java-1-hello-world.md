@@ -82,4 +82,4 @@ After that import, you can use `List` by its short name. That's all `import` doe
 > [!NOTE]
 > You will almost never compile by hand — Maven or your IDE does it when you press **Run**. This page just makes the words make sense.
 
-Next: [Java 2 — values & logic](./java-2-types-and-logic.md) · Go deeper: the [Modern Java refresher](../../reference/java-refresher.md)
+⬅️ Prev: [The command line](./the-command-line.md) · Next: [Java 2 — values & logic](./java-2-types-and-logic.md) · Go deeper: the [Modern Java refresher](../../reference/java-refresher.md)

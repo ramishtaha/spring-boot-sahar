@@ -2,6 +2,9 @@
 
 *Introduce a `@Service` bean that holds the routine in a field, add `PUT` endpoints that edit it, and watch those edits survive between requests but vanish on restart.*
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-04-in-memory-edit`](../../checkpoints/step-04-in-memory-edit/) — the Sahar app with a `RoutineService` state-holder, constructor-injected controllers, and the three new `PUT` endpoints. Package is `com.ramishtaha.sahar`.
+
 > [!TIP]
 > **IntelliJ IDEA Ultimate** — fire the PUTs from the **HTTP Client** ([`app/requests.http`](../../app/requests.http)), and use the **Spring Beans** diagram + the autowiring gutter icons to *see* the dependency injection you wired. [More →](../../reference/intellij-ultimate.md)
 
@@ -18,6 +21,9 @@ You will also meet the three workhorses of every Spring web app you will ever wr
 - **`@RequestBody`** — how incoming JSON becomes a typed Java object, the exact mirror of how `@RestController` turns objects back into JSON.
 
 And you will feel the limitation that motivates the rest of the course: in-memory state **resets on restart**. That ache is what a database fixes in [step 06](./06-jdbctemplate-h2.md).
+
+> [!NOTE]
+> **What changed from Spring Boot 3.x** — the service layer, `@Service`, constructor injection, and `@RequestBody` are all unchanged from Boot 3 (and Spring 5/6); these are stable foundations. The one delta that touches this step is **Jackson 3** (package `tools.jackson`), which is what Boot 4 uses to turn your incoming JSON into a record and your returned record back into JSON — it works exactly like Jackson 2 did here, just under a new package name. You will also see `synchronized` (plain Java, no version story) rather than any newer concurrency type. Full older-vs-newer table: [Version deltas](../../reference/cheatsheet-version-deltas.md).
 
 ## 🧠 Theory
 
@@ -60,7 +66,7 @@ All four controllers receive the **same** `RoutineService` instance. That shared
 
 ### `@RequestBody` and PUT vs POST
 
-`@RestController` already turns a returned object into a JSON response (via Jackson — in Boot 4 that is Jackson 3, `tools.jackson`, but it is invisible here). `@RequestBody` is the mirror: it takes the incoming JSON request body and **deserializes** it into a Java object. Because our domain types are records, Jackson maps JSON keys to record components automatically — no annotations, no custom code.
+`@RestController` already turns a returned object into a JSON response (via Jackson — in Boot 4 that is Jackson 3, `tools.jackson`, but it is invisible here). `@RequestBody` is the mirror: it takes the incoming JSON request body and **deserializes** it (turns text-on-the-wire back into a live Java object — the reverse of serialization; see [Serialization & JSON](../theory/serialization-and-json.md)) into a Java object. Because our domain types are records, Jackson maps JSON keys to record components automatically — no annotations, no custom code.
 
 ```text
 Request:   PUT /api/prayer-times   body = {"fajr":"04:37", ...}
@@ -72,7 +78,7 @@ Request:   PUT /api/prayer-times   body = {"fajr":"04:37", ...}
 Response:  200 OK   body = {"fajr":"04:37", ...}
 ```
 
-Why **PUT** and not POST for these edits? PUT means *"make the resource at this URL equal to what I'm sending"* — a full replacement. It is **idempotent**: sending the identical request twice leaves the server in the same state as sending it once. Replacing the single prayer-times resource is a textbook PUT. POST means *"create a new sub-resource"* or *"run a process"* and is not idempotent. We use POST later (`POST /api/schedule` to create, `POST /api/block/roll-forward` to run an action). See [the HTTP/REST theory page](../theory/http-and-rest.md) and the [HTTP cheatsheet](../../reference/cheatsheet-http-rest.md).
+Why **PUT** and not POST for these edits? PUT means *"make the resource at this URL equal to what I'm sending"* — a full replacement. It is **idempotent** (a request you can repeat safely — running it many times has the same effect as running it once): sending the identical request twice leaves the server in the same state as sending it once. Replacing the single prayer-times resource is a textbook PUT. POST means *"create a new sub-resource"* or *"run a process"* and is not idempotent. We use POST later (`POST /api/schedule` to create, `POST /api/block/roll-forward` to run an action). See [the HTTP/REST theory page](../theory/http-and-rest.md) and the [HTTP cheatsheet](../../reference/cheatsheet-http-rest.md).
 
 ### Immutable records, and how you "edit" them
 
@@ -307,6 +313,26 @@ Files changed or added this step:
 
 Full source: [step-04-in-memory-edit checkpoint](../../checkpoints/step-04-in-memory-edit/).
 
+## 💼 Interview angle
+
+**Q: What is dependency injection, and why is constructor injection preferred?**
+A: DI means a class declares the collaborators it *needs* and a container (Spring's application context) supplies them, instead of the class calling `new` itself. Constructor injection makes the dependency `final` and mandatory — the object can't exist in a half-wired state — and needs no `@Autowired` on a single-constructor class.
+
+**Q: Why is a Spring `@Service` a singleton, and why does that matter here?**
+A: Spring's default bean scope creates exactly one instance per context. All four controllers receive that same `RoutineService`, so an edit through one request mutates the one shared `config` field and the next request sees it. Two instances would each have their own state and edits would "vanish."
+
+**Q: What do `@RequestBody` and `@RestController` do, and how are they related?**
+A: `@RequestBody` deserializes the incoming JSON request body into a typed Java object (here, a record); `@RestController` serializes the returned object back into a JSON response. They're mirror images, both driven by Jackson — one inbound, one outbound.
+
+**Q: What does "idempotent" mean, and why is PUT idempotent but POST not?**
+A: An idempotent request can be repeated with the same end state as sending it once. PUT *replaces* the resource at a URL, so resending it changes nothing further; POST typically *creates* a new sub-resource or runs an action, so each call can have a new effect.
+
+**Q: Why split a tiny app into web and service layers?**
+A: The layers change for different reasons — HTTP concerns (status codes, content types) move at a different pace than business rules. The service knows nothing about HTTP, so it stays unit-testable without a web server and can be driven from a CLI, a test, or a scheduled job unchanged.
+
+**Q: Your in-memory edit survives between requests but disappears on restart. Why?**
+A: The state is a field on a singleton, living in the JVM heap. It outlives a single request because the bean outlives it, but when the process dies the heap dies too; the next start re-runs the seed. Moving that state into a database (step 06) makes it durable across restarts.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Calling `new RoutineService()` in a controller.** You then get a *second* service with its own empty `config`, and edits made through it are invisible elsewhere. Symptom: a PUT "works" (200 OK) but the next GET ignores it. Fix: never `new` a bean — declare it as a constructor parameter and let Spring inject the singleton.
@@ -325,6 +351,5 @@ Full source: [step-04-in-memory-edit checkpoint](../../checkpoints/step-04-in-me
 5. Where does the seed get read — once at startup, or on every request? Which line decides that?
 6. After a restart your edits are gone. Explain why in terms of where `config` lives, and what step fixes it.
 
-## ---
-
-⬅️ Prev: [03 - Model the domain](./03-model-the-domain.md) · ➡️ Next: [05 - Validation and rules](./05-validation-and-rules.md) · 📍 Checkpoint: [step-04-in-memory-edit](../../checkpoints/step-04-in-memory-edit/)
+---
+⬅️ Prev: [03 - Model the domain](./03-model-the-domain.md) · ➡️ Next: [05 - Validation and rules](./05-validation-and-rules.md) · 📍 Checkpoint: [step-04-in-memory-edit](../../checkpoints/step-04-in-memory-edit/) · 🔗 See also: [Spring & DI](../theory/spring-and-di.md) · [HTTP & REST](../theory/http-and-rest.md) · [Interview-prep](../../reference/interview-prep.md)

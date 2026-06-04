@@ -17,7 +17,7 @@ and teaches you modern backend engineering, _why before how_, as you go.
 &nbsp;![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
 &nbsp;![PWA](https://img.shields.io/badge/PWA-installable-5A0FC8?logo=pwa&logoColor=white)
 
-<sub>26 runnable checkpoints · 27 step docs · 5 theory deep-dives · interview-prep bank · all green ✅</sub>
+<sub>26 runnable checkpoints · 27 step docs · 9 theory deep-dives · interview-prep + version-deltas references · all green ✅</sub>
 
 </div>
 
@@ -157,12 +157,18 @@ Eight deeper steps that turn the working app into something you'd actually ship 
 ### 🧠 Theory deep-dives — [`docs/theory/`](docs/theory/)
 - [Spring, servlets & dependency injection](docs/theory/spring-and-di.md)
 - [HTTP and REST](docs/theory/http-and-rest.md)
+- [Serialization & JSON](docs/theory/serialization-and-json.md) — how a Java object becomes a response body (Jackson)
+- [Calling other services: RestClient vs RestTemplate vs WebClient](docs/theory/rest-clients.md)
+- [Transactions, ACID & `@Transactional`](docs/theory/transactions-and-acid.md)
 - [The persistence landscape](docs/theory/persistence-landscape.md) — the full comparison
 - [JdbcTemplate vs Spring Data JPA](docs/theory/jdbc-vs-jpa.md)
 - [Containers and DevOps](docs/theory/containers-and-devops.md)
+- [What is a PWA? Manifest, service worker & offline caching](docs/theory/pwa-and-service-workers.md)
 
 ### 📑 Reference — [`reference/`](reference/)
 - 💼 [**Interview-prep Q&A bank**](reference/interview-prep.md) — every concept you build in Sahar, framed as the questions an interviewer actually asks (DI, REST, persistence, testing, security, observability, CI/CD…).
+- 🔄 [**Spring Boot 3.x → 4 / Java 17 → 25 — what changed**](reference/cheatsheet-version-deltas.md) — the one map for every rename, package move, and new API (so older online tutorials still make sense).
+- 🧱 [**JVM fundamentals**](reference/cheatsheet-fundamentals.md) — classpath, JAR, fat jar, BOM, servlet, LTS, JRE vs JDK, defined in one line each.
 - [Glossary](reference/glossary.md) · [Modern Java refresher](reference/java-refresher.md)
 - Cheatsheets: [Maven](reference/cheatsheet-maven.md) · [Spring annotations](reference/cheatsheet-spring-annotations.md) · [HTTP & REST](reference/cheatsheet-http-rest.md) · [SQL & JdbcTemplate](reference/cheatsheet-sql-jdbc.md) · [Docker & Podman](reference/cheatsheet-docker-podman.md)
 - 💡 [IntelliJ IDEA for Sahar](reference/intellij-ultimate.md) — Ultimate's useful extras (and what's now free) mapped to each step, plus a ready-to-run `requests.http`.

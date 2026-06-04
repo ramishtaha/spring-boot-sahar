@@ -2,9 +2,12 @@
 
 _A browser editor that saves the month, prayer times, and the training block straight to the database over the same-origin REST API - and shows up on a second device._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-08-editable-admin-ui`](../../checkpoints/step-08-editable-admin-ui/) — the full Sahar app with the browser editor wired up: `admin.html` + `admin.js` calling the step-07 CRUD API over the same origin, plus the `Edit` link on `index.html`. No new Java. Package is `com.ramishtaha.sahar`.
+
 ## 🎯 Why this matters
 
-This is **the core goal of the whole project**. Everything before this step was scaffolding: a static page that renders a config ([step 01](./00-baseline.md)), a server that owns the data and serves `/api/config` ([step 02](./00-baseline.md)), real persistence ([step 06](./07-full-crud.md)), and a full read/write API ([step 07](./07-full-crud.md)). None of that is useful to the human running Sahar until they can **open a browser, change a value, and have it stick**.
+This is **the core goal of the whole project**. Everything before this step was scaffolding: a static page that renders a config ([step 01](./01-serve-static.md)), a server that owns the data and serves `/api/config` ([step 02](./02-first-rest-endpoint.md)), real persistence ([step 06](./06-jdbctemplate-h2.md)), and a full read/write API ([step 07](./07-full-crud.md)). None of that is useful to the human running Sahar until they can **open a browser, change a value, and have it stick**.
 
 Step 08 builds that editor with nothing but an HTML file and a plain `.js` file - no framework, no build step. It is deliberately small so you can see exactly how a browser talks to the Spring API you wrote. By the end you can change Fajr in the browser, watch the toast confirm, refresh your phone, and see the new time. That round trip - **form to controller to service to repo to database and back** - is the thing this course exists to make real.
 
@@ -12,11 +15,14 @@ A second, sneaky reason this matters: because Spring serves `admin.html` from th
 
 ## 🧠 Theory
 
+> [!NOTE]
+> **What changed from Spring Boot 3.x** — the same-origin static-serving and `@CrossOrigin` / `WebMvcConfigurer` CORS APIs are unchanged in Boot 4. The one thing to know for this step: when your form's JSON arrives at `PUT /api/prayer-times`, **Jackson 3** (Boot 4's default, up from Jackson 2) deserialises it into your record, and validation annotations live under `jakarta.validation.*` (not the old `javax.validation.*` of Boot 2). Full table: [Version deltas](../../reference/cheatsheet-version-deltas.md).
+
 ### One server, two kinds of file
 
 Spring Boot serves anything under `src/main/resources/static/` as a plain static file at the web root. So `static/admin.html` is reachable at `http://localhost:8080/admin.html`, and `static/admin.js` at `/admin.js`. The **same** Spring app also answers `/api/...` with JSON. That single fact - one app, one origin - is what makes this step so simple.
 
-An **origin** is the triple `(scheme, host, port)`. `http://localhost:8080` is one origin. When the browser loads `admin.html` from `http://localhost:8080` and that page calls `fetch('/api/prayer-times')`, the request goes to `http://localhost:8080/api/prayer-times` - **same scheme, same host, same port**. Same origin. The browser asks no questions.
+An **origin** is the triple `(scheme, host, port)`. `http://localhost:8080` is one origin. When the browser loads `admin.html` from `http://localhost:8080` and that page calls `fetch('/api/prayer-times')` (the browser's built-in HTTP function, returning a Promise — see [Browser JS basics](../foundations/browser-javascript-basics.md)), the request goes to `http://localhost:8080/api/prayer-times` - **same scheme, same host, same port**. Same origin. The browser asks no questions.
 
 ### What CORS is, and why we do NOT need it here
 
@@ -161,7 +167,7 @@ Finally, the toast element and the script tag at the end of `<body>`:
 
 ### 2. Create `admin.js` - the wiring
 
-Put this at `src/main/resources/static/admin.js`. Start with the tiny helpers. `$` is a one-character alias for `getElementById`; `toast()` flashes a message and auto-hides it after 2.2 seconds:
+Put this at `src/main/resources/static/admin.js`. Start with the tiny helpers. `$` is a one-character alias for `getElementById` (a **DOM** call — the browser's in-memory tree of the page; refresher in [Browser JS basics](../foundations/browser-javascript-basics.md)); `toast()` flashes a message and auto-hides it after 2.2 seconds:
 
 ```javascript
 const $ = (id) => document.getElementById(id);
@@ -259,9 +265,15 @@ $('savePrayer').addEventListener('click', async () => {
 });
 ```
 
-Try clearing Fajr and saving: the server's `@NotBlank`-style message appears under the form. That is the full validation loop - JS payload, Jackson 3 deserialises it into your record, `jakarta.validation` rejects it, the handler builds `ApiError`, and `errorText()` renders the message.
+Try clearing Fajr and saving: the server's `@NotBlank`-style message appears under the form. That is the full validation loop - JS payload, Jackson 3 deserialises the JSON into your record (turning text on the wire into a Java object — see [Serialization & JSON](../theory/serialization-and-json.md)), `jakarta.validation` rejects it, the handler builds `ApiError`, and `errorText()` renders the message.
 
 ### 5. Render and edit each week
+
+This is the longest function in the file, so read it in three beats:
+
+1. **Wipe and loop** — clear `#weeks`, then build one card per week.
+2. **Template** — a backtick string of HTML; the `deload` flag adds a class + pill, and each input carries a `data-f="..."` naming its field.
+3. **Wire** — attach the Save / Drop click handlers to that card's buttons.
 
 `renderWeeks()` rebuilds the `#weeks` host from scratch each time. For every week it builds a card; the `deload` flag adds a CSS class and a pill, and each input carries a `data-f="..."` attribute naming its field so `saveWeek` can collect them back generically:
 
@@ -386,6 +398,17 @@ Files changed this step: `src/main/resources/static/admin.html` (new), `src/main
 
 See the full code in the [step 08 checkpoint](../../checkpoints/step-08-editable-admin-ui/).
 
+## 💼 Interview angle
+
+This step's same-origin / CORS contrast and the browser-to-database round trip are reliable interview ground. A few questions it prepares you for:
+
+- **"What is CORS, and when does it apply?"** CORS is a *browser* rule layered on the same-origin policy: JS may *send* a cross-origin request, but the browser hides the *response* unless the target opts in with `Access-Control-Allow-Origin`. It applies only browser-side and only across origins — `curl`/Postman never trigger it.
+- **"Define an 'origin'."** The triple `(scheme, host, port)`. `http://localhost:8080` and `https://localhost:8080` differ (scheme), as do `localhost:8080` and `127.0.0.1:8080` (host string). All three must match for a request to count as same-origin.
+- **"How would you enable CORS in Spring if you split the frontend out?"** Either `@CrossOrigin(origins = "...")` on a controller/method, or globally via a `WebMvcConfigurer.addCorsMappings`. You opt in per origin and per method — you don't disable the policy.
+- **"Why parse the response as text first instead of calling `resp.json()`?"** `resp.json()` throws on an empty or non-JSON body (e.g. a `200` with no content, or an HTML error page). Reading `text()` and parsing defensively keeps the wrapper from blowing up and lets you fall back gracefully.
+- **"How does a server-side validation failure reach the user?"** Jackson 3 deserialises the JSON into a record, `jakarta.validation` rejects it, the handler returns a `400` carrying `ApiError.messages`, and the client's `errorText()` pulls that array out and writes it under the form — the UI never duplicates the rule, it renders the server's verdict.
+- **"What is optimistic UI, and how is Sahar's honest about it?"** It's giving instant feedback before the server fully confirms, then reconciling with the real response. Sahar shows a toast on success but never fakes it — on `400` it shows the real messages, and the block endpoints re-render straight from the returned block.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **"It saved but the page still shows the old value."** You forgot to reconcile. The block handlers call `afterBlock(res.body)` to re-render; if you skip that, the inputs keep the value _you_ typed even after a server-side normalisation. Open DevTools - Network and inspect the response body to see what the server actually stored.
@@ -405,8 +428,6 @@ See the full code in the [step 08 checkpoint](../../checkpoints/step-08-editable
 5. Trace a cleared-out Fajr value from the input box to the red message under the form - which layer rejects it, and how does the message reach `#prayerErr`?
 6. Why is `roll-forward` guarded by `confirm()` but `addWeek` is not?
 
-## ---
+---
 
-⬅️ Prev: [07 - Full CRUD](./07-full-crud.md) · ➡️ Next: [09 - Swap to Postgres](./09-swap-to-postgres.md) · 🏁 Checkpoint: [step-08-editable-admin-ui](../../checkpoints/step-08-editable-admin-ui/)
-
-_See also: [HTTP and REST](../theory/http-and-rest.md) · [HTTP/REST cheatsheet](../../reference/cheatsheet-http-rest.md)_
+⬅️ Prev: [07 - Full CRUD](./07-full-crud.md) · ➡️ Next: [09 - Swap to Postgres](./09-swap-to-postgres.md) · 📍 Checkpoint: [step-08-editable-admin-ui](../../checkpoints/step-08-editable-admin-ui/) · 🔗 See also: [HTTP and REST](../theory/http-and-rest.md) · [HTTP/REST cheatsheet](../../reference/cheatsheet-http-rest.md) · [Browser JS basics](../foundations/browser-javascript-basics.md) · [Interview-prep](../../reference/interview-prep.md)

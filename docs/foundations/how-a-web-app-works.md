@@ -72,4 +72,4 @@ Same loop as before - just with your own app filling in the blanks.
 - **`localhost:8080`** is your own computer acting as the server while you build.
 - In Sahar, the page asks the server for your routine, the server reads it from the database, and sends it back as JSON.
 
-Next: [The command line](./the-command-line.md) · Go deeper: [HTTP and REST](../theory/http-and-rest.md)
+⬅️ Prev: [Foundations index](./README.md) · Next: [Browser & JavaScript basics](./browser-javascript-basics.md) · then [The command line](./the-command-line.md) · Go deeper: [HTTP and REST](../theory/http-and-rest.md)

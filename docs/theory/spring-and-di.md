@@ -12,6 +12,9 @@
 
 This is the conceptual foundation. The hands-on versions of everything here are in [00 — baseline](../steps/00-baseline.md), [02 — first REST endpoint](../steps/02-first-rest-endpoint.md), [04 — in-memory edit](../steps/04-in-memory-edit.md), and [06 — JdbcTemplate + H2](../steps/06-jdbctemplate-h2.md).
 
+> [!NOTE]
+> **Versions in one place.** Sahar runs on **Spring Boot 4 / Spring Framework 7 / Java 25**, so this page reflects that world: the `webmvc` starter (renamed from `web`), Jackson 3 (`tools.jackson`), `jakarta.*` servlet packages, and "no `@Autowired` on a sole constructor." If you have only ever used **Boot 3.x / Spring 5–6 / Java 17**, you will hit the older names — `spring-boot-starter-web`, Jackson 2 (`com.fasterxml.jackson`), and (further back) `javax.*`. Every such delta is collected, with the why behind each, in [Version deltas](../../reference/cheatsheet-version-deltas.md). The inline callouts below stay version-specific so you can spot each change in context.
+
 ---
 
 ## 🧩 1. What is a servlet, and what is Tomcat doing?
@@ -427,6 +430,30 @@ None of your classes called `new` on another bean, opened a socket, parsed HTTP,
 
 ---
 
+## 💼 Interview angle
+
+These are the questions this page actually prepares you for. Answer them in your own words first, then check against the model answers. The full bank lives in [interview-prep.md](../../reference/interview-prep.md).
+
+**Q: What is the difference between Inversion of Control and Dependency Injection?**
+IoC is the broad principle: you hand control of object creation and lifecycle to a framework instead of using `new` yourself, so the framework calls your code rather than the other way round. DI is the specific technique that implements IoC for an object's collaborators — those dependencies are *handed in* from outside (typically through the constructor) rather than constructed internally.
+
+**Q: Why is constructor injection preferred over field or setter injection?**
+It lets dependencies be `final` (set once, never null), guarantees an object can never exist half-wired — a missing required bean fails loudly at startup instead of throwing a `NullPointerException` later — and makes the class trivially testable with plain `new` and no Spring container. The constructor signature also honestly documents everything the class needs, so a seven-parameter constructor is a visible smell.
+
+**Q: What is a Spring bean, and what is the default scope?**
+A bean is simply an object that Spring instantiates, configures, and manages inside the **ApplicationContext** (the in-memory registry of beans, keyed mostly by type). The default scope is **singleton** — one shared instance for the whole application — which is why an in-memory edit in one request is visible to the next, and why singleton beans must be thread-safe under the one-thread-per-request model.
+
+**Q: How does Spring know which classes to turn into beans?**
+`@SpringBootApplication` includes `@ComponentScan`, which scans the base package (`com.ramishtaha.sahar`) and all sub-packages for **stereotype** annotations — `@Component`, `@RestController`, `@Service`, `@Repository` — and registers each as a bean definition. A class placed *outside* the base package is silently never found, the classic "why isn't my controller working?" bug.
+
+**Q: What is auto-configuration, and how does it differ from component scanning?**
+Component scanning registers *your* annotated classes. Auto-configuration (the `@EnableAutoConfiguration` half of `@SpringBootApplication`) creates *infrastructure* beans you never wrote — `DispatcherServlet`, `DataSource`, `JdbcTemplate` — by inspecting the classpath: a starter pulls in libraries, conditions like "only if class X is present" and "only if no bean of type Y already exists" fire, and matching beans appear. It always backs off if you have defined your own.
+
+**Q: Why is the app split into web / service / repo / domain layers?**
+Each layer has one responsibility and only knows about the layer beneath it, which localises bugs (JSON issue → web; bad `WHERE` clause → repo) and lets each layer be tested in isolation. The payoff is concrete in Sahar: step 04 held state in a field, step 06 moved it to an H2 database, but because the service method signatures held steady, **every controller compiled and ran unchanged**.
+
+---
+
 ## 🔗 Related
 
 - [00 — baseline](../steps/00-baseline.md) — the project skeleton, `@SpringBootApplication`, and the starters.
@@ -434,5 +461,10 @@ None of your classes called `new` on another bean, opened a socket, parsed HTTP,
 - [04 — in-memory edit](../steps/04-in-memory-edit.md) — the service holding state in a field (the "before").
 - [06 — JdbcTemplate + H2](../steps/06-jdbctemplate-h2.md) — the repository layer and the swap that proved layering (the "after").
 - [HTTP and REST](./http-and-rest.md) — methods, status codes, and resource design.
+- [Transactions and ACID](./transactions-and-acid.md) — what `@Transactional` on the service layer actually guarantees.
+- [Serialization and JSON](./serialization-and-json.md) — what the Jackson 3 `HttpMessageConverter` does to your records in stage 6.
 - [Spring annotations cheatsheet](../../reference/cheatsheet-spring-annotations.md) — quick reference for every annotation named here.
+- [Fundamentals cheatsheet](../../reference/cheatsheet-fundamentals.md) — classpath, JAR, BOM, servlet, and LTS explained.
+- [Version deltas](../../reference/cheatsheet-version-deltas.md) — the consolidated Boot 3.x → 4 story behind every inline note here.
+- [Interview prep](../../reference/interview-prep.md) — the central bank that the 💼 questions above feed into.
 - 📚 Official: [Spring Boot 4.0.6 reference](https://docs.spring.io/spring-boot/4.0.6/) · ⬆️ [back to the README](../../README.md).

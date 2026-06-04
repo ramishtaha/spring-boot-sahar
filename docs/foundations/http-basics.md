@@ -86,4 +86,4 @@ You'll write the Sahar side of these later. For now, just enjoy recognising the 
 - A response has a **status code** (2xx good, 4xx your fault, 5xx server's fault) and usually a body.
 - **JSON** is the simple text format that carries the data.
 
-Next: [Databases in five minutes](./databases-basics.md) · Go deeper: [HTTP & REST theory](../theory/http-and-rest.md) and the [HTTP cheatsheet](../../reference/cheatsheet-http-rest.md)
+⬅️ Prev: [What is Spring Boot?](./what-is-spring-boot.md) · Next: [Databases in five minutes](./databases-basics.md) · Go deeper: [HTTP & REST theory](../theory/http-and-rest.md) and the [HTTP cheatsheet](../../reference/cheatsheet-http-rest.md)

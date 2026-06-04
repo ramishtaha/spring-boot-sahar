@@ -12,7 +12,10 @@
 - What **Kubernetes** solves and why it is overkill for a personal app.
 - **CI/CD** in plain terms, mapped onto the actual Sahar GitHub Actions workflow.
 
-This is theory. The hands-on steps are [step 11 — Dockerize](../steps/11-dockerize.md), [step 12 — Compose](../steps/12-compose.md), [step 13 — CI with GitHub Actions](../steps/13-ci-with-github-actions.md), and [step 14 — Deploy](../steps/14-deploy.md).
+This is theory. The hands-on steps are [step 11 — Dockerize](../steps/11-dockerize.md), [step 12 — Compose](../steps/12-compose.md), [step 13 — CI with GitHub Actions](../steps/13-ci-with-github-actions.md), and [step 14 — Deploy](../steps/14-deploy.md). The CD (deploy-on-green) half is extended in [step 25 — OpenAPI docs + continuous delivery](../steps/25-openapi-cicd.md).
+
+> [!NOTE]
+> **Version landscape.** This page targets the current stack: **Java 25 JRE** base images, modern `docker compose` (no top-level `version:` key), and BuildKit on by default. Older material you will meet online assumes **Java 17/21** base images, the standalone `docker-compose` (v1, hyphenated) binary, a `version: "3"` line at the top of the YAML, and pre-BuildKit Docker without cache mounts. None of that changes the *concepts* here — only the syntax. The consolidated old-vs-new story lives in [Version deltas](../../reference/cheatsheet-version-deltas.md).
 
 ---
 
@@ -108,7 +111,11 @@ COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 mvn -B -ntp -DskipTests clean package
 ```
 
-The `pom.xml` is copied **before** the source. Your dependencies change rarely; your Java source changes constantly. By putting the rarely-changing thing on an earlier layer, a normal code edit invalidates only the `COPY src` layer and below — the (potentially large) dependency-download work above it stays cached. If you copied everything in one `COPY . .`, *every* edit would bust the cache and re-resolve dependencies.
+The `pom.xml` (the Maven build file that lists every dependency) is copied **before** the source. The reasoning is a single rule of thumb:
+
+> **Order Dockerfile instructions from least-changing to most-changing.**
+
+Dependencies change rarely; Java source changes constantly. Putting the rarely-changing thing on an earlier layer means a normal code edit invalidates only the `COPY src` layer and below — the (potentially large) dependency-download work above it stays cached. If you copied everything in one `COPY . .`, *every* edit would bust the cache and re-resolve dependencies.
 
 There is a second, subtler optimisation in that `RUN`:
 
@@ -122,7 +129,7 @@ RUN --mount=type=cache,target=/root/.m2 mvn -B -ntp -DskipTests clean package
 
 ## 🏗️ Multi-stage builds: build image vs run image
 
-Here is the tension. To *build* Sahar you need a full JDK and Maven — together, hundreds of MB of compiler, build tool, and downloaded plugins. To *run* Sahar you need only a JRE and the jar. You do not want to ship the compiler to production: it bloats the image, slows pulls, and widens the attack surface (every tool in the image is something an attacker could use).
+Here is the tension. To *build* Sahar you need a full **JDK** (Java Development Kit — the compiler plus tooling) and Maven — together, hundreds of MB of compiler, build tool, and downloaded plugins. To *run* Sahar you need only a **JRE** (Java Runtime Environment — just enough to execute compiled code) and the jar. You do not want to ship the compiler to production: it bloats the image, slows pulls, and widens the **attack surface** (every tool present in the image is one more thing an attacker who gets in could abuse).
 
 A **multi-stage build** resolves this. You declare more than one `FROM`. Early stages do the heavy work; the final stage starts from a clean, minimal base and copies in *only the artifacts it needs* from earlier stages. Everything else — compiler, Maven, intermediate files — is left behind.
 
@@ -181,9 +188,9 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 Things to notice, beyond the staging:
 
 - **`AS build` / `AS run`** name the stages so `COPY --from=build` can reach back into the build stage's filesystem. Only the named path is copied — the JDK and Maven do not come along.
-- **`EXPOSE 8080`** is documentation, not action. It records which port the app listens on. It does **not** publish anything; publishing happens at run time with `-p 8080:8080` (or in Compose, the `ports:` key).
-- **Configuration via environment, not baked in.** The image contains no database password, no profile choice. That is the [twelve-factor](https://12factor.net/config) principle: the *same* image runs against H2 locally (no env set) or PostgreSQL in production (`SPRING_PROFILES_ACTIVE=postgres` plus the `SAHAR_DB_*` vars). One artifact, many environments — exactly the portability promise, now extended to config. (See [step 09 — Swap to PostgreSQL](../steps/09-swap-to-postgres.md) for where those profiles come from.)
-- **Non-root user.** `useradd` then `USER sahar` means the JVM runs as uid 10001. The `chown` is necessary so that non-root user can create `./data` for the default H2 file.
+- **`EXPOSE 8080` is documentation, not action.** It records the port the app listens on. Publishing happens at run time with `-p 8080:8080` (or in Compose, the `ports:` key).
+- **Non-root user.** `useradd` then `USER sahar` runs the JVM as uid 10001; the `chown` lets that user create `./data` for the default H2 file. If the container is breached, the attacker is not root.
+- **Configuration via environment, not baked in.** The image holds no database password and no profile choice — the **same** image runs against H2 locally (no env set) or PostgreSQL in production (`SPRING_PROFILES_ACTIVE=postgres` plus the `SAHAR_DB_*` vars). This is the [twelve-factor](https://12factor.net/config) rule "store config in the environment": one artifact, many environments. (See [step 09 — Swap to PostgreSQL](../steps/09-swap-to-postgres.md) for where those profiles come from.)
 
 > [!CAUTION]
 > A note that will age: base image tags like `maven:3.9-eclipse-temurin-25` and `eclipse-temurin:25-jre` move forward over time. Pin to the versions your project targets and re-check the official tags at <https://hub.docker.com/_/eclipse-temurin> and <https://hub.docker.com/_/maven>.
@@ -396,14 +403,40 @@ Build the artifact once, ship the same artifact everywhere, automate the path be
 
 ---
 
+## 💼 Interview angle
+
+A few questions this page answers directly — practise saying the answer out loud in two or three sentences.
+
+**Q: What are image layers, and why does Dockerfile instruction order matter?**
+An image is a stack of read-only, content-addressed layers; each filesystem-changing instruction (`FROM`, `COPY`, `RUN`) adds one. On rebuild the builder reuses cached layers until the first instruction whose inputs changed, then rebuilds everything below it. So you order instructions least-changing first — copy `pom.xml` and resolve dependencies before copying source — so a routine code edit doesn't bust the dependency cache.
+
+**Q: What is the difference between an image and a container?**
+An image is the immutable template (layers plus metadata); a container is a running or stopped instance of it with a thin writable layer on top. You build one image and can run many isolated containers from it. The writable layer is discarded on `rm`, which is why persistent state must live in a volume.
+
+**Q: What is the difference between CI and CD?**
+CI (Continuous Integration) builds and tests every push on a clean machine to keep `main` green and catch "works on my machine" early. CD (Continuous Delivery/Deployment) takes a green build and prepares or actually ships it to the running environment. Slogan: CI = build + test on every push; CD = deploy on green.
+
+**Q: What does the twelve-factor "config in the environment" principle buy you with containers?**
+It means the image bakes in no environment-specific values — no DB URL, no password, no profile — and reads them from environment variables at run time. So one identical artifact runs against H2 locally and PostgreSQL in production just by changing env vars, which is what makes "test the exact thing you ship" possible.
+
+**Q: How should secrets (like a DB password) be handled in a container?**
+Never baked into the image or committed to the Dockerfile — anyone who pulls the image can read its layers. Inject them at run time via environment variables (or, better, a secrets manager / orchestrator secret), the same twelve-factor channel as the rest of the config. In Sahar the password arrives as `SAHAR_DB_PASSWORD` at run time, never in the image.
+
+---
+
 ## 🔗 Related
 
 - Step: [11 — Dockerize](../steps/11-dockerize.md) — write and build the Sahar `Dockerfile`.
 - Step: [12 — Compose](../steps/12-compose.md) — bring up app + PostgreSQL with `docker compose`.
 - Step: [13 — CI with GitHub Actions](../steps/13-ci-with-github-actions.md) — green build on every push.
 - Step: [14 — Deploy](../steps/14-deploy.md) — turn a green build into a running app.
+- Step: [25 — OpenAPI docs + continuous delivery](../steps/25-openapi-cicd.md) — extend CI into real CD (deploy on green).
 - Step: [09 — Swap to PostgreSQL](../steps/09-swap-to-postgres.md) — the `postgres` profile and `SAHAR_DB_*` config the container consumes.
 - Reference: [Docker / Podman cheatsheet](../../reference/cheatsheet-docker-podman.md) — command-by-command, both engines.
+- Reference: [Interview prep](../../reference/interview-prep.md) — the central question bank, including containers/DevOps.
+- Reference: [Version deltas](../../reference/cheatsheet-version-deltas.md) — old-vs-new across Boot 3.x→4, Java 17→25, base images, Compose.
+- Reference: [Fundamentals cheatsheet](../../reference/cheatsheet-fundamentals.md) — classpath, JAR, BOM, servlet, LTS in one place.
 - Theory: [Spring and dependency injection](./spring-and-di.md) — what is actually inside the jar the image runs.
+- Theory: [REST clients](./rest-clients.md) — how the containerised app calls *out* to other services.
 - Repo: [README](../../README.md)
 - Official docs: [Docker](https://docs.docker.com/) · [Podman](https://podman.io/) · [Compose](https://docs.docker.com/compose/) · [OCI](https://opencontainers.org/) · [GitHub Actions](https://docs.github.com/actions) · [Kubernetes](https://kubernetes.io/docs/) · [Twelve-Factor App](https://12factor.net/)

@@ -55,7 +55,7 @@ Maven reads a single file named `pom.xml`. Think of it as your project's recipe 
 ```
 
 > [!NOTE]
-> Notice the starter has no `<version>`. The parent already chose a version that fits. That's one less thing for you to worry about.
+> Notice the starter has no `<version>`. The parent already chose a version that fits. That's one less thing for you to worry about. (Curious what a "BOM" or a "JAR" really is? The [fundamentals cheatsheet](../../reference/cheatsheet-fundamentals.md) explains them in one place — totally optional.)
 
 ## 🛠️ The Maven Wrapper (mvnw)
 
@@ -89,4 +89,4 @@ Early on, you'll rarely touch `pom.xml` by hand. The starter project comes with 
 - The **Maven Wrapper** (`mvnw` / `mvnw.cmd`) runs the right Maven version, so you don't install anything.
 - Your three go-to commands: `spring-boot:run`, `test`, and `package`.
 
-Next: [What is Spring Boot?](./what-is-spring-boot.md) · Go deeper: the [Maven cheatsheet](../../reference/cheatsheet-maven.md)
+⬅️ Prev: [Java 3 — classes, objects & records](./java-3-classes-and-objects.md) · Next: [What is Spring Boot?](./what-is-spring-boot.md) · Go deeper: the [Maven cheatsheet](../../reference/cheatsheet-maven.md)

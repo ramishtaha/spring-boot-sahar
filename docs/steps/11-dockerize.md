@@ -2,6 +2,11 @@
 
 _Package Sahar into a small, reproducible container image that anyone can run with one command - no Java, no Maven, no "works on my machine"._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-11-dockerize`](../../checkpoints/step-11-dockerize/) — the full Sahar app from step 10
+> plus two new root files, `Dockerfile` (the two-stage build) and `.dockerignore`, with no Java changed. Build
+> it once and `docker run` it anywhere. Package is `com.ramishtaha.sahar`.
+
 > [!TIP]
 > **IntelliJ IDEA Ultimate** — build and run the image from a ▶ gutter icon on the `Dockerfile`; the **Services** tool window shows the container, its logs, and a shell — no terminal needed. [More →](../../reference/intellij-ultimate.md)
 
@@ -11,7 +16,10 @@ Up to now you have been running Sahar with `mvn spring-boot:run` on your own lap
 
 A container image is that unit. It bundles a JRE, the built jar, and a tiny bit of OS into one read-only artifact. `docker run` it anywhere Docker (or Podman) is installed and it behaves identically - same Java, same jar, same start command. That reproducibility is the entire point.
 
-The twist in this step is the **multi-stage build**. Building the app needs a full JDK plus Maven (hundreds of MB). _Running_ it needs only a JRE. A naive Dockerfile would ship all the build tooling and produce a bloated, attack-surface-heavy image. We will use two stages so the compiler and Maven stay behind, and only the jar plus a slim JRE ship.
+The twist in this step is the **multi-stage build**. Building the app needs a full JDK plus Maven (hundreds of MB). _Running_ it needs only a JRE (Java Runtime Environment — just enough to *run* compiled code, with no compiler). A naive Dockerfile would ship all the build tooling and produce a bloated, attack-surface-heavy image. We will use two stages so the compiler and Maven stay behind, and only the jar plus a slim JRE ship.
+
+> [!NOTE]
+> **What changed from Spring Boot 3.x.** Older Docker guides pin **Java 17** base images (`maven:...-eclipse-temurin-17`, `eclipse-temurin:17-jre`); Sahar is Boot 4 on **Java 25 (LTS)**, so the bases are `maven:3.9-eclipse-temurin-25` and `eclipse-temurin:25-jre`. The packaging itself is unchanged — it is still a Spring Boot executable fat jar you launch with `java -jar`. The full older→newer table (starter renames, `javax`→`jakarta`, Jackson 2→3, etc.) lives in the [Version deltas](../../reference/cheatsheet-version-deltas.md) cheatsheet.
 
 ## 🧠 Theory
 
@@ -115,7 +123,10 @@ Reading this carefully:
 - `RUN --mount=type=cache,target=/root/.m2 ...` is the BuildKit cache mount. It mounts a persistent cache at `/root/.m2` (Maven's local repository) for the duration of this `RUN` only. Downloaded dependencies survive between builds, but the cache is **not** baked into any layer - it never ships in the image. This is the modern replacement for the old "copy pom, run `dependency:go-offline`, then copy src" dance.
 - The Maven flags: `-B` (batch mode, no interactive prompts), `-ntp` (no transfer progress spam in logs), `-DskipTests` (tests already ran in CI / locally; skip them in the image build for speed), `clean package` (produce the executable jar in `target/`).
 
-The output is `target/sahar-0.0.1-SNAPSHOT.jar`, a Spring Boot fat jar with everything inside. That filename comes from the artifactId `sahar` and version in the pom - quote it exactly when you copy it across.
+The output is `target/sahar-0.0.1-SNAPSHOT.jar`, a Spring Boot **fat jar** (one self-contained JAR holding your classes _plus_ every dependency and an embedded Tomcat — it runs with just `java -jar`; see [Fundamentals](../../reference/cheatsheet-fundamentals.md)). That filename comes from the artifactId `sahar` and version in the pom - quote it exactly when you copy it across.
+
+> [!TIP]
+> Spring Boot can also produce a **layered jar** — the same fat jar with its contents split into ordered layers (dependencies, then your code) so Docker can cache the rarely-changing dependency layer separately. We get the same cache win more simply here by copying `pom.xml` before `src`, so plain `java -jar` is all Sahar needs. Layered jars are an optimization for later, not a requirement; the [Fundamentals](../../reference/cheatsheet-fundamentals.md) primer covers the jar terms.
 
 ### 3. Stage 2 - the run stage
 
@@ -234,6 +245,26 @@ Full checkpoint: [`../../checkpoints/step-11-dockerize/`](../../checkpoints/step
 > [!NOTE]
 > Going smaller: the JRE base is the bulk of the image. If you want a smaller, harder-to-attack image you can swap the run stage for a Google **distroless** Java base (no shell, no package manager) or build a custom minimal runtime with **`jlink`** that includes only the modules Sahar uses, then run it on a tiny base. Both add complexity (debugging a shell-less image is harder), so they are an optimization, not a starting point. Keep the readable Temurin JRE for learning.
 
+## 💼 Interview angle
+
+**Q: What's the difference between a Docker image and a container?**
+A: An image is a read-only template — a baked filesystem plus metadata (start command, port, user). A container is a running instance of an image with a thin writable layer on top. One image, many containers — it's the class-vs-instance relationship. `docker build` produces an image; `docker run` produces a container.
+
+**Q: What problem does a multi-stage build solve, and how?**
+A: Building needs a full JDK + Maven; running needs only a JRE. A multi-stage build uses two `FROM`s — a fat build stage that compiles, and a slim run stage that `COPY --from=build`s only the jar. Earlier stages are discarded, so the compiler and Maven never ship, shrinking the image and its attack surface.
+
+**Q: Why copy `pom.xml` before `src` in the Dockerfile?**
+A: Docker caches layers and rebuilds from the first changed line down. Putting the rarely-changing `pom.xml` (and its dependency resolution) on its own layer above the constantly-changing `src` means a code edit reuses the cached dependency layer instead of re-downloading everything. Reverse them and every build re-resolves all dependencies.
+
+**Q: Does `EXPOSE` make a container's port reachable?**
+A: No — `EXPOSE` is documentation/metadata recording which port the app listens on. The port is actually published with `-p host:container` (e.g. `-p 8080:8080`) at `docker run` time. This catches almost everyone once.
+
+**Q: Why run the container as a non-root user?**
+A: By default the container process is root; if the app is exploited, the attacker is root inside the container. Creating a dedicated unprivileged user (uid 10001) and dropping to it with `USER` limits the blast radius. You must `chown` the writable paths first, or the app can't create files like the H2 database.
+
+**Q: How do you point the same image at a different database without rebuilding?**
+A: Config comes from the environment (12-factor), not the image. The app reads `${SAHAR_DB_URL:default}`-style properties and `SPRING_PROFILES_ACTIVE`, so you pass `-e SPRING_PROFILES_ACTIVE=postgres -e SAHAR_DB_URL=...` at `docker run` time. The immutable image stays the same; only the environment changes.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **`docker build` ignores `--mount=type=cache` / "unknown flag".** The `# syntax=docker/dockerfile:1` line is missing or not the first line of the file, so BuildKit is not active. Put it on line 1. On older Docker, prefix the build with `DOCKER_BUILDKIT=1`.
@@ -253,8 +284,5 @@ Full checkpoint: [`../../checkpoints/step-11-dockerize/`](../../checkpoints/step
 5. Why do we `mkdir -p /app/data && chown -R sahar:sahar /app` _before_ `USER sahar`? What fails if we drop to the non-root user first?
 6. How would you run this same image against Postgres without rebuilding it?
 
-## ---
-
-⬅️ Prev: [10 - Seed and migrations](./10-seed-and-migrations.md) · ➡️ Next: [12 - Compose](./12-compose.md) · 📍 Checkpoint: [step-11-dockerize](../../checkpoints/step-11-dockerize/)
-
-🔗 Theory: [containers-and-devops](../theory/containers-and-devops.md) · 🐳 Cheatsheet: [docker / podman](../../reference/cheatsheet-docker-podman.md) · 🗂️ Reference: [glossary](../../reference/glossary.md)
+---
+⬅️ Prev: [10 - Seed and migrations](./10-seed-and-migrations.md) · ➡️ Next: [12 - Compose](./12-compose.md) · 📍 Checkpoint: [step-11-dockerize](../../checkpoints/step-11-dockerize/) · 🔗 See also: [containers-and-devops](../theory/containers-and-devops.md) · [docker / podman](../../reference/cheatsheet-docker-podman.md) · [interview-prep](../../reference/interview-prep.md)

@@ -96,4 +96,4 @@ If something goes wrong, you get an **error**, which is *also* just text. Do not
 - Ctrl+C stops a running program, and the up arrow repeats your last command.
 - A line like `./mvnw spring-boot:run` is just "run this local program, with this instruction" — and output and errors are both plain text you can read.
 
-Next: [Java 1 — your first program](./java-1-hello-world.md) · Go deeper: the [Maven cheatsheet](../../reference/cheatsheet-maven.md)
+⬅️ Prev: [Browser & JavaScript basics](./browser-javascript-basics.md) · Next: [Java 1 — your first program](./java-1-hello-world.md) · Go deeper: the [Maven cheatsheet](../../reference/cheatsheet-maven.md)

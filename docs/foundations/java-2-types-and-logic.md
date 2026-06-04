@@ -99,4 +99,4 @@ If you can read that, you've already got the core of everyday Java.
 - A **for-each** loop visits each item in a collection; classic `for` and `while` loops also exist.
 - A `List<String>` holds many values of one type, and you can loop over it.
 
-Next: [Java 3 — classes, objects & records](./java-3-classes-and-objects.md) · Go deeper: the [Modern Java refresher](../../reference/java-refresher.md)
+⬅️ Prev: [Java 1 — your first program](./java-1-hello-world.md) · Next: [Java 3 — classes, objects & records](./java-3-classes-and-objects.md) · Go deeper: the [Modern Java refresher](../../reference/java-refresher.md)

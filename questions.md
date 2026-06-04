@@ -48,3 +48,7 @@ fully understand — log it here instead of breaking flow. Bring the list to you
 ## ✅ Resolved
 
 _(move entries here once you've discussed and written the answer in your own words)_
+
+---
+
+🔗 Related: [Progress checklist](progress.md) · [Plan](PLAN.md) · [Glossary](reference/glossary.md) · [💼 Interview-prep](reference/interview-prep.md) · ⬆️ [README](README.md)

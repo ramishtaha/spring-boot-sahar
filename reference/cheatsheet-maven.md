@@ -229,6 +229,9 @@ flowchart LR
 
 Sahar targets **Spring Boot 4.0.6**, which renamed and split several artifacts. If you copy a 3.x tutorial, these are the lines that will fail to resolve. Use the Boot 4 names.
 
+> [!NOTE]
+> The full older-vs-newer story for these starter renames (`web` -> `webmvc`) and the modular test starters lives in [Version deltas](./cheatsheet-version-deltas.md).
+
 | Purpose | Spring Boot 4 artifact (use this) | Replaced (Boot 3.x) |
 | --- | --- | --- |
 | Web (servlet MVC + Tomcat + JSON) | `org.springframework.boot:spring-boot-starter-webmvc` | `spring-boot-starter-web` |
@@ -325,8 +328,14 @@ flowchart LR
 
 ## 🔗 Related
 
+**Reference:**
+
 - ➡️ [Step 00 - Baseline](../docs/steps/00-baseline.md) - the guided walkthrough of this exact `pom.xml`.
+- [Version deltas](./cheatsheet-version-deltas.md) - the consolidated Boot 3.x -> 4 story behind the starter renames here.
+- [Fundamentals cheatsheet](./cheatsheet-fundamentals.md) - classpath, JAR, BOM, servlet, and LTS terms this page leans on.
 - [Spring annotations cheatsheet](./cheatsheet-spring-annotations.md) - the annotations these starters bring to life.
+- [Docker / Podman cheatsheet](./cheatsheet-docker-podman.md) - how the fat jar this build produces gets containerized.
+- [Interview-prep](interview-prep.md) - the central question bank, including build-tool and dependency-scope questions.
 - [Spring Boot 4.0.6 reference docs](https://docs.spring.io/spring-boot/4.0.6/) - official dependency and configuration reference.
 - [Apache Maven documentation](https://maven.apache.org/guides/) - lifecycle, plugins, and the full POM reference.
 - [Java SE 25 documentation](https://docs.oracle.com/en/java/javase/25/) - the language/runtime Sahar targets.

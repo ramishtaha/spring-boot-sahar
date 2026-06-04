@@ -2,6 +2,11 @@
 
 _One file, two containers: the Sahar app plus a real PostgreSQL database, wired together and persisting data._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-12-compose`](../../checkpoints/step-12-compose/) — the Sahar app and a real PostgreSQL 17
+> database brought up together by one `docker-compose.yml`, on a private network, with data persisting in a
+> named volume across `down`/`up`. Package is `com.ramishtaha.sahar`.
+
 > [!TIP]
 > **IntelliJ IDEA Ultimate** — run `docker-compose.yml` from the IDE (▶ on the `services:` line) and watch `db` + `app` come up, healthcheck and all, in the **Services** tool window. [More →](../../reference/intellij-ultimate.md)
 
@@ -12,6 +17,14 @@ In [step 11](./11-dockerize.md) you put the app in a container. That image runs 
 A production-shaped setup is two processes: your app, and a database it talks to over the network. Doing that by hand means starting Postgres with the right flags, finding its IP, starting the app with that IP, and remembering to attach storage so the data survives. That is fiddly and easy to get wrong.
 
 **Docker Compose** is the answer: one declarative file describes both containers, the private network between them, the storage volume for the database, and the start-up ordering. Then a single command - `docker compose up` - brings the whole stack online. This is the closest you can get to "production on your laptop" with one command, and it is exactly the artifact that [step 13 (CI)](./13-ci-with-github-actions.md) and any real deployment build on.
+
+> [!NOTE]
+> **What changed (older tutorials vs. now).** Compose itself moved on under your feet, so older guides will look different:
+> - **`docker-compose` (hyphen, v1) → `docker compose` (space, v2).** The standalone Python tool is retired; modern Compose is a built-in `docker` subcommand. The commands below all use the new form.
+> - **No top-level `version:` key.** Older files open with `version: "3.8"`; modern Compose ignores it and prints a deprecation warning, so we omit it entirely.
+> - **Postgres pinned to `17`, not `latest`.** A database engine should never silently change major version under your data — see the volume-major-version mistake below.
+>
+> For the project-wide older-vs-newer story (Boot 3.x→4, Spring 6→7, Java 17→25, `javax`→`jakarta`, Jackson 2→3, starter renames), see [Version deltas](../../reference/cheatsheet-version-deltas.md).
 
 ## 🧠 Theory
 
@@ -46,19 +59,19 @@ flowchart LR
     db -->|"data files persist outside container"| vol
 ```
 
-Read it as: your browser hits `localhost:8080`, which Compose forwards into the `app` container; the app opens a JDBC connection to the hostname `db` on the internal network; Postgres stores its files on the `sahar-db-data` volume, which outlives the container.
+Read it as: your browser hits `localhost:8080`, which Compose forwards into the `app` container; the app opens a JDBC connection (JDBC = Java's standard API for talking to a SQL database) to the hostname `db` on the internal network; Postgres stores its files on the `sahar-db-data` volume, which outlives the container.
 
 For the bigger picture on images vs containers, networks, and volumes, see [the containers and DevOps theory page](../theory/containers-and-devops.md).
 
 ## 🚦 Start from
 
-Continue from the [step 11 checkpoint](./11-dockerize.md) - you already have a working multi-stage `Dockerfile` that produces a runnable image and uses environment variables for all configuration. The Dockerfile does **not** change in this step; we only add a `docker-compose.yml` next to it that uses it.
+Continue from the [step 11 checkpoint](../../checkpoints/step-11-dockerize/) - you already have a working multi-stage `Dockerfile` that produces a runnable image and uses environment variables for all configuration. The Dockerfile does **not** change in this step; we only add a `docker-compose.yml` next to it that uses it.
 
 ## 🛠️ Build it
 
 ### 1. Confirm the Dockerfile is environment-driven
 
-Compose works because the image in [step 11](./11-dockerize.md) takes its entire configuration from the environment - the classic 12-factor approach. The relevant lines of the `Dockerfile` are:
+Compose works because the image in [step 11](./11-dockerize.md) takes its entire configuration from the environment - the classic 12-factor approach (a widely-used checklist for cloud-friendly apps; rule III says read config from the environment, not from baked-in files). The relevant lines of the `Dockerfile` are:
 
 ```dockerfile
 # All configuration comes from the environment (12-factor), e.g.:
@@ -252,6 +265,38 @@ Files in this step:
 
 Checkpoint for this step: [step-12-compose](../../checkpoints/step-12-compose/).
 
+## 💼 Interview angle
+
+**Q: How do two containers in a Compose stack find each other on the network?**
+A: Compose puts every service on a shared internal network and registers each service's name as a DNS hostname.
+So `app` reaches the DB at host `db:5432` — no IP, no `localhost`. `localhost` inside a container means *that*
+container, which is the classic connection-refused mistake.
+
+**Q: `depends_on` already orders startup — why add `condition: service_healthy`?**
+A: Plain `depends_on` only guarantees "started before", and "started" isn't "ready" — Postgres reports started
+in a second but isn't yet accepting connections. The healthcheck (`pg_isready`) plus `service_healthy` makes the
+app wait until the DB genuinely answers, avoiding the boot-time race.
+
+**Q: How does data survive `docker compose down`, and how is `down -v` different?**
+A: A named volume (`sahar-db-data`) is storage that lives outside any container's lifecycle, mounted at
+Postgres's data directory. `down` removes containers and the network but leaves the volume, so data persists.
+`down -v` additionally deletes named volumes — that wipes the database.
+
+**Q: Why publish a port for `app` but not for `db`?**
+A: The app's `8080:8080` is the one door from your host into the stack. The DB deliberately has no `ports:` entry,
+so it's reachable only from inside the private network — not exposed to your host or the internet. Less surface
+area is a security win.
+
+**Q: Why pin `postgres:17-alpine` instead of `postgres:latest`?**
+A: Reproducibility. `latest` can jump major versions on a fresh pull, and a data volume created by one Postgres
+major version can't be read by another — so an unpinned image can silently break an existing database. Pinning
+makes every run identical.
+
+**Q: The same image ran on H2 in step 11 and now runs on Postgres — what rebuilt?**
+A: Nothing in the image. It's environment-driven (12-factor): Compose just sets `SPRING_PROFILES_ACTIVE=postgres`
+and the `SAHAR_DB_*` variables. The DB switch is pure configuration, which is exactly why the artifact is
+deployment-ready.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Using `localhost` in `SAHAR_DB_URL`.** Inside the app container, `localhost` means the app container itself, not your machine and not the DB. The URL must use the **service name**: `jdbc:postgresql://db:5432/sahar`. Symptom: connection refused on startup.
@@ -272,6 +317,5 @@ Checkpoint for this step: [step-12-compose](../../checkpoints/step-12-compose/).
 5. What does `${SAHAR_HOST_PORT:-8080}` mean, and how would you start the stack on host port 8086 without editing the file?
 6. Which file does `build: .` refer to, and which step's image is being reused unchanged?
 
-## ---
-
-⬅️ Prev: [11 - Dockerize the app](./11-dockerize.md) · ➡️ Next: [13 - CI with GitHub Actions](./13-ci-with-github-actions.md) · 🏁 Checkpoint: [step-12-compose](../../checkpoints/step-12-compose/)
+---
+⬅️ Prev: [11 - Dockerize the app](./11-dockerize.md) · ➡️ Next: [13 - CI with GitHub Actions](./13-ci-with-github-actions.md) · 📍 Checkpoint: [step-12-compose](../../checkpoints/step-12-compose/) · 🔗 See also: [Containers & DevOps](../theory/containers-and-devops.md) · [Docker/Podman cheatsheet](../../reference/cheatsheet-docker-podman.md) · [Interview-prep](../../reference/interview-prep.md)

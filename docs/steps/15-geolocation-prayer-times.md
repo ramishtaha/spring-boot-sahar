@@ -41,7 +41,15 @@ coordinates) and **reverse geocoding** (coordinates → name). We use OpenStreet
 
 - Nominatim's policy asks callers to send a `User-Agent`; a server sets that reliably (and could cache /
   rate-limit). 
-- It introduces Spring Boot 4's **`RestClient`** — the fluent HTTP client for calling other services.
+- It introduces Spring Boot 4's **`RestClient`** (the modern, fluent HTTP client your backend uses to call
+  *other* services — see [REST clients](../theory/rest-clients.md)) for calling other services.
+
+> [!NOTE]
+> **What changed from Spring Boot 3.x** — older tutorials reach for `RestTemplate` (maintenance-only since
+> Spring 6) or the reactive `WebClient` for a simple blocking call. Spring Framework 6.1 / Boot 3.2 introduced
+> **`RestClient`**, and it's the default choice in Boot 4: a fluent, synchronous client with `WebClient`'s
+> ergonomics but no reactive dependency. We use the static `RestClient.builder()` factory here. Full
+> old-vs-new table: [Version deltas](../../reference/cheatsheet-version-deltas.md).
 
 ```mermaid
 flowchart LR
@@ -142,6 +150,34 @@ deliberate non-goal here — see the calculator's Javadoc.
 - The location is persisted and returned in `/api/config`.
 - A unit test pins the math.
 
+## 💼 Interview angle
+
+**Q: Why call a third-party API like Nominatim from your backend instead of directly from the browser?**
+A: The server can reliably set the required `User-Agent`, add caching and rate-limiting, hide any API keys,
+and sidestep browser CORS. The browser just asks your backend, which becomes a *client* of the upstream service.
+
+**Q: `RestClient` vs `RestTemplate` vs `WebClient` — which would you reach for and why?**
+A: `RestClient` for a synchronous (blocking) call like this — it's the modern Boot 4 default with a fluent API
+and no reactive dependency. `RestTemplate` is maintenance-only; `WebClient` is for reactive/streaming or when
+you genuinely need non-blocking I/O.
+
+**Q: How do you make an outbound HTTP call degrade gracefully when the upstream is down?**
+A: Catch the failure at the boundary and return a safe fallback instead of propagating it — here `search`
+returns an empty list and `reverse` falls back to the raw coordinates, so an offline or rate-limited Nominatim
+never breaks the page.
+
+**Q: Why is the prayer-time calculator a pure `@Component` with no DB or HTTP, and why does that matter?**
+A: It's deterministic degree-based trig — same inputs, same outputs — so it needs no Spring context, no mocks,
+and no network. That makes it trivially unit-testable: you pin known coordinates to expected times in plain JUnit.
+
+**Q: The `tz` parameter is "minutes east of UTC." Why minutes, and how does a browser supply it?**
+A: Minutes covers offsets like India's +05:30 that aren't whole hours. The browser reports
+`-(new Date()).getTimezoneOffset()` — it returns minutes *behind* UTC, so you negate it to get minutes *east*.
+
+**Q: Why is shipping the V4 `ALTER TABLE ... ADD COLUMN` migration safe?**
+A: Adding a nullable/defaulted column is backward-compatible — existing rows and older code keep working, and
+Flyway applies it once and records the version, so it's idempotent across environments.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Times off by hours** — timezone sign; `tz` is **minutes east of UTC** (IST = 330; browsers report
@@ -160,4 +196,4 @@ deliberate non-goal here — see the calculator's Javadoc.
 4. What does `tz` mean and how does the browser provide it?
 
 ---
-⬅️ Prev: [14 - Deploy](./14-deploy.md) · ➡️ Next: [16 - UI, location picker & PWA](./16-ui-and-pwa.md) · 📍 Checkpoint: [step-15](../../checkpoints/step-15-geolocation-prayer-times/) · 🔗 See also: [HTTP & REST](../theory/http-and-rest.md)
+⬅️ Prev: [14 - Deploy](./14-deploy.md) · ➡️ Next: [16 - UI, location picker & PWA](./16-ui-and-pwa.md) · 📍 Checkpoint: [step-15](../../checkpoints/step-15-geolocation-prayer-times/) · 🔗 See also: [REST clients](../theory/rest-clients.md) · [HTTP & REST](../theory/http-and-rest.md) · [Interview-prep](../../reference/interview-prep.md)

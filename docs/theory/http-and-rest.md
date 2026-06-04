@@ -389,7 +389,7 @@ The library that does JSON ↔ Java in Spring Boot 4 is **Jackson 3** (package `
 That symmetry is why a `GET` then `PUT` round-trips: the JSON you read back has exactly the keys the `PUT` expects.
 
 > [!NOTE]
-> **Version note:** the Jackson-3-on-`tools.jackson` detail is specific to Spring Boot 4 / Spring Framework 7. If you read older tutorials referencing `com.fasterxml.jackson`, they're describing Boot 3.x. See the [Spring Boot 4.0.6 reference](https://docs.spring.io/spring-boot/4.0.6/) for the current state.
+> **Version note:** the Jackson-3-on-`tools.jackson` detail is specific to Spring Boot 4 / Spring Framework 7. Older tutorials referencing `com.fasterxml.jackson` (Jackson 2), `javax.*` packages (pre-Jakarta), or the old `spring-boot-starter-web` starter name are describing Boot 3.x / Spring 5–6 / Java 17. For the full before/after of every rename touched in this page, see the [Version deltas](../../reference/cheatsheet-version-deltas.md) cheatsheet (and the [Spring Boot 4.0.6 reference](https://docs.spring.io/spring-boot/4.0.6/) for the current state). The deeper *why* of serialization — how Jackson maps records, nulls, dates, and naming — lives in [Serialization and JSON](serialization-and-json.md).
 
 ---
 
@@ -475,6 +475,27 @@ Want a one-screen lookup of verbs, codes, and `curl` flags? Keep the [HTTP & RES
 
 ---
 
+## 💼 Interview angle
+
+These come up constantly in backend interviews. Answer from this page — every model answer below is grounded in something Sahar actually does. The full bank lives in [interview-prep.md](../../reference/interview-prep.md).
+
+**Q: What's the difference between `PUT` and `POST`, and when do you use each?**
+`PUT` *replaces* the resource at a known URL — the client already knows the address, so sending the same body twice leaves the same end state (it's **idempotent**). `POST` *creates* a new sub-resource at a collection URL (the server assigns the id) or *runs a command*; it isn't idempotent because each call mints a new identity. In Sahar, `PUT /api/prayer-times` replaces the one prayer-times resource, while `POST /api/schedule` creates a new slot each time.
+
+**Q: What does idempotent mean, and which HTTP methods are idempotent?**
+Idempotent means sending the request *N* times leaves the same server state as sending it once, so a client can safely **retry** after a timeout. `GET`, `PUT`, and `DELETE` are idempotent; `POST` is not (and `PATCH` is not guaranteed to be). The practical test: "my request timed out — can I just resend it?" Yes for `PUT`/`DELETE`, no for `POST` because you might create a duplicate.
+
+**Q: When would you return `201` vs `200` vs `204`?**
+`200 OK` is the default success for reads and replacements (`GET`, `PUT`) and usually carries a body. `201 Created` signals a new resource was created — return it from `POST` with the new resource (including its assigned `id`) in the body. `204 No Content` means "done, nothing to send back" and pairs naturally with a `void` method, which Sahar uses for `DELETE /api/schedule/{id}`.
+
+**Q: Why a `400` and not a `500` for a validation failure?**
+The `4xx` family means *the client* sent something wrong, so retrying the identical request will fail the same way — the fix is to send valid data. A `5xx` means *the server* broke, where a retry might succeed. A malformed body (e.g. `fajr` of `"7am"`) is the client's mistake, so Sahar's `@RestControllerAdvice` maps the `MethodArgumentNotValidException` to `400` with a predictable `{status, error, messages}` body.
+
+**Q: How would you design RESTful URLs for a resource, and what does "stateless" mean?**
+Model the domain as **nouns** addressed by URLs and let the HTTP verb express the action — `GET /api/schedule` reads, `POST /api/schedule` creates, `PUT /api/schedule/{id}` replaces — never `/api/getSchedule`. **Statelessness** means each request carries everything the server needs; the server keeps no per-client memory between requests, so any request can hit any instance behind a load balancer. Durable state lives in the database, not in process memory tied to a connection.
+
+---
+
 ## 🔗 Related
 
 - [Step 02 — Your first REST endpoint](../steps/02-first-rest-endpoint.md) — `GET /api/config` and how `@RestController` returns JSON.
@@ -482,6 +503,9 @@ Want a one-screen lookup of verbs, codes, and `curl` flags? Keep the [HTTP & RES
 - [Step 05 — Validation and rules](../steps/05-validation-and-rules.md) — where the `400` body comes from, including the `@DeloadLast` global error.
 - [Step 07 — Full CRUD](../steps/07-full-crud.md) — `ScheduleController` with all five verbs and their status codes.
 - [Step 08 — Editable admin UI](../steps/08-editable-admin-ui.md) — the JavaScript client that sets `Content-Type`/`Accept` and consumes these endpoints.
+- [Serialization and JSON](serialization-and-json.md) — the deeper story of how Jackson 3 turns records into the JSON these endpoints exchange.
 - [HTTP & REST cheatsheet](../../reference/cheatsheet-http-rest.md) — dense, scannable reference for verbs, codes, and `curl`.
+- [Version deltas](../../reference/cheatsheet-version-deltas.md) — the consolidated Boot 3.x → 4 / Jackson 2 → 3 / `javax` → `jakarta` story.
+- [Interview prep](../../reference/interview-prep.md) — the central bank of questions, including the HTTP and REST set sampled above.
 - [Spring Boot 4.0.6 reference](https://docs.spring.io/spring-boot/4.0.6/) — official docs for the web layer and Jackson 3.
 - [README](../../README.md) — project overview and the full step index.

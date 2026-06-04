@@ -2,6 +2,11 @@
 
 _The day Sahar grows a memory: edit a prayer time, restart the app, and the change is still there._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-06-jdbctemplate-h2`](../../checkpoints/step-06-jdbctemplate-h2/) — Sahar with a real
+> data layer: a `DataSource` + HikariCP pool, seven SQL repositories, an H2 file-mode database that survives
+> restarts, and an in-memory H2 for isolated tests. Package is `com.ramishtaha.sahar`.
+
 > [!TIP]
 > **IntelliJ IDEA** — the **Database** tool window (free since 2025.3) connects to the H2 file `jdbc:h2:file:./data/sahar`, so you can browse tables and run SQL; **SQL support** even completes column names inside `schema.sql` and your `JdbcTemplate` strings. [Setup →](../../reference/intellij-ultimate.md)
 
@@ -15,13 +20,22 @@ The headline lesson is not "SQL". It is the **payoff of layering** you set up in
 
 See [../theory/persistence-landscape.md](../theory/persistence-landscape.md) for where embedded databases, connection pools, and the JDBC API sit in the bigger picture, and [../theory/jdbc-vs-jpa.md](../theory/jdbc-vs-jpa.md) for why this course uses `JdbcTemplate` instead of JPA/Hibernate.
 
+> [!NOTE]
+> **What changed from Spring Boot 3.x.** The persistence basics are stable, but two things bite if you copy old
+> tutorials. (1) The **H2 web console** is no longer bundled with the driver-plus-a-flag the way it was in Boot
+> 3.x — in Boot 4 it ships as a dedicated module, `spring-boot-h2console`, that you add yourself (see step 1).
+> (2) `JdbcTemplate` and HikariCP still arrive through `spring-boot-starter-jdbc`, but on **Java 25** the
+> repository code leans on modern Java (records as row targets, text blocks for multi-line SQL) that did not
+> exist on Java 8/11. The `javax.sql` → `jakarta` rename does **not** touch you here — `DataSource` lives in
+> `javax.sql` either way (it's a JDK package, not Jakarta EE). Full table: [Version deltas](../../reference/cheatsheet-version-deltas.md).
+
 ## 🧠 Theory
 
 ### DataSource and connection pooling (HikariCP)
 
-A `DataSource` is the standard Java abstraction for "the thing that hands me database connections". Opening a real connection to a database is expensive - a TCP handshake, authentication, session setup - far too slow to do per HTTP request. So instead of opening one each time, applications keep a **pool** of already-open connections and borrow/return them.
+A **`DataSource`** (the standard Java factory object that hands your code database connections — you ask it for one, it gives you one) is the abstraction for "the thing that hands me database connections". Opening a real connection to a database is expensive - a TCP handshake, authentication, session setup - far too slow to do per HTTP request. So instead of opening one each time, applications keep a **connection pool** (a small set of already-open connections kept ready and reused, so no request pays the open-and-close cost) and borrow/return them.
 
-Spring Boot auto-configures **HikariCP** (the default pool since Boot 2) the moment it sees `spring.datasource.*` properties and a JDBC driver on the classpath. You never write pool code; you just configure the URL. When a repository runs a query it borrows a connection from the pool, uses it, and returns it - all invisibly.
+Spring Boot auto-configures **HikariCP** (the default pool since Boot 2) the moment it sees `spring.datasource.*` properties and a JDBC driver on the **classpath** (the set of compiled classes and JARs the JVM can load at runtime — see [Fundamentals](../../reference/cheatsheet-fundamentals.md)). You never write pool code; you just configure the URL. When a repository runs a query it borrows a connection from the pool, uses it, and returns it - all invisibly.
 
 ### JdbcTemplate: SQL without the ceremony
 
@@ -119,7 +133,7 @@ In Spring Boot 4 the pieces are modular. Add the JDBC starter (which brings in H
 </dependency>
 ```
 
-Boot 4 difference worth remembering: the H2 web console is no longer bundled with the driver plus a flag the way it was in Boot 3.x. It now ships as a dedicated module, `spring-boot-h2console`. Add it so `/h2-console` works:
+Boot 4 difference worth remembering (this is the one from the [version-story callout](#-why-this-matters) above): the H2 web console is no longer bundled with the driver plus a flag the way it was in Boot 3.x. It now ships as a dedicated module, `spring-boot-h2console`. Add it so `/h2-console` works:
 
 ```xml
 <dependency>
@@ -189,7 +203,11 @@ Note `prayer_times` has a fixed `id INT PRIMARY KEY` (it is always row `1`), whi
 
 ### 4. Write the repositories
 
-A repository takes a `JdbcTemplate` in its constructor, defines a `RowMapper`, and exposes domain-shaped methods. The simplest, `PrayerTimesRepository`, reads and writes the single row `id = 1`:
+A repository takes a `JdbcTemplate` in its constructor, defines a `RowMapper`, and exposes domain-shaped methods. We'll meet three shapes, smallest first: a single-row repository, a list repository, and a parent-with-children repository. Once you see the pattern, the other four repositories are variations on it.
+
+#### 4a. A single-row repository (`PrayerTimesRepository`)
+
+The simplest repository reads and writes the single row `id = 1`:
 
 ```java
 @Repository
@@ -232,6 +250,8 @@ What is happening:
 - `find()` returns `Optional<PrayerTimes>`: there might be zero rows on a brand-new database before seeding, so we return an `Optional` rather than risk a null or an exception.
 - The seven `?` in `update` bind in argument order. The `?, ?, ?` style is the safe pattern; the values come last.
 
+#### 4b. A list repository (`ScheduleRepository`)
+
 Most tables are lists. `ScheduleRepository` shows the read-and-seed shape:
 
 ```java
@@ -253,6 +273,8 @@ public class ScheduleRepository {
 ```
 
 The `ORDER BY sort_order` matters: rows in a table have no inherent order, so we store an explicit `sort_order` column and sort by it to keep the daily timeline in the right sequence.
+
+#### 4c. A parent-with-children repository (`BlockRepository`)
 
 The most interesting repository spans **two** tables. A `BlockPlan` is a parent `blocks` row plus ordered `weeks` children. `BlockRepository.find()` reads both:
 
@@ -348,7 +370,7 @@ public RoutineConfig updateBlock(BlockPlan block) {
 }
 ```
 
-As the Javadoc puts it: _"if anything throws halfway, the delete-and-reinsert is rolled back, so a reader can never catch the block with half its weeks missing."_ Spring opens a transaction around the method, commits on normal return, and rolls back on a runtime exception.
+As the Javadoc puts it: _"if anything throws halfway, the delete-and-reinsert is rolled back, so a reader can never catch the block with half its weeks missing."_ Spring opens a **transaction** (a unit of work the database treats as all-or-nothing — see [Transactions & ACID](../theory/transactions-and-acid.md)) around the method, commits on normal return, and rolls back on a runtime exception. The "all-or-nothing" guarantee is the **A**(tomicity) in ACID.
 
 Notice the controllers are not mentioned anywhere in this step - because they did not change. That is the entire reward for layering.
 
@@ -417,6 +439,38 @@ Files added or changed in this step:
 
 Full sources: [step-06-jdbctemplate-h2](../../checkpoints/step-06-jdbctemplate-h2/).
 
+## 💼 Interview angle
+
+**Q: What is a connection pool and why do applications use one?**
+A: Opening a real DB connection is expensive (TCP handshake, auth, session setup) — far too slow per request.
+A pool keeps a small set of connections already open; code borrows one, runs its query, and returns it. Spring
+Boot auto-configures HikariCP from `spring.datasource.*`.
+
+**Q: How does `JdbcTemplate` protect against SQL injection?**
+A: It uses **bind parameters** — the `?` placeholders. The driver sends the SQL template and the values
+separately, so a value can never be parsed as SQL. String-concatenating user input into the SQL is the hole;
+`update("... = ?", value)` closes it.
+
+**Q: What does a `RowMapper<T>` do, and what must line up for it to work?**
+A: It maps one `ResultSet` row to one object — for a record, you read each column and pass it to the canonical
+constructor. The column names in the mapper must match `schema.sql` exactly; `JdbcTemplate` does no automatic
+snake_case → camelCase conversion, so `method_note` is read by hand into `methodNote()`.
+
+**Q: Why is `updateBlock` annotated `@Transactional` but `updatePrayerTimes` is not?**
+A: Replacing the block is delete-then-reinsert across two tables — multiple statements. `@Transactional` makes
+them atomic, so a mid-operation failure rolls back and no reader sees a block with half its weeks. Updating
+prayer times is a single `UPDATE`, already atomic on its own.
+
+**Q: The controllers didn't change at all this step — why is that a good sign?**
+A: Because only the data layer absorbed the change. The repository is the single place that knows SQL, the
+service kept its method signatures, and the web layer never saw a `ResultSet`. That clean boundary is exactly
+what makes the PostgreSQL swap in step 09 a wiring change, not a rewrite.
+
+**Q: Why `JdbcTemplate` here instead of JPA/Hibernate?**
+A: For a small, schema-owned app, `JdbcTemplate` keeps the SQL explicit and the mental model tiny — you see
+every query. JPA adds an ORM, entity lifecycle, and lazy-loading semantics that are powerful but heavier than
+this app needs. (Full reasoning: [jdbc-vs-jpa](../theory/jdbc-vs-jpa.md).)
+
 ## 🐞 Common mistakes and how to debug them
 
 - **`Database may be already in use` when opening the H2 console.** The app already holds the file lock. The fix is `AUTO_SERVER=TRUE` in the JDBC URL, which lets a second process attach. Make sure the console's URL matches the app's exactly (`jdbc:h2:file:./data/sahar`).
@@ -436,6 +490,6 @@ Full sources: [step-06-jdbctemplate-h2](../../checkpoints/step-06-jdbctemplate-h
 5. Why is `updateBlock` annotated `@Transactional` when `updatePrayerTimes` is not?
 6. The journal prompts and three rules are not in any table. Where do they come from in `getConfig()`, and what is the reasoning for keeping them out of the database?
 
-## ---
+---
 
-⬅️ Prev: [05 - Validation and rules](./05-validation-and-rules.md) · ➡️ Next: [07 - Full CRUD](./07-full-crud.md) · 📍 Checkpoint: [step-06-jdbctemplate-h2](../../checkpoints/step-06-jdbctemplate-h2/)
+⬅️ Prev: [05 - Validation and rules](./05-validation-and-rules.md) · ➡️ Next: [07 - Full CRUD](./07-full-crud.md) · 📍 Checkpoint: [step-06-jdbctemplate-h2](../../checkpoints/step-06-jdbctemplate-h2/) · 🔗 See also: [SQL/JDBC cheatsheet](../../reference/cheatsheet-sql-jdbc.md) · [Transactions & ACID](../theory/transactions-and-acid.md) · [Interview-prep](../../reference/interview-prep.md)

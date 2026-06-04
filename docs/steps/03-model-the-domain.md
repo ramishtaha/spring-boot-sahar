@@ -2,6 +2,12 @@
 
 _Replace the untyped `Map` from step 02 with a typed tree of Java records, so the compiler guarantees the JSON shape and the code reads like the domain._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-03-model-the-domain`](../../checkpoints/step-03-model-the-domain/) — the working `/api/config` endpoint now returns a typed `RoutineConfig` record tree instead of a `Map`, with the full June 2026 seed. Package is `com.ramishtaha.sahar`.
+
+> [!TIP]
+> **IntelliJ IDEA** — when you write `new RoutineConfig(` and press <kbd>Ctrl</kbd>+<kbd>P</kbd>, IntelliJ shows the 13 record components inline as parameter hints, so you match them top-to-bottom without guessing. Generate a record from a `Map` literal with the **paste-as-record** intention, and let <kbd>Alt</kbd>+<kbd>Enter</kbd> add any missing import.
+
 ## 🎯 Why this matters
 
 In [step 02](./02-first-rest-endpoint.md) the `/api/config` endpoint returned a giant `Map<String, Object>`. It worked, and the JSON looked right, but the code was lying to the compiler: every key was a `String`, every value was `Object`, and a typo like `"prayertimes"` instead of `"prayerTimes"`, or putting a number where a string belonged, would compile fine and only blow up (or silently produce wrong JSON) at runtime.
@@ -11,6 +17,9 @@ This step fixes that without changing a single byte of the JSON the client sees.
 This is the foundation for everything later: the service in [step 04](./04-in-memory-edit.md) edits these records, validation in step 05 constrains them, and the database in step 06 stores their structured parts. You only get to model the domain once and reuse it everywhere if it is typed.
 
 ## 🧠 Theory
+
+> [!NOTE]
+> **What changed from Spring Boot 3.x.** This step leans on two things that are newer than most tutorials assume. **Records** are a full language feature on Java 25 (the project's LTS — *Long-Term Support*, the release line that gets years of updates), not the preview they were back on Java 14–15. And Spring Boot 4 ships **Jackson 3** (package `tools.jackson`, the library that turns your objects into JSON) where Boot 3.x shipped Jackson 2 (`com.fasterxml.jackson`) — same record-to-JSON behaviour, new import root. You never import Jackson here, so this is transparent, but it matters the day you add a custom annotation. Full older-vs-newer table: [Version deltas](../../reference/cheatsheet-version-deltas.md).
 
 ### What a record is
 
@@ -23,12 +32,12 @@ public record PrayerTimes(String fajr, String sunrise, String dhuhr, /* ... */) 
 the compiler generates, for free:
 
 - a `private final` field for each **component** (`fajr`, `sunrise`, ...),
-- a **canonical constructor** that takes all components in order,
+- a **canonical constructor** (the all-arguments constructor a record generates automatically, taking every component in declaration order) that takes all components in order,
 - a public **accessor** per component, named exactly like the component - `fajr()`, `isha()` (note: no `get` prefix),
 - value-based `equals()` and `hashCode()` (two records are equal when all their components are equal),
 - a readable `toString()` like `PrayerTimes[fajr=04:37, ...]`.
 
-That is roughly 60 lines of boilerplate you would otherwise hand-write for a classic POJO, and the record version cannot drift out of sync because there is nothing to maintain.
+That is roughly 60 lines of boilerplate you would otherwise hand-write for a classic POJO (*Plain Old Java Object* — an ordinary class with fields, getters, setters, `equals`/`hashCode`, all written by hand), and the record version cannot drift out of sync because there is nothing to maintain.
 
 If you are rusty on records, the closures-vs-accessors and `final` mechanics, skim the [Java refresher](../../reference/java-refresher.md) before continuing.
 
@@ -43,7 +52,7 @@ Our domain is "data with a shape": prayer times, weeks, schedule slots. It is no
 
 ### How records become JSON
 
-Spring Boot 4 ships **Jackson 3** (package `tools.jackson`). You do not import Jackson anywhere in this project - it is transparent - but it is what turns a returned object into a JSON response body. For a record, Jackson reads the **component names** and emits one JSON property per component: `fajr()` becomes `"fajr": "04:37"`. Nesting works recursively: a `RoutineConfig` holds a `PrayerTimes`, so the JSON nests a `"prayerTimes"` object. Lists become JSON arrays. The same machinery runs in reverse for request bodies in [step 04](./04-in-memory-edit.md). For the deeper HTTP/JSON picture see [HTTP and REST](../theory/http-and-rest.md).
+Spring Boot 4 ships **Jackson 3** (package `tools.jackson`). You do not import Jackson anywhere in this project - it is transparent - but it is what turns a returned object into a JSON response body. Turning an in-memory object into text on the wire is called **serialization** (and reading it back, deserialization); for the mental model see [Serialization & JSON](../theory/serialization-and-json.md). For a record, Jackson reads the **component names** and emits one JSON property per component: `fajr()` becomes `"fajr": "04:37"`. Nesting works recursively: a `RoutineConfig` holds a `PrayerTimes`, so the JSON nests a `"prayerTimes"` object. Lists become JSON arrays. The same machinery runs in reverse for request bodies in [step 04](./04-in-memory-edit.md). For the deeper HTTP/JSON picture see [HTTP and REST](../theory/http-and-rest.md).
 
 Because the component names *are* the JSON keys, renaming a record component renames the JSON field. That is the trade we want: one typed source of truth.
 
@@ -85,7 +94,7 @@ classDiagram
     BlockPlan --> "4..5" Week : weeks
 ```
 
-`RoutineConfig` is the **aggregate root**: the single thing `GET /api/config` returns, composing all the smaller records.
+`RoutineConfig` is the **aggregate root** (the one top-level record that owns and composes all the smaller ones, so the rest of the app talks to a single object instead of juggling ten): the single thing `GET /api/config` returns, composing all the smaller records.
 
 ## 🚦 Start from
 
@@ -396,6 +405,37 @@ Files added or changed in this step:
 
 See the full, working source in [the step 03 checkpoint](../../checkpoints/step-03-model-the-domain/).
 
+## 💼 Interview angle
+
+**Q: What does the `record` keyword generate for you, and why use it for a domain model?**
+A: For each component it generates a `private final` field, the all-args canonical constructor, a same-named
+accessor, plus value-based `equals`/`hashCode` and a readable `toString`. That makes records ideal for
+"data with a shape" — immutable, self-documenting, and comparable by content.
+
+**Q: How does a record become JSON, and where do the property names come from?**
+A: Jackson reads the **component names** and emits one JSON property per component (`fajr()` → `"fajr"`),
+nesting recursively for records and emitting arrays for lists. The component name *is* the JSON key, so
+renaming a component renames the field.
+
+**Q: Records are immutable — so how do you "change" one?**
+A: You don't mutate it; you build a *new* record with the updated values (there are no setters). That's
+exactly what the in-memory edit in step 04 does, and it's why records are safe to hand out and share.
+
+**Q: A record has no `length` field, yet the JSON shows `"length": 4`. Why?**
+A: `BlockPlan.length()` is a derived/no-arg accessor that computes `weeks.size()`. Jackson treats any
+public no-arg getter-shaped method as a property, so it serializes `length` even though nothing is stored —
+and ignores it on deserialization because it isn't a constructor component.
+
+**Q: What's an aggregate root, and why model the config as one `RoutineConfig`?**
+A: It's the single top-level object that owns and composes the smaller records, so callers deal with one
+typed thing instead of ten loose pieces. `GET /api/config` returns exactly that one object, and later steps
+persist only its editable parts.
+
+**Q: Why model prayer times as `String` rather than `LocalTime`?**
+A: They're hand-typed display values in `"HH:mm"` form. Strings keep the JSON byte-for-byte (`"04:37"`),
+avoid forcing a parse/format on every read, and step 05 adds validation that the strings are well-formed —
+all the safety without the conversion cost.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Constructor argument order/count mismatch.** `new RoutineConfig(...)` takes 13 arguments in a fixed order. If you swap two `String`s of the same type (e.g. `title` and `tagline`), it compiles but the JSON is subtly wrong. Symptom: fields look shuffled in the response. Fix: read the component list top-to-bottom and match it; let your IDE show parameter hints.
@@ -415,8 +455,5 @@ See the full, working source in [the step 03 checkpoint](../../checkpoints/step-
 5. The records have no setters. If [step 04](./04-in-memory-edit.md) needs to change the month, how will it produce the updated config?
 6. Why is `RoutineSeed` a `final` class with a private constructor instead of a regular class you instantiate?
 
-## ---
-
-⬅️ Prev: [02 - first REST endpoint](./02-first-rest-endpoint.md) · ➡️ Next: [04 - in-memory edit](./04-in-memory-edit.md) · 📍 Checkpoint: [step-03-model-the-domain](../../checkpoints/step-03-model-the-domain/)
-
-See also: [Java refresher](../../reference/java-refresher.md) · [HTTP and REST](../theory/http-and-rest.md) · [Glossary](../../reference/glossary.md)
+---
+⬅️ Prev: [02 - first REST endpoint](./02-first-rest-endpoint.md) · ➡️ Next: [04 - in-memory edit](./04-in-memory-edit.md) · 📍 Checkpoint: [step-03-model-the-domain](../../checkpoints/step-03-model-the-domain/) · 🔗 See also: [Serialization & JSON](../theory/serialization-and-json.md) · [Java refresher](../../reference/java-refresher.md) · [Interview-prep](../../reference/interview-prep.md)

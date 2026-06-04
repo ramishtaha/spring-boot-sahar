@@ -131,4 +131,5 @@ Ultimate runs them from the IDE:
 
 ## 🔗 Related
 - 🧰 [Setup](../docs/00-setup.md) · 🧠 [Spring & DI](../docs/theory/spring-and-di.md) · 🗄️ [SQL & JdbcTemplate](cheatsheet-sql-jdbc.md) · 🌐 [HTTP & REST](cheatsheet-http-rest.md)
+- 🎤 [Interview prep](interview-prep.md) — the Spring tooling above (Beans diagram, Endpoints window) is a great way to *show* the bean graph and REST mappings you'll be asked about · 🆚 [Boot 3.x → 4 deltas](cheatsheet-version-deltas.md)
 - 📄 Official: [IntelliJ IDEA help](https://www.jetbrains.com/help/idea/) · [unified release](https://blog.jetbrains.com/idea/2025/12/intellij-idea-unified-release/)

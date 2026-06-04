@@ -2,6 +2,11 @@
 
 _Add `GET /api/config`, return JSON from Java, and let the server — not a bundled file — feed the page._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-02-first-rest-endpoint`](../../checkpoints/step-02-first-rest-endpoint/) — the Sahar
+> app's first REST endpoint: a `@RestController` serving `GET /api/config` as JSON, with the static page
+> rewired to `fetch` it. Package is `com.ramishtaha.sahar`.
+
 > [!TIP]
 > **IntelliJ IDEA Ultimate** — open the **Endpoints** tool window to see and call `/api/config`, or run [`app/requests.http`](../../app/requests.http) in the built-in **HTTP Client** instead of curl. [More →](../../reference/intellij-ultimate.md)
 
@@ -15,13 +20,13 @@ You will meet the three pieces that make almost every Spring web endpoint work: 
 
 ## 🧠 Theory
 
-**A REST endpoint is just a Java method wired to an HTTP request.** When a request for `GET /api/config` arrives, Spring needs to (a) decide which of your methods should handle it, (b) call it, and (c) turn whatever the method returns into an HTTP response. That dispatch job is done by one object Spring Boot configures for you: the **`DispatcherServlet`**, the *front controller*. Every request to the app hits it first; it consults a handler mapping, finds the method annotated for that path, invokes it, then runs the result through a *message converter* on the way out.
+**A REST endpoint is just a Java method wired to an HTTP request.** When a request for `GET /api/config` arrives, Spring needs to (a) decide which of your methods should handle it, (b) call it, and (c) turn whatever the method returns into an HTTP response. That dispatch job is done by one object Spring Boot configures for you: the **`DispatcherServlet`**, the *front controller* (one entry point that receives **every** request and routes it to the right handler — see [servlet in Fundamentals](../../reference/cheatsheet-fundamentals.md)). Every request to the app hits it first; it consults a handler mapping, finds the method annotated for that path, invokes it, then runs the result through a *message converter* (the component that turns your Java return value into bytes for the response body — here, into JSON) on the way out.
 
 **`@RestController` = `@Controller` + `@ResponseBody`.** A plain `@Controller` traditionally returns a *view name* — a string like `"home"` that Spring resolves to an HTML template to render. We do not want that; we want the return value to **be the response body**. `@ResponseBody` says exactly that, and `@RestController` is the convenience annotation that bundles both, so *every* method in the class returns body content rather than a view name. The class is also a `@Component`, so component scanning (see [Spring and DI](../theory/spring-and-di.md)) finds it and registers it as a bean at startup.
 
 **`@GetMapping("/api/config")`** maps HTTP `GET` requests for that path to the method. It is the GET-only shorthand for `@RequestMapping(method = GET, path = "...")`. Later steps add `@PostMapping`, `@PutMapping`, `@DeleteMapping` for the other verbs (see [HTTP and REST](../theory/http-and-rest.md) and the [HTTP/REST cheatsheet](../../reference/cheatsheet-http-rest.md)).
 
-**Jackson turns the returned object into JSON.** When a `@ResponseBody` method returns a Java object (not a `String`/`ResponseEntity`), Spring picks the JSON message converter, which uses **Jackson** to serialize. It writes the JSON bytes and sets `Content-Type: application/json` for you — no manual string building, no `new JSONObject(...)`. Spring Boot 4 ships **Jackson 3** (the `tools.jackson` package); you do not import Jackson here, so the upgrade is transparent — a `Map`, a record, or a `List` all serialize the same way they did under Jackson 2.
+**Jackson turns the returned object into JSON.** When a `@ResponseBody` method returns a Java object (not a `String`/`ResponseEntity`), Spring picks the JSON message converter, which uses **Jackson** to *serialize* it (serialize = convert an in-memory object into a flat stream of bytes/text you can send over the wire — here, JSON; see [Serialization & JSON](../theory/serialization-and-json.md)). It writes the JSON bytes and sets `Content-Type: application/json` for you — no manual string building, no `new JSONObject(...)`. Spring Boot 4 ships **Jackson 3** (the `tools.jackson` package); you do not import Jackson here, so the upgrade is transparent — a `Map`, a record, or a `List` all serialize the same way they did under Jackson 2.
 
 Here is the full round trip for `GET /api/config`:
 
@@ -43,7 +48,20 @@ sequenceDiagram
     T-->>B: 200 {"title":"Sahar", ...}
 ```
 
-Nothing in this diagram is custom: Tomcat is the embedded server Spring Boot starts, the `DispatcherServlet` and the handler mapping are auto-configured, and the JSON converter is registered because Jackson is on the classpath (pulled in by the web starter). Your code is only the `config()` method in the middle.
+Nothing in this diagram is custom: Tomcat is the embedded server Spring Boot starts, the `DispatcherServlet` and the handler mapping are auto-configured, and the JSON converter is registered because Jackson is on the classpath (the list of compiled JARs Spring scans at startup; see [Fundamentals](../../reference/cheatsheet-fundamentals.md)), pulled in by the web starter. Your code is only the `config()` method in the middle.
+
+> [!NOTE]
+> **What changed from Spring Boot 3.x.** The pieces in this step kept the same shape but were renamed or
+> bumped in Boot 4:
+> - **Starter rename:** the web starter is now `spring-boot-starter-webmvc` (was `spring-boot-starter-web` in
+>   Boot 3.x). It still pulls in Spring MVC, embedded Tomcat, and Jackson — nothing here changes for you.
+> - **Jackson 2 → 3:** Boot 4 ships Jackson 3 under the `tools.jackson` package (was `com.fasterxml.jackson`).
+>   You do not import Jackson in this step, so the upgrade is invisible — `Map`s, records, and `List`s serialize
+>   exactly as before.
+> - **Java 17 → 25 (LTS):** the codealong targets Java 25 (LTS = Long-Term Support, the release line teams run
+>   in production). Records and the rest of this step compile the same on either.
+>
+> Full table of renames and version bumps: [Version deltas](../../reference/cheatsheet-version-deltas.md).
 
 ## 🚦 Start from
 
@@ -88,7 +106,7 @@ public class ConfigController {
 ```
 
 - `@RestController` (line 27 in the checkpoint) marks this class as a REST handler — `@Controller` + `@ResponseBody` in one. Because it is a component, startup component-scanning registers it as a bean and the `DispatcherServlet` learns about its mappings. See the [Spring annotations cheatsheet](../../reference/cheatsheet-spring-annotations.md).
-- `import org.springframework.web.bind.annotation.*` is where `@GetMapping` and `@RestController` come from. Note `org.springframework.web` — this is Spring MVC, pulled in by `spring-boot-starter-webmvc` (renamed from Boot 3.x's `spring-boot-starter-web`; the reactive sibling is `spring-boot-starter-webflux`).
+- `import org.springframework.web.bind.annotation.*` is where `@GetMapping` and `@RestController` come from. Note `org.springframework.web` — this is Spring MVC, pulled in by `spring-boot-starter-webmvc` (renamed from Boot 3.x's `spring-boot-starter-web`; the reactive sibling is `spring-boot-starter-webflux`). See the version callout above and [Version deltas](../../reference/cheatsheet-version-deltas.md) for the full rename story.
 
 ### 2. Add the `GET /api/config` handler
 
@@ -263,6 +281,31 @@ No `pom.xml` change is needed: `spring-boot-starter-webmvc` (already present fro
 
 Full code: [`step-02-first-rest-endpoint`](../../checkpoints/step-02-first-rest-endpoint/).
 
+## 💼 Interview angle
+
+**Q: What does `@RestController` actually do, and how is it different from `@Controller`?**
+A: `@RestController` = `@Controller` + `@ResponseBody`, so every method's return value *is* the HTTP response
+body. A plain `@Controller` treats a returned `String` as a *view name* to render; `@ResponseBody` overrides
+that and writes the value itself.
+
+**Q: Walk me through what happens between an HTTP `GET /api/config` and the JSON the browser receives.**
+A: Tomcat hands the request to the `DispatcherServlet` (the front controller). It matches the path to the
+`@GetMapping` method, invokes it, then runs the returned object through a message converter. Jackson serializes
+it to JSON, sets `Content-Type: application/json`, and Tomcat ships back a `200`.
+
+**Q: Who turns the Java return value into JSON, and do you have to configure it?**
+A: A JSON message converter backed by Jackson. It's auto-registered because Jackson is on the classpath (via
+the web starter) — no annotations or wiring needed. Spring Boot 4 uses Jackson 3, but that's transparent here.
+
+**Q: Why is returning `Map<String, Object>` a poor model, and why won't switching to records break the client?**
+A: An untyped map gives no compile-time safety — a misspelled key compiles fine, and the shape isn't
+documented anywhere. Records fix both. The swap is invisible to the frontend because Jackson serializes a
+record by its component names to the **byte-identical** JSON the map produced.
+
+**Q: `fetch` resolved successfully but the page broke — why check `resp.ok`?**
+A: `fetch` only rejects on network failure; an HTTP `404` or `500` still *resolves* the promise. Without an
+explicit `if (!resp.ok) throw …`, a failed request looks like success and you parse an error body as data.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Endpoint returns `404`.** The controller probably is not being component-scanned. `ConfigController` must live under the base package `com.ramishtaha.sahar` (here `com.ramishtaha.sahar.web`). `@SpringBootApplication` scans its own package and below — a class outside that tree is invisible. Also confirm the path is exactly `/api/config` (case-sensitive) and the verb is `GET`.
@@ -281,6 +324,5 @@ Full code: [`step-02-first-rest-endpoint`](../../checkpoints/step-02-first-rest-
 5. Why does the `fetch` code check `if (!resp.ok)` instead of relying on the `.catch`?
 6. Why did `data.js` have to be deleted rather than just left in place?
 
-## ---
-
-⬅️ Prev: [01 - Serve static](./01-serve-static.md) · ➡️ Next: [03 - Model the domain](./03-model-the-domain.md) · 🏁 Checkpoint: [step-02-first-rest-endpoint](../../checkpoints/step-02-first-rest-endpoint/)
+---
+⬅️ Prev: [01 - Serve static](./01-serve-static.md) · ➡️ Next: [03 - Model the domain](./03-model-the-domain.md) · 📍 Checkpoint: [step-02-first-rest-endpoint](../../checkpoints/step-02-first-rest-endpoint/) · 🔗 See also: [Serialization & JSON](../theory/serialization-and-json.md) · [HTTP and REST](../theory/http-and-rest.md) · [Interview-prep](../../reference/interview-prep.md)

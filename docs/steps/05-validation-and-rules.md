@@ -2,6 +2,9 @@
 
 *Reject bad edits at the door: well-formed prayer times, a 4-or-5-week block, and a deload that is always the last week - turned into clean HTTP 400s.*
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-05-validation-and-rules`](../../checkpoints/step-05-validation-and-rules/) — the editable routine from step 04 with Bean Validation wired in: field rules on `PrayerTimes` and `Week`, a `@Size` + cascade + custom `@DeloadLast` rule on `BlockPlan`, `@Valid` on the controllers, and one `@RestControllerAdvice` that turns every failure into a clean 400. Package is `com.ramishtaha.sahar`.
+
 > [!TIP]
 > **IntelliJ IDEA Ultimate** — run the malformed requests from the **HTTP Client** ([`app/requests.http`](../../app/requests.http)) to watch the `400`s and read the JSON error inline. [More →](../../reference/intellij-ultimate.md)
 
@@ -13,11 +16,14 @@ That is the gap this step closes. The point of Sahar is to be edited once a mont
 
 The lesson underneath the app: **validate at the boundary, in one place, with declarative rules.** You will see three layers of constraints - simple field rules (`@NotBlank`, `@Pattern`), a built-in collection rule (`@Size`), and a custom cross-field rule you write yourself (`@DeloadLast`) - all enforced automatically by Spring when the request body arrives, and all failures funnelled into one tidy `400` response shape. That is the standard, idiomatic way to do input validation in a Spring application, and you will reuse exactly this pattern in every controller from here on.
 
+> [!NOTE]
+> **What changed from Spring Boot 3.x** — two renames touch this step. (1) The validation API is now `jakarta.validation.*` (Jakarta EE 11); the old `javax.validation.*` imports you will see in pre-Boot-3 tutorials are gone, so `import jakarta.validation.constraints.NotBlank;` is correct. (2) When `ApiExceptionHandler` returns its `ApiError` record, Spring Boot 4 serializes it with **Jackson 3** (the `tools.jackson` packages) instead of Jackson 2's `com.fasterxml.jackson` - transparent here, you write no mapping code either way. Full table: [Version deltas](../../reference/cheatsheet-version-deltas.md).
+
 ## 🧠 Theory
 
 ### What Bean Validation is
 
-Bean Validation is a Java standard (the `jakarta.validation` API, the Jakarta EE 11 namespace - see the [glossary](../../reference/glossary.md)). You *describe* rules by putting annotations on fields, and a separate engine *enforces* them. The reference implementation - the engine that actually runs the checks - is **Hibernate Validator**, which `spring-boot-starter-validation` pulls onto the classpath. You added that starter back in the [baseline pom](../../checkpoints/step-00-baseline/); step 05 is where it finally earns its keep.
+Bean Validation is a Java standard (the `jakarta.validation` API, the Jakarta EE 11 namespace - see the [glossary](../../reference/glossary.md)). You *describe* rules by putting annotations on fields, and a separate engine *enforces* them. The reference implementation - the engine that actually runs the checks - is **Hibernate Validator**, which `spring-boot-starter-validation` pulls onto the classpath (the set of JARs your app can "see" at runtime - see [Fundamentals](../../reference/cheatsheet-fundamentals.md)). You added that starter back in the [baseline pom](../../checkpoints/step-00-baseline/); step 05 is where it finally earns its keep.
 
 Two halves, kept separate on purpose:
 
@@ -40,7 +46,7 @@ flowchart TD
     G --> I[HTTP 400 + JSON list of messages]
 ```
 
-The order matters: Jackson builds the object *first* (the field types must parse), then the validator checks the *values*. So `"isha": "20:36"` becomes a valid `String` either way - it is `@Pattern` that decides `20:36` is acceptable and `99:99` is not.
+The order matters: Jackson builds the object *first* by deserializing the JSON (turning the request's text into a Java object - see [Serialization & JSON](../theory/serialization-and-json.md)), then the validator checks the *values*. So `"isha": "20:36"` becomes a valid `String` either way - it is `@Pattern` that decides `20:36` is acceptable and `99:99` is not.
 
 ### Field rules vs cross-field rules
 
@@ -322,7 +328,7 @@ What it does:
 - `@ExceptionHandler(MethodArgumentNotValidException.class)` says "when this specific exception escapes any controller, run this method instead of letting it 500".
 - `@ResponseStatus(HttpStatus.BAD_REQUEST)` sets the status code to `400` - the correct code for "your input was malformed" (see the [HTTP cheatsheet](../../reference/cheatsheet-http-rest.md)).
 - It pulls **field errors** (e.g. `fajr: Fajr must be a 24-hour time...`) and **global errors** (the class-level `@DeloadLast` message has no field, so it lands here) out of the binding result, flattens them to plain strings, and sorts them so the output order is stable and testable.
-- Returning the `ApiError` record means Jackson 3 (`tools.jackson` - transparent here, see [persistence/JSON notes](../theory/http-and-rest.md)) serializes it to JSON automatically, exactly like any other response body.
+- Returning the `ApiError` record means Jackson serializes it to JSON automatically, exactly like any other response body (the Boot 4 / Jackson 3 detail is in the version note above; how serialization works is in [Serialization & JSON](../theory/serialization-and-json.md)).
 
 ## ✅ End state
 
@@ -377,6 +383,26 @@ Files changed / added in this step (browse the full [step 05 checkpoint](../../c
 
 No pom change: `spring-boot-starter-validation` was already present from the baseline.
 
+## 💼 Interview angle
+
+**Q: How does Bean Validation actually run on an incoming request body?**
+A: The annotations are just metadata; nothing runs until `@Valid` on the `@RequestBody` triggers it. Spring then has Hibernate Validator check every constraint *after* Jackson deserializes the JSON but *before* the controller method runs. On failure it throws `MethodArgumentNotValidException`, so bad data never reaches the service.
+
+**Q: What's the difference between `@NotNull`, `@NotEmpty`, and `@NotBlank`?**
+A: `@NotNull` only rejects `null`. `@NotEmpty` rejects `null` and empty (length 0). `@NotBlank` rejects `null`, empty, *and* whitespace-only strings - the right pick for human-typed text like a week name.
+
+**Q: When do you need a custom class-level constraint instead of a field annotation?**
+A: When the rule spans multiple fields. "The deload must be the last week" can't be judged from any single `Week` - it depends on position within the list. So `@DeloadLast` sits on the `BlockPlan` type (`@Target(TYPE)`) with a `ConstraintValidator` that receives the whole object.
+
+**Q: Why doesn't `@Pattern` reject `null`?**
+A: By spec, `@Pattern` (like most value constraints) treats `null` as valid - it only checks present values. To require "present *and* well-formed" you pair it with `@NotBlank`/`@NotNull`, each carrying its own message.
+
+**Q: What does `@Valid` on a `List<Week>` field do that `@Size` doesn't?**
+A: `@Size` only checks the list's length. `@Valid` cascades - it descends into each `Week` and runs that element's own field constraints. Drop the cascade and a week with a blank `name` slips through even though `Week` is fully annotated.
+
+**Q: How do you turn validation failures into a consistent HTTP 400?**
+A: A single `@RestControllerAdvice` with an `@ExceptionHandler(MethodArgumentNotValidException.class)` method. It pulls field errors and global errors out of the binding result, flattens them into one JSON shape, and `@ResponseStatus(HttpStatus.BAD_REQUEST)` sets the 400 - applied across every controller, declared once.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Forgetting `@Valid` on the parameter.** The annotations are present but nothing rejects bad input - the symptom is "my `@Pattern` does nothing". Fix: every `@RequestBody` you want validated needs `@Valid` right before it.
@@ -397,6 +423,6 @@ No pom change: `spring-boot-starter-validation` was already present from the bas
 5. What is the difference between a *field error* and a *global error* in `MethodArgumentNotValidException`, and which one carries the `@DeloadLast` message?
 6. What would break if you removed `@Valid` from the `List<Week> weeks` field but left it on the controller parameter?
 
-## ---
+---
 
-⬅️ Prev: [04 - In-memory edit](./04-in-memory-edit.md) · ➡️ Next: [06 - JdbcTemplate and H2](./06-jdbctemplate-h2.md) · 🏁 Checkpoint: [step-05-validation-and-rules](../../checkpoints/step-05-validation-and-rules/)
+⬅️ Prev: [04 - In-memory edit](./04-in-memory-edit.md) · ➡️ Next: [06 - JdbcTemplate and H2](./06-jdbctemplate-h2.md) · 📍 Checkpoint: [step-05-validation-and-rules](../../checkpoints/step-05-validation-and-rules/) · 🔗 See also: [Serialization & JSON](../theory/serialization-and-json.md) · [HTTP & REST cheatsheet](../../reference/cheatsheet-http-rest.md) · [Interview-prep](../../reference/interview-prep.md)

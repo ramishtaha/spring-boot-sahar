@@ -2,6 +2,12 @@
 
 _Same code, two databases: keep embedded H2 as the zero-setup default, and add a `postgres` profile that points the very same app at a real PostgreSQL server — with every connection detail coming from the environment._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-09-swap-to-postgres`](../../checkpoints/step-09-swap-to-postgres/) — the same Sahar app
+> running on two databases from one codebase: embedded H2 by default, and a `postgres` profile that flips the
+> identical JAR onto a real PostgreSQL server with all connection details from the environment. Package is
+> `com.ramishtaha.sahar`.
+
 > [!TIP]
 > **IntelliJ IDEA** — point the **Database** tool window at the compose Postgres (`jdbc:postgresql://localhost:5432/sahar`, `sahar`/`sahar`) to confirm the same data, and set the `postgres` profile in your Spring Boot run config. [Setup →](../../reference/intellij-ultimate.md)
 
@@ -11,9 +17,17 @@ Up to now Sahar has run on embedded H2: a database that lives **inside the app's
 
 The naive way to switch databases is to edit `application.properties` and change the URL. That is a trap: you would have to edit-and-revert constantly, you would risk committing production credentials, and two developers could not run different setups from the same code. The professional way is **profiles plus environment-based config**. You teach the app *both* configurations once, pick one at launch time, and feed secrets in from the environment.
 
-The payoff for Sahar specifically: the default profile still runs on H2 (anyone can run the course with zero setup), while `--spring.profiles.active=postgres` flips the same JAR onto Postgres for a real deploy. Crucially, **not one line of Java or SQL changes** — only configuration. That is the whole point of this step, and it only works because we kept [`schema.sql`](../../checkpoints/step-09-swap-to-postgres/) portable back in [step 06](./06-jdbctemplate-h2.md).
+The payoff for Sahar specifically: the default profile still runs on H2 (anyone can run the course with zero setup), while `--spring.profiles.active=postgres` flips the same JAR (the single packaged `.jar` archive that *is* your built app — see [Fundamentals](../../reference/cheatsheet-fundamentals.md)) onto Postgres for a real deploy. Crucially, **not one line of Java or SQL changes** — only configuration. That is the whole point of this step, and it only works because we kept [`schema.sql`](../../checkpoints/step-09-swap-to-postgres/) portable back in [step 06](./06-jdbctemplate-h2.md).
 
 ## 🧠 Theory
+
+> [!NOTE]
+> **What changed from Spring Boot 3.x** — Profiles, the `${VAR:default}` placeholder, and environment-based
+> 12-factor config (the heart of this step) all work the same as they did in Boot 3.x. The one shift you meet
+> here: in Boot 4 the **H2 web console** is its own starter (`spring-boot-h2console`) rather than being bundled
+> with the H2 driver as in 3.x — that is why `application-postgres.properties` can simply set
+> `spring.h2.console.enabled=false` to turn the feature off in this profile. The PostgreSQL driver and the
+> standard `spring.datasource.*` keys are unchanged across versions. Full table: [Version deltas](../../reference/cheatsheet-version-deltas.md).
 
 ### Embedded DB vs server DB
 
@@ -77,7 +91,7 @@ If you ever want the finished result to compare against, it is in [`checkpoints/
 
 ### 1. Confirm the PostgreSQL driver is already on the classpath
 
-You do not need to add a dependency in this step — the generated `pom.xml` has had the driver since the start, declared `runtime` so it ships but isn't compiled against:
+You do not need to add a dependency in this step — the generated `pom.xml` has had the driver on the **classpath** (the set of JARs Java loads classes from at runtime — see [Fundamentals](../../reference/cheatsheet-fundamentals.md)) since the start, declared `runtime` so it ships but isn't compiled against:
 
 ```xml
 <!-- The PostgreSQL JDBC driver. Only needed at runtime; used from step 09. -->
@@ -147,7 +161,7 @@ Line by line, the *why*:
 - **`spring.datasource.username` / `password`** — likewise from `SAHAR_DB_USERNAME` / `SAHAR_DB_PASSWORD`, defaulting to `sahar`/`sahar` for local dev. In production you set the env vars to the real credentials and this file never contains a secret.
 - **`spring.datasource.driver-class-name=org.postgresql.Driver`** — overrides the H2 driver name from the base file. This is why the `postgresql` dependency must be present at runtime.
 - **`spring.sql.init.mode=always`** — repeated here intentionally. It is also set in the base file, but stating it in the profile makes the intent explicit and immune to the base file changing. `schema.sql` runs against Postgres exactly as it ran against H2.
-- **`spring.h2.console.enabled=false`** — there is no H2 in this profile, so we turn its console off. (Note that the H2 console module — `spring-boot-h2console`, a Spring Boot 4 change from the bundled-with-driver approach in 3.x — is still on the classpath; we simply disable the feature here.)
+- **`spring.h2.console.enabled=false`** — there is no H2 in this profile, so we turn its console off. (The H2 console module — `spring-boot-h2console` — is still on the classpath; we simply disable the feature here. That separate-starter packaging is the Boot 4 change noted in the [version callout above](#-theory) and the [Version deltas](../../reference/cheatsheet-version-deltas.md) cheatsheet.)
 
 Everything **not** mentioned in this file (your `server.port`, `server.error.include-message`, the application name) is inherited from `application.properties`.
 
@@ -231,6 +245,37 @@ Files changed in this step:
 
 Full result: [`checkpoints/step-09-swap-to-postgres/`](../../checkpoints/step-09-swap-to-postgres/).
 
+## 💼 Interview angle
+
+**Q: What's the difference between an embedded database and a server database, and when do you use each?**
+A: An embedded DB (H2) runs in-process inside your JVM and dies with the app — great for tests, demos, and
+zero-setup learning. A server DB (PostgreSQL) is a separate process with its own lifecycle, real concurrency
+(MVCC, locking), and durability (WAL/fsync) — that's what you deploy. You develop on either; you ship on the server.
+
+**Q: How do Spring profiles resolve a conflicting property?**
+A: Spring loads the base `application.properties` first, then layers `application-<profile>.properties` on top.
+For any key set in both, the **active profile wins**; keys the profile doesn't mention are inherited unchanged.
+
+**Q: What does `${SAHAR_DB_URL:jdbc:postgresql://localhost:5432/sahar}` do, and why is it a 12-factor win?**
+A: It reads the `SAHAR_DB_URL` environment variable if set, otherwise falls back to the local default after the
+colon. That keeps config in the environment, not in code: a fresh checkout "just works" locally, while production
+injects real values via env vars — so secrets never get committed and one codebase serves every deployment.
+
+**Q: Why is the PostgreSQL driver scoped `runtime` rather than `compile`?**
+A: Our code only ever talks to `JdbcTemplate` and the `javax.sql.DataSource` abstraction — we never
+`import org.postgresql.*`. The driver is loaded reflectively by class name at runtime, so it belongs on the
+runtime classpath but not the compile classpath. `runtime` scope ships the JAR without letting code couple to it.
+
+**Q: How can the same `schema.sql` run unchanged on both H2 and PostgreSQL?**
+A: It uses SQL-standard constructs both engines share: `GENERATED BY DEFAULT AS IDENTITY` for auto-increment
+(not MySQL's `AUTO_INCREMENT` or Postgres-only `SERIAL`), the real `BOOLEAN` type, and reserved-word-safe names.
+`CREATE TABLE IF NOT EXISTS` makes `spring.sql.init.mode=always` idempotent across restarts.
+
+**Q: How would you prove data actually persists in the server, not in the app's JVM?**
+A: Write a value through the app, then read it back with a *different* client that bypasses the app — e.g.
+`docker exec ... psql -c "SELECT ..."`. Seeing your edit from outside the JVM proves the data lives in the
+separate, durable Postgres process.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Forgot the profile flag.** Running plain `mvn spring-boot:run` uses the *default* H2 profile, so your Postgres edits "disappear." Check the startup log for `The following 1 profile is active: "postgres"`. No such line means you are on H2.
@@ -250,8 +295,5 @@ Full result: [`checkpoints/step-09-swap-to-postgres/`](../../checkpoints/step-09
 5. Why can the *same* `schema.sql` run unchanged on both H2 and Postgres — name two specific SQL choices that make it portable.
 6. How would you prove the data really lives in Postgres and not inside the app's JVM?
 
-## ---
-
-⬅️ Prev: [08 - Editable admin UI](./08-editable-admin-ui.md) · ➡️ Next: [10 - Seed and migrations](./10-seed-and-migrations.md) · 📍 Checkpoint: [step-09-swap-to-postgres](../../checkpoints/step-09-swap-to-postgres/)
-
-Related reading: [persistence-landscape.md](../theory/persistence-landscape.md) · [containers-and-devops.md](../theory/containers-and-devops.md) · [Docker/Podman cheatsheet](../../reference/cheatsheet-docker-podman.md) · [glossary.md](../../reference/glossary.md)
+---
+⬅️ Prev: [08 - Editable admin UI](./08-editable-admin-ui.md) · ➡️ Next: [10 - Seed and migrations](./10-seed-and-migrations.md) · 📍 Checkpoint: [step-09-swap-to-postgres](../../checkpoints/step-09-swap-to-postgres/) · 🔗 See also: [persistence-landscape](../theory/persistence-landscape.md) · [containers-and-devops](../theory/containers-and-devops.md) · [Docker/Podman cheatsheet](../../reference/cheatsheet-docker-podman.md) · [Interview-prep](../../reference/interview-prep.md)

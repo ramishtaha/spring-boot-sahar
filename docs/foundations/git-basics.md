@@ -65,4 +65,4 @@ A simple rhythm: get one small thing working, then `git add .` and `git commit -
 - **GitHub** is a website that hosts your repo so it's backed up and shareable.
 - Commit small and often — and the Sahar repo is already set up for you.
 
-Next: [Install your tools (setup)](../00-setup.md) — you're ready! · Go deeper: the [README's publish guide](../../README.md)
+⬅️ Prev: [Databases in five minutes](./databases-basics.md) · Next: [Install your tools (setup)](../00-setup.md) — you're ready! · Go deeper: the [README's publish guide](../../README.md)

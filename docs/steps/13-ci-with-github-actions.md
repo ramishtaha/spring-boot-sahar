@@ -2,6 +2,9 @@
 
 *Every push and pull request gets built, tested, and Docker-image-checked on a clean Linux machine - so "works on my machine" stops being a thing.*
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-13-ci-with-github-actions`](../../checkpoints/step-13-ci-with-github-actions/) — the full Sahar app plus the one new file this step adds, `.github/workflows/ci.yml` (an active `build` job and a commented-out GHCR `publish-image` job). Nothing under `src/` changes. Package is `com.ramishtaha.sahar`.
+
 ## 🎯 Why this matters
 
 Up to step 12 you have been the only quality gate. You run `mvn verify` locally, you `docker build` locally, and if you forget - nobody catches it. The first time a teammate (or future-you) clones the repo on a different machine, a missing file or a stale assumption blows up.
@@ -29,7 +32,7 @@ This step is deliberately small - it is a *taste* of DevOps, not a full pipeline
 
 **Why `uses:` for checkout and setup, but `run:` for the build?** Cloning a repo and installing a JDK are common, fiddly, security-sensitive chores - so you lean on a vetted, versioned action instead of writing shell. Your *actual* build (`mvn verify`, `docker build`) is project-specific, so it is a plain `run:` command - the same one you type locally. That symmetry is the point: CI runs *your* command, not a magic one.
 
-**Why tests need no database in CI.** Sahar's tests run against in-memory H2 (set up via the modular test starters in the `pom.xml`, see [step 11](./99-roadmap.md)). The runner does not have Postgres installed, and it does not need it: `mvn verify` spins H2 up inside the JVM, runs the Flyway migrations against it, exercises the layers, and tears it down. No external service, no Docker-for-the-tests, nothing to provision. This is exactly why the in-memory profile was worth the trouble earlier.
+**Why tests need no database in CI.** Sahar's tests run against in-memory H2 (set up via the modular test starters in the `pom.xml`, see [step 06](./06-jdbctemplate-h2.md)). The runner does not have Postgres installed, and it does not need it: `mvn verify` spins H2 up inside the JVM, runs the Flyway migrations against it, exercises the layers, and tears it down. No external service, no Docker-for-the-tests, nothing to provision. This is exactly why the in-memory profile was worth the trouble earlier.
 
 ```mermaid
 flowchart LR
@@ -45,6 +48,9 @@ flowchart LR
 
 > [!IMPORTANT]
 > The rule the whole pipeline rests on: **a step fails the moment its command exits non-zero.** `mvn verify` returns non-zero if compilation or any test fails; `docker build` returns non-zero if the `Dockerfile` is broken. The runner stops at the first failure and the commit goes red.
+
+> [!NOTE]
+> **What changed from Spring Boot 3.x.** This step is build tooling, not app code, so the version story is small. The one that bites: `actions/setup-java` installs the **JDK that matches your project** — Sahar pins `java-version: '25'` (Java 25 is an **LTS** — Long-Term Support — release, the multi-year production baseline; see [Fundamentals](../../reference/cheatsheet-fundamentals.md)), where an older Boot 3.x tutorial would pin `'17'`. Tests run green on the runner with **no external DB** because Sahar uses Boot 4's *modular* test starters (`spring-boot-starter-{webmvc,jdbc,validation,flyway}-test`) rather than the single Boot 3.x `spring-boot-starter-test`. The full older→newer table lives in [Version deltas](../../reference/cheatsheet-version-deltas.md).
 
 ## 🚦 Start from
 
@@ -67,7 +73,7 @@ mvn -B -ntp verify
 
 - `-B` (`--batch-mode`) - non-interactive output, no progress spinners. Always use this in CI; the log is cleaner and Maven never waits for input.
 - `-ntp` (`--no-transfer-progress`) - suppresses the per-file "Downloading..." lines that otherwise flood the log.
-- `verify` - a Maven lifecycle *phase*. Running it runs everything up to and including it: `compile`, `test`, `package`, and `verify`. So one word gives you compile + run tests + build the jar. (See [cheatsheet-maven.md](../../reference/cheatsheet-maven.md) for the lifecycle.)
+- `verify` - a Maven lifecycle *phase*. Running it runs everything up to and including it: `compile`, `test`, `package`, and `verify`. So one word gives you compile + run tests + build the jar (the runnable archive of compiled classes Boot bundles your app into — see [Fundamentals](../../reference/cheatsheet-fundamentals.md)). (See [cheatsheet-maven.md](../../reference/cheatsheet-maven.md) for the lifecycle.)
 
 > [!TIP]
 > This was confirmed green locally before CI was added - the CI run is just the same command on a clean machine. If it does not pass on your laptop, fix that first; CI will only tell you the same thing, slower.
@@ -220,6 +226,26 @@ Nothing under `src/`, the `pom.xml`, or the `Dockerfile` changed - this step onl
 
 Checkpoint for this step: [../../checkpoints/step-13-ci-with-github-actions/](../../checkpoints/step-13-ci-with-github-actions/)
 
+## 💼 Interview angle
+
+**Q: What is Continuous Integration, and what problem does it solve?**
+A: CI automatically builds and tests every change on a fresh, reproducible machine. It kills "works on my machine" — a clean runner has no leftover state, so an uncommitted file or local-only tool fails the build immediately, at the commit where it's cheap to fix.
+
+**Q: Difference between a workflow, a job, a step, and an action?**
+A: A *step* is one thing to do (`uses:` a shared action, or `run:` a shell command); a *job* is an ordered list of steps on one runner; a *workflow* is the whole YAML file — its name, triggers (`on:`), and jobs; an *action* is a reusable, versioned unit (e.g. `actions/checkout`) you reference with `uses:`.
+
+**Q: Why does CI use `uses:` for checkout/setup but `run:` for the build?**
+A: Cloning a repo and installing a JDK are common, security-sensitive chores, so you lean on vetted, version-pinned actions. The actual build (`mvn verify`, `docker build`) is project-specific — it's the exact command you type locally, run unchanged on the runner. CI runs *your* command, not a magic one.
+
+**Q: How does a CI step signal failure, and what happens next?**
+A: A step fails the moment its command exits non-zero — `mvn verify` on a compile/test failure, `docker build` on a broken `Dockerfile`. The runner stops at the first failure, later steps don't run, and the commit gets a red cross right next to the code.
+
+**Q: Sahar runs on Postgres in production — why do its CI tests need no database?**
+A: The tests run against in-memory **H2**, wired through Boot 4's modular test starters. `mvn verify` spins H2 up inside the JVM, runs the Flyway migrations against it, exercises the layers, and tears it down — no external service to provision on the runner.
+
+**Q: The `publish-image` job uses `secrets.GITHUB_TOKEN` without you creating any secret. How?**
+A: GitHub injects a short-lived `GITHUB_TOKEN` into every workflow run automatically. Combined with `permissions: packages: write` in that job, it authenticates the GHCR push with zero secrets to manage. Without the `packages: write` scope the token is read-only and the push is rejected.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Workflow never runs / no Actions tab activity.** The file is not at the repository root. It must be `.github/workflows/ci.yml` in the directory that contains `.git`. A workflow under `app/.github/...` or any subfolder is invisible to GitHub. (See step 4 above.)
@@ -240,8 +266,5 @@ Checkpoint for this step: [../../checkpoints/step-13-ci-with-github-actions/](..
 5. The `publish-image` job uses `secrets.GITHUB_TOKEN` without you ever creating a secret. Where does that token come from, and what `permissions:` entry must be present for the push to succeed?
 6. You put the workflow at `app/.github/workflows/ci.yml` in a repo whose root is one level up. Why does nothing happen on push, and where should the file go?
 
-## ---
-
-⬅️ Prev: [12 - Docker Compose](./12-compose.md) · ➡️ Next: [14 - Deploy](./14-deploy.md) · 🏁 Checkpoint: [step-13-ci-with-github-actions](../../checkpoints/step-13-ci-with-github-actions/)
-
-See also: [Containers and DevOps theory](../theory/containers-and-devops.md) · [Maven cheatsheet](../../reference/cheatsheet-maven.md) · [Glossary](../../reference/glossary.md)
+---
+⬅️ Prev: [12 - Docker Compose](./12-compose.md) · ➡️ Next: [14 - Deploy](./14-deploy.md) · 📍 Checkpoint: [step-13-ci-with-github-actions](../../checkpoints/step-13-ci-with-github-actions/) · 🔗 See also: [Containers and DevOps theory](../theory/containers-and-devops.md) · [Maven cheatsheet](../../reference/cheatsheet-maven.md) · [Interview-prep](../../reference/interview-prep.md)

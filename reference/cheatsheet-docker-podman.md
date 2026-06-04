@@ -6,6 +6,9 @@
 
 For the *why* behind containers, layers, and 12-factor config, read [containers and devops](../docs/theory/containers-and-devops.md). For the step-by-step builds, see [step 11 (dockerize)](../docs/steps/11-dockerize.md) and [step 12 (compose)](../docs/steps/12-compose.md).
 
+> [!NOTE]
+> Sahar pins the **Java 25** base images and the **`docker compose` v2** plugin (the hyphenated `docker-compose` v1 is retired). For the older-vs-newer story behind those versions, see [Version deltas](cheatsheet-version-deltas.md).
+
 ---
 
 ## 🔑 Image vs container, in one line
@@ -311,5 +314,8 @@ Flags and provider plumbing can change between releases; check [podman.io](https
 - Step: [12 — Compose](../docs/steps/12-compose.md)
 - Step: [09 — Swap to PostgreSQL](../docs/steps/09-swap-to-postgres.md)
 - Theory: [Containers and DevOps](../docs/theory/containers-and-devops.md)
+- Cheatsheet: [Maven](cheatsheet-maven.md) (the build that produces the jar this image ships)
+- Cheatsheet: [Version deltas](cheatsheet-version-deltas.md) (Boot 3.x → 4 / Java 25, base-image and Compose v2 story)
+- Reference: [Interview-prep](interview-prep.md)
 - Official docs: [docs.docker.com](https://docs.docker.com/) · [podman.io](https://podman.io/) · [postgresql.org](https://www.postgresql.org/)
 - ↩️ Back to [README](../README.md)

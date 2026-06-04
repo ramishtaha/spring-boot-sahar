@@ -2,6 +2,12 @@
 
 _Stop running `schema.sql` and a Java seeder on every boot. Move both the schema and the routine into versioned Flyway migrations that run exactly once and are tracked in a history table._
 
+> [!IMPORTANT]
+> **Checkpoint:** [`step-10-seed-and-migrations`](../../checkpoints/step-10-seed-and-migrations/) — the full
+> Sahar app with its schema and seed data moved into versioned Flyway migrations (`V1__init_schema.sql`,
+> `V2__seed_routine.sql`), the old `schema.sql` and Java `DataSeeder` retired, and a fresh database that comes
+> up pre-filled with the June 2026 routine on both H2 and Postgres. Package is `com.ramishtaha.sahar`.
+
 > [!TIP]
 > **IntelliJ IDEA** — **SQL support** gives completion in your `V1`/`V2` migrations, and the **Database** tool window shows the `flyway_schema_history` table so you can see exactly which migrations Flyway applied. [More →](../../reference/intellij-ultimate.md)
 
@@ -15,11 +21,23 @@ Up to step 09 your schema lived in a `schema.sql` file that Spring re-ran on eve
 
 Flyway solves exactly this: numbered migration scripts that each run once, in order, recorded in a `flyway_schema_history` table. This is the standard way real Spring apps manage their database. After this step, a brand-new database comes up already filled with the June 2026 routine, and a restart re-validates the history but does not re-seed.
 
+> [!NOTE]
+> **What changed from Spring Boot 3.x** — the way you add Flyway is the headline difference in this step. In
+> Boot 3.x you added `org.flywaydb:flyway-core` directly to the pom (a single artifact that bundled all
+> database support). In Boot 4.x you instead add the dedicated **`spring-boot-starter-flyway`**, which pulls
+> Flyway onto the classpath (the list of folders and JARs the JVM loads classes from — see
+> [Fundamentals](../../reference/cheatsheet-fundamentals.md)) and auto-configures it, plus a separate
+> **`flyway-database-postgresql`** module for Postgres (Flyway 10+ split per-database support into its own
+> modules; H2 support ships inside the starter). The single `spring-boot-starter-test` was likewise split into
+> per-feature test starters such as `spring-boot-starter-flyway-test`. And when the seeded rows are later
+> serialized to `/api/config`, Boot 4 uses **Jackson 3** (`tools.jackson`) rather than Jackson 2
+> (`com.fasterxml.jackson`). The full table lives in [Version deltas](../../reference/cheatsheet-version-deltas.md).
+
 ## 🧠 Theory
 
 ### The simple built-in option (and why we are leaving it)
 
-Spring Boot has a zero-dependency schema initializer baked in: if it finds `schema.sql` on the classpath it runs the DDL, and if it finds `data.sql` it runs the inserts. You control it with `spring.sql.init.mode` (`always`, `embedded`, or `never`). That is what steps 06-09 leaned on for the schema. It is genuinely useful for tiny demos, but it has no concept of _versions_ — it just replays the same file. There is no record of "what has already run," so it cannot apply an incremental change; it can only build the world from zero. The `IF NOT EXISTS` everywhere was the symptom.
+Spring Boot has a zero-dependency schema initializer baked in: if it finds `schema.sql` on the classpath it runs the DDL (Data Definition Language — the `CREATE TABLE`/`ALTER TABLE` statements that define structure, as opposed to the `INSERT`/`UPDATE` that move data), and if it finds `data.sql` it runs the inserts. You control it with `spring.sql.init.mode` (`always`, `embedded`, or `never`). That is what steps 06-09 leaned on for the schema. It is genuinely useful for tiny demos, but it has no concept of _versions_ — it just replays the same file. There is no record of "what has already run," so it cannot apply an incremental change; it can only build the world from zero. The `IF NOT EXISTS` everywhere was the symptom.
 
 ### Flyway: versioned migrations
 
@@ -65,7 +83,7 @@ We will retire `schema.sql` and the Java seeder and hand both jobs to Flyway. Th
 
 ### 1. Add the Flyway dependencies (Spring Boot 4 specifics)
 
-Open `pom.xml` and add the migration dependencies. **This is a real Spring Boot 4 difference**: in Boot 3.x you added `org.flywaydb:flyway-core` directly. In Boot 4.x there is a dedicated starter that pulls Flyway in and auto-configures it, plus a separate Flyway module for Postgres support (Flyway 10+ split per-database support into modules; H2 support ships with the starter).
+Open `pom.xml` and add the migration dependencies. **This is a real Spring Boot 4 difference** — `flyway-core` → `spring-boot-starter-flyway` + `flyway-database-postgresql` — consolidated in the version callout above and in [Version deltas](../../reference/cheatsheet-version-deltas.md). In short: a dedicated starter pulls Flyway in and auto-configures it, plus a separate Flyway module adds Postgres support (Flyway 10+ split per-database support into modules; H2 support ships with the starter).
 
 ```xml
 <!--
@@ -188,7 +206,7 @@ INSERT INTO diet_sections (ordinal, title, body) VALUES
 This is a standard SQL gotcha (it is the same in H2, Postgres, and most other engines). Get it wrong and you get a syntax error or a truncated string. See the [SQL + JDBC cheatsheet](../../reference/cheatsheet-sql-jdbc.md) for the quick reference.
 
 > [!NOTE]
-> Note on JSON, not SQL: when the service later reads these rows and serializes the config to JSON, Spring Boot 4 uses **Jackson 3** (package `tools.jackson`). Your records serialize automatically and you never import Jackson, so this is transparent here — it only matters that the strings you seeded are exactly what shows up in the `/api/config` response.
+> Note on JSON, not SQL: when the service later reads these rows and serializes them (turns Java objects into a wire format — see [Serialization & JSON](../theory/serialization-and-json.md)) to JSON for `/api/config`, Spring Boot 4 uses **Jackson 3** (package `tools.jackson`) — see the version callout near the top. Your records serialize automatically and you never import Jackson, so this is transparent here — it only matters that the strings you seeded are exactly what shows up in the `/api/config` response.
 
 ### 4. Delete `schema.sql` and the Java `DataSeeder`
 
@@ -263,6 +281,38 @@ Files changed in this step:
 
 Full checkpoint: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-and-migrations/).
 
+## 💼 Interview angle
+
+**Q: Why use a migration tool like Flyway instead of just re-running a `schema.sql` on startup?**
+A: `schema.sql` can only build from scratch; it has no concept of versions, so it cannot describe the
+_difference_ between v1 and v2 of a schema (the next `ALTER TABLE` has nowhere clean to go). Flyway runs
+numbered scripts once each, in order, and records them — giving you incremental, repeatable, team-safe schema
+evolution.
+
+**Q: How does Flyway guarantee a migration runs exactly once per database?**
+A: It keeps a `flyway_schema_history` table. On startup it reads which versions are already applied and runs
+only the pending ones, in version order. That history is the single source of truth, which is why the
+migrations themselves drop `IF NOT EXISTS` — the first time a DB sees `V1` the tables genuinely don't exist.
+
+**Q: You shipped `V2` last month and now need a new column. Do you edit `V2`?**
+A: No. Flyway stores a checksum of each applied migration; editing `V2` causes a "Migration checksum mismatch"
+validation failure on the next boot. Once a migration has run anywhere, it's immutable — you add a new
+`V3__add_column.sql`. (On a throwaway local DB you can just wipe it and let Flyway rebuild.)
+
+**Q: Why does `spring.sql.init.mode` have to be `never` once Flyway is in charge?**
+A: Otherwise Spring's built-in `schema.sql`/`data.sql` initializer and Flyway both try to manage the same
+tables, causing duplicate-object or "table already exists" errors. Pick one owner; here it's Flyway.
+
+**Q: Flyway runs the same `V1`/`V2` on H2 and Postgres — what makes that possible, and what extra piece does
+Postgres need?**
+A: The DDL is written in portable standard SQL (`BIGINT GENERATED BY DEFAULT AS IDENTITY`, reserved-word-safe
+names) so it runs unchanged on both. Postgres also needs the `flyway-database-postgresql` module so Flyway
+knows how to talk to a real Postgres server; H2 support is already inside `spring-boot-starter-flyway`.
+
+**Q: When in the lifecycle does Flyway run, relative to the rest of the Spring context?**
+A: Before the application beans. Flyway's auto-configuration applies pending migrations first, so by the time
+`RoutineService`, repositories, and controllers start, the schema and seed data are guaranteed to be present.
+
 ## 🐞 Common mistakes and how to debug them
 
 - **Leaving `IF NOT EXISTS` in `V1`.** It will still work, but it defeats the point and hides ordering bugs. Flyway runs each migration once; write plain `CREATE TABLE`.
@@ -283,6 +333,5 @@ Full checkpoint: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-an
 5. What is the role of `flyway-database-postgresql`, and why is there no equivalent module needed for H2?
 6. You shipped `V2` last month; now you need a new column. Do you edit `V1`/`V2`, or do something else — and what error would editing them cause?
 
-## ---
-
-⬅️ Prev: [09 - Swap to Postgres](./09-swap-to-postgres.md) · ➡️ Next: [11 - Dockerize](./11-dockerize.md) · 📍 Checkpoint: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-and-migrations/)
+---
+⬅️ Prev: [09 - Swap to Postgres](./09-swap-to-postgres.md) · ➡️ Next: [11 - Dockerize](./11-dockerize.md) · 📍 Checkpoint: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-and-migrations/) · 🔗 See also: [persistence landscape](../theory/persistence-landscape.md) · [SQL + JDBC cheatsheet](../../reference/cheatsheet-sql-jdbc.md) · [Version deltas](../../reference/cheatsheet-version-deltas.md) · [Interview-prep](../../reference/interview-prep.md)

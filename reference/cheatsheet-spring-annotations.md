@@ -6,6 +6,9 @@
 
 A quick mental model first: annotations in Spring are mostly *markers and metadata*. They do nothing by themselves. Something else — the Spring Boot auto-configuration, component scanning, the MVC dispatcher, the Bean Validation engine — reads them at startup or per-request and acts on them. That is the recurring "why" on this page: the annotation describes intent; a framework piece enforces it.
 
+> [!NOTE]
+> A couple of these annotations changed between Boot 3.x and 4 — testing's `@MockBean` is now `@MockitoBean`, and security's `WebSecurityConfigurerAdapter` is gone in favour of a `SecurityFilterChain` `@Bean`. For the full older-vs-newer story, see [Version deltas](cheatsheet-version-deltas.md).
+
 ---
 
 ## 🗺️ The map: which annotation belongs to which layer
@@ -389,5 +392,6 @@ See step [06-jdbctemplate-h2](../docs/steps/06-jdbctemplate-h2.md) for the repos
 - Step [07 — full CRUD](../docs/steps/07-full-crud.md)
 - Reference: [glossary](./glossary.md)
 - Reference: [SQL + JDBC cheatsheet](./cheatsheet-sql-jdbc.md)
+- Reference: [Maven cheatsheet](./cheatsheet-maven.md) · [Version deltas](./cheatsheet-version-deltas.md) · [Interview-prep](./interview-prep.md)
 - Official: [Spring Boot 4.0.6 reference](https://docs.spring.io/spring-boot/4.0.6/) · [Spring Web MVC](https://docs.spring.io/spring-framework/reference/web/webmvc.html) · [Bean Validation in Spring](https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html)
 - Back to the [README](../README.md)

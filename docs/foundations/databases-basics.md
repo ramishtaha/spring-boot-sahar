@@ -78,4 +78,4 @@ You'll meet repositories properly in step 06 — for now, just know the plumbing
 - **SQL** does four things: SELECT (read), INSERT (add), UPDATE (change), DELETE (remove).
 - Sahar starts on embedded **H2**, moves to server **PostgreSQL** — same code, and a **repository** writes the SQL for you.
 
-Next: [Git in five minutes](./git-basics.md) · Go deeper: [The persistence landscape](../theory/persistence-landscape.md)
+⬅️ Prev: [HTTP in five minutes](./http-basics.md) · Next: [Git in five minutes](./git-basics.md) · Go deeper: [The persistence landscape](../theory/persistence-landscape.md)
