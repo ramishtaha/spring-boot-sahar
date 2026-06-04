@@ -37,7 +37,7 @@ and teaches you modern backend engineering, _why before how_, as you go.
 | 📍 **Location-aware prayer times** (geolocation + a real solar-math calculator + OpenStreetMap geocoding) | 🎨 **Light/dark themed, installable PWA** |
 
 > [!TIP]
-> **New here?** Read **[docs/00-setup.md](docs/00-setup.md)** to set up your toolchain, then open **[step 00](docs/steps/00-baseline.md)** and build alongside the checkpoints. Track yourself in **[progress.md](progress.md)**.
+> **Never written Java or Spring Boot?** Start with **[Foundations — from zero](docs/foundations/)**: ten short primers (~1 hour total) that ramp you up with nothing assumed. Already comfortable? Set up your toolchain in **[docs/00-setup.md](docs/00-setup.md)**, then open **[step 00](docs/steps/00-baseline.md)** and build alongside the checkpoints, ticking [progress.md](progress.md) as you go.
 
 - **Stack:** Spring Boot **4.0.6** · Java **25** (LTS; 17 minimum) · Maven · IntelliJ IDEA (free tier or **Ultimate** — see the [IDE guide](reference/intellij-ultimate.md)).
 - **The domain** is the real "Sahar" routine — a Sunnah + 5-prayer baseline, an MMA block that waves **Foundation → Build → Peak → Deload**, supplements, nutrition, and bullet-journal prompts — seeded so the app boots with real content and lets you edit what changes each month.
@@ -83,6 +83,7 @@ The loop: **read** the step doc → **build** it yourself in `app/` (or alongsid
 ## 🗺️ Table of contents
 
 ### 🚀 Start here
+- 🌱 [Foundations — start from zero](docs/foundations/) — for complete beginners: short primers on the web, the terminal, Java, Maven, Spring Boot, HTTP, databases & Git (~1 hour).
 - 🧰 [docs/00-setup.md](docs/00-setup.md) — install & verify the toolchain; version notes; using the checkpoints safely.
 - 🗓️ [PLAN.md](PLAN.md) — the multi-session plan mapped to the steps and a time budget.
 - ✅ [progress.md](progress.md) — your checklist, one box per step.

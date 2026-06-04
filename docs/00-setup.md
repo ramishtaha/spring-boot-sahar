@@ -2,6 +2,9 @@
 
 > The on-ramp. Get a working Java 25 + Maven + Docker toolchain, prove it works, understand how this codealong is laid out, and learn how to run and `diff` the checkpoints without losing your place.
 
+> [!TIP]
+> **Brand new to Java, Spring Boot, or the terminal?** Spend an hour on the **[Foundations primers](./foundations/)** first — they assume *zero* prior knowledge and make everything below click. Already comfortable? Read on.
+
 **What you will get from this page**
 
 - Exactly what to install on Windows, macOS, or Linux — and the one thing you do *not* need (Maven).

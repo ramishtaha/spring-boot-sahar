@@ -2,6 +2,9 @@
 
 _The empty-but-runnable Spring Boot 4 project from start.spring.io, taken apart piece by piece so nothing later is magic._
 
+> [!NOTE]
+> **First time with Java, Maven, or Spring Boot?** Skim the [Foundations primers](../foundations/) first (~1 hour) — this step assumes you know what a class, a method, and a build tool are. Already comfortable? Carry on.
+
 > [!TIP]
 > **IntelliJ IDEA Ultimate** — run `SaharApplication` from the green gutter ▶ (a saved Spring Boot config), and explore the **Beans** diagram + `application.properties` key completion. The Database tools you'll want from step 06 are free now. See [IntelliJ IDEA for Sahar](../../reference/intellij-ultimate.md).
 
