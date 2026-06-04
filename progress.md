@@ -52,6 +52,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done.
   - [ ] read  - [ ] calculate from coords  - [ ] geocode search/reverse  - [ ] location persists
 - [ ] **16 Location picker, UI polish & PWA** — [doc](docs/steps/16-ui-and-pwa.md) · [checkpoint](checkpoints/step-16-ui-and-pwa/) — theming, board, countdown, location picker (device/search/map), editable meals, installable offline
   - [ ] read  - [ ] set location by search/map/device  - [ ] light/dark  - [ ] installed as PWA
+- [ ] **17 Visual polish** — [doc](docs/steps/17-visual-polish.md) · [checkpoint](checkpoints/step-17-visual-polish/) — design-system pass (tokens, type, depth, motion), CSS-only
 
 ## Done?
 - [ ] The app serves and **edits** my routine, persisted in a database, runnable in Docker.

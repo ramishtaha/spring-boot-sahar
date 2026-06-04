@@ -66,6 +66,7 @@ The recommended loop: read the step doc → build the change yourself in `app/` 
 These extend the finished app past the 14-step course. Steps 00–14 stay frozen; **15 & 16 add their own runnable checkpoints** and `app/` equals step 16.
 - **15 — Location-aware prayer times** ([doc](docs/steps/15-geolocation-prayer-times.md) · [checkpoint](checkpoints/step-15-geolocation-prayer-times/)) — a server-side prayer-time calculator (Karachi 18°, Hanafi Asr), OpenStreetMap geocoding via `RestClient`, a persisted location, and a unit test.
 - **16 — Location picker, UI polish & PWA** ([doc](docs/steps/16-ui-and-pwa.md) · [checkpoint](checkpoints/step-16-ui-and-pwa/)) — light/dark theming, the *This week* board, a live prayer countdown, a **user-controlled location picker** (device / search / map pin), an editable meal plan, and an installable offline PWA.
+- **17 — Visual polish** ([doc](docs/steps/17-visual-polish.md) · [checkpoint](checkpoints/step-17-visual-polish/)) — a design-system pass (tokens, typography, depth, motion) that makes it genuinely good-looking, CSS-only. `app/` equals step 17.
 - [Suggested diet plan](docs/diet-plan.md) — the generated weekly meal plan.
 
 ### Theory deep-dives ([docs/theory/](docs/theory/))
