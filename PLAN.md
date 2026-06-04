@@ -17,6 +17,19 @@ Each step below is sized to fit one or two morning sprints. Don't rush; a step y
 
 ---
 
+## 🌱 Week 0 — Foundations (before you start)
+
+New to Java, the terminal, or Spring Boot? Spend about an hour on the [Foundations primers](docs/foundations/) — ten short reads that make everything below click. Already comfortable? Skip straight to Week 1.
+
+| Sitting | Read | Outcome |
+|--------|------|---------|
+| ~30 min | [Web app](docs/foundations/how-a-web-app-works.md) · [Command line](docs/foundations/the-command-line.md) · [Java 1](docs/foundations/java-1-hello-world.md)–[2](docs/foundations/java-2-types-and-logic.md)–[3](docs/foundations/java-3-classes-and-objects.md) | You can read Java and run a command. |
+| ~30 min | [Maven](docs/foundations/what-is-maven.md) · [Spring Boot](docs/foundations/what-is-spring-boot.md) · [HTTP](docs/foundations/http-basics.md) · [Databases](docs/foundations/databases-basics.md) · [Git](docs/foundations/git-basics.md) | You know what every tool in the stack is for. |
+
+Then install your toolchain ([00-setup](docs/00-setup.md)) and start Week 1.
+
+---
+
 ## 🏗️ Week 1 — Foundation · "Spring Boot core" → steps 00–05
 
 | Session | Focus | Step(s) | Outcome |

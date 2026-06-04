@@ -90,6 +90,20 @@ The loop: **read** the step doc → **build** it yourself in `app/` (or alongsid
 - ❓ [questions.md](questions.md) — where to log questions for your mentor.
 - 🍽️ [docs/diet-plan.md](docs/diet-plan.md) — a suggested weekly meal plan (shown on the home page's *This week* board).
 
+**The beginner path** — about an hour of primers, then you're building:
+
+```mermaid
+flowchart LR
+  subgraph F["🌱 Foundations (~1h)"]
+    direction LR
+    W["web app"] --> T["terminal"] --> J["Java 1·2·3"] --> M["Maven"] --> S["Spring Boot"] --> H["HTTP"] --> D["databases"] --> G["Git"]
+  end
+  F --> SET["🧰 Setup"] --> S0["▶ Step 00"]
+  classDef f fill:#2a2030,stroke:#a06cd5,color:#e6edf3;
+  classDef go fill:#1f3a26,stroke:#2ea043,color:#e6edf3;
+  class W,T,J,M,S,H,D,G f; class SET,S0 go;
+```
+
 ### 📚 The steps — build the app while learning
 
 | # | Step | Doc | Checkpoint |
