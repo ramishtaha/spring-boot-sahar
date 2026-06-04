@@ -2,7 +2,7 @@
 
 _One file, two containers: the Sahar app plus a real PostgreSQL database, wired together and persisting data._
 
-## Why this matters
+## 🎯 Why this matters
 
 In [step 11](./11-dockerize.md) you put the app in a container. That image runs fine on its own, but with no environment set it falls back to its **default H2 file database inside the container** - which means the moment the container is recreated, the data is gone. That is fine for a demo, but Sahar is a real app: you edit prayer times once a month and expect them to still be there next month.
 
@@ -10,7 +10,7 @@ A production-shaped setup is two processes: your app, and a database it talks to
 
 **Docker Compose** is the answer: one declarative file describes both containers, the private network between them, the storage volume for the database, and the start-up ordering. Then a single command - `docker compose up` - brings the whole stack online. This is the closest you can get to "production on your laptop" with one command, and it is exactly the artifact that [step 13 (CI)](./13-ci-with-github-actions.md) and any real deployment build on.
 
-## Theory
+## 🧠 Theory
 
 ### What Compose actually does
 
@@ -47,11 +47,11 @@ Read it as: your browser hits `localhost:8080`, which Compose forwards into the 
 
 For the bigger picture on images vs containers, networks, and volumes, see [the containers and DevOps theory page](../theory/containers-and-devops.md).
 
-## Start from
+## 🚦 Start from
 
 Continue from the [step 11 checkpoint](./11-dockerize.md) - you already have a working multi-stage `Dockerfile` that produces a runnable image and uses environment variables for all configuration. The Dockerfile does **not** change in this step; we only add a `docker-compose.yml` next to it that uses it.
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Confirm the Dockerfile is environment-driven
 
@@ -108,7 +108,8 @@ volumes:
   sahar-db-data:
 ```
 
-> Note: there is no top-level `version:` key. Older tutorials start with `version: "3.8"` - modern Compose ignores it and prints a deprecation warning, so we leave it out.
+> [!NOTE]
+> There is no top-level `version:` key. Older tutorials start with `version: "3.8"` - modern Compose ignores it and prints a deprecation warning, so we leave it out.
 
 #### The `db` service - line by line
 
@@ -237,7 +238,7 @@ docker compose logs -f app       podman compose logs -f app
 
 `podman compose` delegates to a Compose provider; on some systems the standalone `podman-compose` binary is used instead - same arguments. Nothing in our `docker-compose.yml` is Docker-specific, so it just works. See the [Docker/Podman cheatsheet](../../reference/cheatsheet-docker-podman.md) for the full command mapping.
 
-## End state
+## ✅ End state
 
 `docker compose up` now brings up the entire Sahar stack with one command: a real PostgreSQL 17 database and the Spring Boot app talking to it over a private network, with the app published on `http://localhost:8080` and the database files persisting in a named volume across `down`/`up`.
 
@@ -248,7 +249,7 @@ Files in this step:
 
 Checkpoint for this step: [step-12-compose](../../checkpoints/step-12-compose/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Using `localhost` in `SAHAR_DB_URL`.** Inside the app container, `localhost` means the app container itself, not your machine and not the DB. The URL must use the **service name**: `jdbc:postgresql://db:5432/sahar`. Symptom: connection refused on startup.
 - **Expecting `depends_on` alone to wait for readiness.** Without `condition: service_healthy`, the app can start while Postgres is still initialising and crash with connection errors. The fix is the healthcheck + condition shown above. If the app still loses the race, raise the healthcheck `retries`.
@@ -259,7 +260,7 @@ Checkpoint for this step: [step-12-compose](../../checkpoints/step-12-compose/).
 - **`db` failing to start on Postgres major-version mismatch.** A volume created by Postgres 17 cannot be read by a different major version. If you change the `image:` major version, you need a fresh volume.
 - **Watching the wrong logs.** `docker compose logs` shows everything interleaved. Use `docker compose logs -f app` or `docker compose logs -f db` to isolate one service when diagnosing startup order or connection failures.
 
-## Check yourself
+## ❓ Check yourself
 
 1. Why does the app use the host `db` (not `localhost` or an IP) in `SAHAR_DB_URL`, and where does that name come from?
 2. The `db` service has no `ports:` entry. How does the app still reach Postgres, and what is the security benefit of not publishing the DB port?
@@ -270,4 +271,4 @@ Checkpoint for this step: [step-12-compose](../../checkpoints/step-12-compose/).
 
 ## ---
 
-Prev: [11 - Dockerize the app](./11-dockerize.md) | Next: [13 - CI with GitHub Actions](./13-ci-with-github-actions.md) | Checkpoint: [step-12-compose](../../checkpoints/step-12-compose/)
+⬅️ Prev: [11 - Dockerize the app](./11-dockerize.md) · ➡️ Next: [13 - CI with GitHub Actions](./13-ci-with-github-actions.md) · 🏁 Checkpoint: [step-12-compose](../../checkpoints/step-12-compose/)

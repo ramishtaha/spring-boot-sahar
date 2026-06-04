@@ -8,7 +8,7 @@ This is a reference, not a tutorial. The walkthrough of these same concepts live
 
 ---
 
-## Mental model: what Maven actually is
+## 🧠 Mental model: what Maven actually is
 
 Maven is two things at once, and conflating them causes most confusion:
 
@@ -17,11 +17,12 @@ Maven is two things at once, and conflating them causes most confusion:
 
 Both are driven by one file: **`pom.xml`** (Project Object Model). It is the single source of truth for *how* Sahar is built and *what* it depends on. You do not script the build step-by-step; you *declare* what the project is, and Maven runs a conventional lifecycle over it.
 
+> [!NOTE]
 > **Why a convention-heavy tool?** Because every Java project then looks the same: source in `src/main/java`, tests in `src/test/java`, resources in `src/main/resources`, output in `target/`. A new engineer (and a CI server) can build any Maven project with one command without reading a custom build script.
 
 ---
 
-## The build lifecycle (phases)
+## 🔁 The build lifecycle (phases)
 
 Maven's default lifecycle is an **ordered** list of phases. When you run a phase, Maven runs **that phase and every phase before it**. So `mvn package` already ran `validate`, `compile`, and `test` for you.
 
@@ -40,6 +41,7 @@ flowchart LR
 | `install` | Copies the artifact into your **local** repo (`~/.m2`) so other local projects can depend on it. | Sharing a build between local projects. |
 | `deploy` | Uploads the artifact to a **remote** repository for other people/CI. | Publishing a library. |
 
+> [!TIP]
 > Sahar is an application, not a published library, so you almost never run `install` or `deploy`. The two phases that matter day to day are **`package`** (make the runnable jar) and **`verify`** (the full "is this change safe?" gate that CI uses).
 
 There are also two lifecycles that run *outside* the default one:
@@ -49,7 +51,7 @@ There are also two lifecycles that run *outside* the default one:
 
 ---
 
-## Phases vs goals (the bit that trips people up)
+## ⚖️ Phases vs goals (the bit that trips people up)
 
 A **phase** is a stage in the lifecycle. A **goal** is a specific task provided by a plugin, written `plugin:goal`. Phases run by binding goals to them; you can also invoke a goal directly.
 
@@ -63,7 +65,7 @@ mvn dependency:tree   # a GOAL  - the 'tree' goal of the dependency plugin
 
 ---
 
-## Everyday commands
+## ⌨️ Everyday commands
 
 Use `./mvnw` (or `mvnw.cmd` / `.\mvnw` on Windows) instead of bare `mvn` - see [the wrapper section](#the-maven-wrapper-mvnw). Bare `mvn` is shown here for brevity.
 
@@ -111,11 +113,12 @@ Sahar's GitHub Actions workflow runs exactly `mvn -B -ntp verify` on every push 
 | `-U` | Force re-check of `SNAPSHOT` updates. | When a snapshot dep seems stale. |
 | `-X` / `-e` | Debug / show full stack traces. | Diagnosing a confusing build failure. |
 
+> [!CAUTION]
 > **`-DskipTests` vs `-Dmaven.test.skip=true`:** the first still *compiles* your tests (so they can't silently rot), it just doesn't run them. The second skips compilation entirely. Prefer `-DskipTests` when you only want a quick jar.
 
 ---
 
-## `pom.xml` anatomy (Sahar's real POM)
+## 🩻 `pom.xml` anatomy (Sahar's real POM)
 
 Below is Sahar's actual file, in the order it appears. Read it top to bottom once.
 
@@ -222,7 +225,7 @@ flowchart LR
 
 ---
 
-## Spring Boot 4 starter names (and the 3.x names they replaced)
+## 🧩 Spring Boot 4 starter names (and the 3.x names they replaced)
 
 Sahar targets **Spring Boot 4.0.6**, which renamed and split several artifacts. If you copy a 3.x tutorial, these are the lines that will fail to resolve. Use the Boot 4 names.
 
@@ -248,6 +251,7 @@ Key Boot-4 ideas these reflect:
 - **Flyway is a starter now.** Boot 4 auto-configures Flyway via `spring-boot-starter-flyway`; the Postgres dialect is a separate module (required since Flyway 10). H2 support ships with the starter.
 - **Jackson 3 / Spring Framework 7 / Jakarta EE 11.** You won't name these in the POM (the BOM pins them), but they ride along under Boot 4. Note the `jakarta.*` namespace - the old `javax.*` -> `jakarta.*` rename happened back in the 2.x -> 3.x jump, not this one.
 
+> [!IMPORTANT]
 > Artifact names and the minimum Java version can change across minor releases. When in doubt, check the dependency list for your exact version in the [Spring Boot 4.0.6 reference docs](https://docs.spring.io/spring-boot/4.0.6/).
 
 ---
@@ -279,7 +283,7 @@ Anything you can pass to `mvn`, you pass to `mvnw`. The only requirement on a fr
 
 ---
 
-## The local repository (`~/.m2`)
+## 🗄️ The local repository (`~/.m2`)
 
 Every dependency Maven downloads is cached under your home directory:
 
@@ -305,7 +309,7 @@ flowchart LR
 
 ---
 
-## Troubleshooting quick hits
+## 🐞 Troubleshooting quick hits
 
 | Symptom | Likely cause / fix |
 | --- | --- |
@@ -319,9 +323,9 @@ flowchart LR
 
 ---
 
-## Related
+## 🔗 Related
 
-- [Step 00 - Baseline](../docs/steps/00-baseline.md) - the guided walkthrough of this exact `pom.xml`.
+- ➡️ [Step 00 - Baseline](../docs/steps/00-baseline.md) - the guided walkthrough of this exact `pom.xml`.
 - [Spring annotations cheatsheet](./cheatsheet-spring-annotations.md) - the annotations these starters bring to life.
 - [Spring Boot 4.0.6 reference docs](https://docs.spring.io/spring-boot/4.0.6/) - official dependency and configuration reference.
 - [Apache Maven documentation](https://maven.apache.org/guides/) - lifecycle, plugins, and the full POM reference.

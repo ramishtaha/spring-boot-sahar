@@ -8,7 +8,7 @@ For the *why* behind all of this, read the theory page [HTTP & REST](../docs/the
 
 ---
 
-## HTTP methods at a glance
+## 🌐 HTTP methods at a glance
 
 A method is **safe** if it is not supposed to change server state (a read). It is **idempotent** if doing it twice has the same effect as doing it once. These two properties drive almost every REST design decision in Sahar.
 
@@ -35,7 +35,7 @@ flowchart LR
 
 ---
 
-## Status codes Sahar returns
+## 🚦 Status codes Sahar returns
 
 These five are the codes you will actually see hitting the Sahar API.
 
@@ -64,6 +64,7 @@ How Sahar sets these:
 - `400` for a *validation* failure comes from `ApiExceptionHandler` (a `@RestControllerAdvice`), which catches `MethodArgumentNotValidException` and returns the tidy `ApiError` body. See [step 05](../docs/steps/05-validation-and-rules.md).
 - `400` for a *business rule* and `404` for a *missing row* both come from the service throwing `ResponseStatusException`, e.g. `throw new ResponseStatusException(HttpStatus.NOT_FOUND, "no schedule item " + id)`. These use Spring's built-in error body, **not** `ApiError`.
 
+> [!IMPORTANT]
 > Heads-up: only the validation `400` has the `{status, error, messages[]}` shape. A `404` (or a rule-based `400`) carries Spring's default body. If you want them unified, you would add more handlers to `ApiExceptionHandler`.
 
 ### Wider reference list (common codes you may meet)
@@ -92,7 +93,7 @@ Mnemonic: **2xx** worked, **3xx** go elsewhere, **4xx** *you* sent something wro
 
 ---
 
-## Headers that matter for a JSON API
+## 📨 Headers that matter for a JSON API
 
 | Header | Direction | Purpose | Sahar value |
 | --- | --- | --- | --- |
@@ -108,7 +109,7 @@ Rules of thumb:
 
 ---
 
-## The Sahar API map
+## 🗺️ The Sahar API map
 
 Each row: endpoint → method → meaning → success status. Request bodies are JSON; path variables are in `{braces}`.
 
@@ -129,11 +130,12 @@ Each row: endpoint → method → meaning → success status. Request bodies are
 | `/api/schedule/{id}` | `PUT` | Replace the slot at that id (`404` if missing) | `200` |
 | `/api/schedule/{id}` | `DELETE` | Remove the slot (`404` if missing) | `204` |
 
+> [!NOTE]
 > Note on the block verbs: `roll-forward` and `weeks` (add) are `POST` because they *run a process* / *create*; replacing the whole block or one named week is `PUT` (idempotent); removing one week is `DELETE`. The `{ordinal}` is the week's position, pulled from the URL via `@PathVariable`. See [step 07](../docs/steps/07-full-crud.md).
 
 ---
 
-## Request bodies (the JSON shapes)
+## 🧾 Request bodies (the JSON shapes)
 
 `PrayerTimes` — every time field must match 24-hour `HH:mm`; `methodNote` is free text:
 
@@ -181,7 +183,7 @@ Each row: endpoint → method → meaning → success status. Request bodies are
 
 ---
 
-## curl examples (copy-paste)
+## 📋 curl examples (copy-paste)
 
 Assumes the app is running locally on `http://localhost:8080`. `--json` (curl 7.82+) sets `Content-Type` and `Accept` to `application/json` and takes the body; on older curl use `-H "Content-Type: application/json" -d '...'`.
 
@@ -236,7 +238,7 @@ curl -i -X DELETE http://localhost:8080/api/schedule/999    # expect: 404 (no su
 
 ---
 
-## PowerShell `Invoke-RestMethod` examples
+## 🪟 PowerShell `Invoke-RestMethod` examples
 
 `Invoke-RestMethod` (alias `irm`) parses JSON responses into objects automatically. Build the body as a hashtable and pipe through `ConvertTo-Json` so you do not fight quoting. `-ContentType 'application/json'` is the PowerShell equivalent of `--json`.
 
@@ -287,11 +289,12 @@ Invoke-RestMethod -Method Put -Uri http://localhost:8080/api/block/weeks/2 `
   -ContentType 'application/json' -Body $week
 ```
 
+> [!TIP]
 > Tip: to inspect the raw status code and headers in PowerShell, use `Invoke-WebRequest` instead of `Invoke-RestMethod` and read `.StatusCode`. On a `400`/`404`, `Invoke-RestMethod` throws; wrap it in `try { ... } catch { $_.Exception.Response }` to read the error body.
 
 ---
 
-## The validation `400` response body
+## ⚠️ The validation `400` response body
 
 When a `@Valid @RequestBody` fails Bean Validation, `ApiExceptionHandler` returns HTTP `400` with this exact shape (`ApiError(int status, String error, List<String> messages)`):
 
@@ -327,7 +330,7 @@ The editable admin UI in [step 08](../docs/steps/08-editable-admin-ui.md) reads 
 
 ---
 
-## Related
+## 🔗 Related
 
 - Theory: [HTTP & REST](../docs/theory/http-and-rest.md) — the *why* behind methods, status codes, and idempotency.
 - Step 02: [Your first REST endpoint](../docs/steps/02-first-rest-endpoint.md) — `@RestController`, `@GetMapping`, JSON serialization.

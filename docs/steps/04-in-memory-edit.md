@@ -2,7 +2,7 @@
 
 *Introduce a `@Service` bean that holds the routine in a field, add `PUT` endpoints that edit it, and watch those edits survive between requests but vanish on restart.*
 
-## Why this matters
+## 🎯 Why this matters
 
 Up to step 03 the app is a glorified read-only printout. Every request to `GET /api/config` calls `RoutineSeed.defaultConfig()` and builds a brand-new tree from scratch. There is nowhere to *put* an edit, because there is no object that outlives a single request.
 
@@ -16,7 +16,7 @@ You will also meet the three workhorses of every Spring web app you will ever wr
 
 And you will feel the limitation that motivates the rest of the course: in-memory state **resets on restart**. That ache is what a database fixes in [step 06](./06-jdbctemplate-h2.md).
 
-## Theory
+## 🧠 Theory
 
 ### The layered architecture
 
@@ -75,7 +75,7 @@ Why **PUT** and not POST for these edits? PUT means *"make the resource at this 
 
 Records are immutable — there is no `setMonth(...)`. To "change" one you build a **new** instance copying every field except the one you are replacing. We centralise that copy-and-replace in small `with*` helpers on `RoutineConfig` so the service stays readable.
 
-## Start from
+## 🚦 Start from
 
 Continue from the step 03 checkpoint, [`03 - Model the domain`](./03-model-the-domain.md). At that point `ConfigController` reads straight from the seed and there is no service, no edits, no PUT:
 
@@ -93,7 +93,7 @@ public class ConfigController {
 
 Notice there is no field, no constructor, no state. Every call rebuilds the routine. We are about to give it a memory.
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Add the `with*` helpers to `RoutineConfig`
 
@@ -235,6 +235,7 @@ public BlockPlan update(@RequestBody BlockPlan block) {
 }
 ```
 
+> [!NOTE]
 > For now **any** block is accepted — even a 3-week one, or one whose deload is not last. [Step 05](./05-validation-and-rules.md) adds the rules so a malformed block is rejected with a `400` instead of silently corrupting the routine.
 
 **The month label** — this one takes a tiny JSON object, not a whole domain record, so it uses a small request type and echoes the result:
@@ -283,7 +284,7 @@ Stop the app (Ctrl+C) and start it again. Hit `GET /api/config`. The month is ba
 
 Why? The `config` field lives in the JVM's heap. When the process dies, the heap dies with it. On the next start, the field initialiser runs `RoutineSeed.defaultConfig()` again from scratch. The app is **stateless across restarts** — fine for a demo, useless for a real personal app you actually edit. That pain is exactly what [step 06](./06-jdbctemplate-h2.md) fixes by moving `config` out of a field and into a database.
 
-## End state
+## ✅ End state
 
 `GET /api/config` and the three new `PUT` endpoints all read and write **one shared in-memory routine** held by `RoutineService`. Edits made in one request are visible to the next — but reset on restart.
 
@@ -303,7 +304,7 @@ Files changed or added this step:
 
 Full source: [step-04-in-memory-edit checkpoint](../../checkpoints/step-04-in-memory-edit/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Calling `new RoutineService()` in a controller.** You then get a *second* service with its own empty `config`, and edits made through it are invisible elsewhere. Symptom: a PUT "works" (200 OK) but the next GET ignores it. Fix: never `new` a bean — declare it as a constructor parameter and let Spring inject the singleton.
 - **`No qualifying bean of type 'RoutineService'` at startup.** Usually the class is missing `@Service`, or it sits outside the `com.ramishtaha.sahar` base package so component-scan never finds it. Fix: add the annotation; keep the class under the base package.
@@ -312,7 +313,7 @@ Full source: [step-04-in-memory-edit checkpoint](../../checkpoints/step-04-in-me
 - **Editing a record "in place".** There is no setter; `config.month() = "..."` does not compile. You must build a new copy with a `with*` helper and reassign the field. If you forget to reassign (`config.withMonth(x);` with no `config =`), the edit is computed and thrown away — the GET shows the old value.
 - **"My edit disappeared!"** If it vanished after a *restart*, that is expected (in-memory state). If it vanished *between requests on the same run*, you probably have two service instances (see the first bullet).
 
-## Check yourself
+## ❓ Check yourself
 
 1. Why does an edit made by one `PUT` show up in the next `GET`, even though `RoutineConfig` is immutable?
 2. What would break if each controller did `new RoutineService()` instead of accepting it as a constructor parameter?
@@ -323,4 +324,4 @@ Full source: [step-04-in-memory-edit checkpoint](../../checkpoints/step-04-in-me
 
 ## ---
 
-Prev: [03 - Model the domain](./03-model-the-domain.md) | Next: [05 - Validation and rules](./05-validation-and-rules.md) | Checkpoint: [step-04-in-memory-edit](../../checkpoints/step-04-in-memory-edit/)
+⬅️ Prev: [03 - Model the domain](./03-model-the-domain.md) · ➡️ Next: [05 - Validation and rules](./05-validation-and-rules.md) · 📍 Checkpoint: [step-04-in-memory-edit](../../checkpoints/step-04-in-memory-edit/)

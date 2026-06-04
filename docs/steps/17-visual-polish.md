@@ -8,14 +8,14 @@ colour, depth, spacing and motion — with no change to behaviour._
 > entirely a [`styles.css`](../../checkpoints/step-17-visual-polish/src/main/resources/static/styles.css)
 > rewrite, so the markup and JavaScript were left alone.
 
-## Why this matters
+## 🎯 Why this matters
 
 "Make it look good" sounds vague, but it's mostly engineering: a small set of **design tokens** applied
 consistently. Doing it as a CSS-only pass — reusing every existing class — is also a lesson in why
 separating structure (HTML), behaviour (JS) and presentation (CSS) pays off: you can completely restyle an
 app without touching the other two.
 
-## What changed (and the ideas)
+## 🎨 What changed (and the ideas)
 
 - **Tokens first.** Everything is a CSS custom property: colours, a spacing/`--pad` scale, radii
   (`--r-sm/--r/--r-lg/--r-pill`), and a 3-tier shadow scale (`--shadow-sm/--shadow/--shadow-lg`). Both the
@@ -34,17 +34,18 @@ app without touching the other two.
   (gradient primary, ghost secondary) with focus-visible rings, a blurred modal, and gentle staggered
   fade-in — all switched off under `prefers-reduced-motion`.
 
-## How a CSS-only restyle stays safe
+## 🔒 How a CSS-only restyle stays safe
 
 Because the redesign only changes `styles.css` (plus a font `<link>` and a bumped service-worker cache so
 the new shell ships), there is zero risk to the API, the location picker, the countdown, or the PWA. The
 JS still finds the same class names; it just looks better. That's the payoff of keeping presentation in CSS.
 
+> [!NOTE]
 > The service-worker cache key was bumped to `sahar-v2` so returning visitors get the new stylesheet
 > instead of the cached old one — the same "bump the cache when the shell changes" rule from
 > [step 16](./16-ui-and-pwa.md).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **New styles don't appear after deploy/refresh.** The old service-worker cache is serving the old CSS —
   bump `CACHE` in `service-worker.js` (done here) or unregister the worker in dev tools.
@@ -53,7 +54,7 @@ JS still finds the same class names; it just looks better. That's the payoff of 
 - **A component looks unstyled.** A class name drifted out of sync between the HTML/JS and the CSS — the
   whole point of a CSS-only pass is to keep those identical.
 
-## Check yourself
+## ❓ Check yourself
 
 1. Why can the entire app be restyled without touching the HTML or JavaScript?
 2. How do the light and dark themes share one set of rules?
@@ -61,4 +62,4 @@ JS still finds the same class names; it just looks better. That's the payoff of 
 4. Why load the web font with a system-font fallback?
 
 ---
-Prev: [16 - Location picker, UI & PWA](./16-ui-and-pwa.md) | Next: [99 - Roadmap](./99-roadmap.md) | Checkpoint: [step-17](../../checkpoints/step-17-visual-polish/)
+⬅️ Prev: [16 - Location picker, UI & PWA](./16-ui-and-pwa.md) · ➡️ Next: [99 - Roadmap](./99-roadmap.md) · 📍 Checkpoint: [step-17](../../checkpoints/step-17-visual-polish/)

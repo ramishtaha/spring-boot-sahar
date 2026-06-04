@@ -2,7 +2,7 @@
 
 _The empty-but-runnable Spring Boot 4 project from start.spring.io, taken apart piece by piece so nothing later is magic._
 
-## Why this matters
+## 🎯 Why this matters
 
 Most Spring tutorials hand you a finished `pom.xml` and a `@RestController` and tell you to "just run it." You end up with a working app and no mental model. When something breaks three steps later, you have no idea which moving part is responsible.
 
@@ -10,7 +10,7 @@ This step does the opposite. We start with the smallest thing that boots - a gen
 
 There is a second reason this matters specifically here: we are on **Spring Boot 4.0.6**, which renamed several artifacts that 90% of the tutorials and Stack Overflow answers online still call by their Boot 3.x names. If you copy a dependency from an old blog post, it will not resolve. Knowing the new names up front saves you a confusing afternoon. See [../theory/spring-and-di.md](../theory/spring-and-di.md) for the bigger picture of what Spring even is.
 
-## Theory
+## 🧠 Theory
 
 A Spring Boot app is, at its core, three things working together:
 
@@ -35,7 +35,7 @@ flowchart TD
 
 The thing tying it all together is one annotation, `@SpringBootApplication`, which is itself three annotations bundled (we dissect it below). Keep that diagram in mind - every later step plugs into one of these stages.
 
-## Start from
+## 🚦 Start from
 
 Nothing - this is the first code step. If you have not installed the JDK, Maven, and IntelliJ yet, do [../00-setup.md](../00-setup.md) first, then come back. The starting point for this step is literally the zip that [start.spring.io](https://start.spring.io) produces, which is preserved in the checkpoint folder for this step (linked at the end).
 
@@ -49,7 +49,7 @@ You do not have to regenerate it yourself, but it is worth knowing what was sele
 
 (Flyway is added later, in [./01-serve-static.md](./01-serve-static.md)'s successors - specifically step 10 - so it is deliberately absent here.)
 
-## Build it
+## 🛠️ Build it
 
 There is nothing to *write* in this step; the work is *reading*. Go through the four generated files in order.
 
@@ -284,13 +284,19 @@ mvnw.cmd spring-boot:run      # Windows PowerShell or cmd
 
 3. **In IntelliJ**: open the `pom.xml` as a project, wait for it to import, then click the green ▶ in the gutter next to `main` in `SaharApplication`, or use the auto-created run configuration.
 
-About the **Maven wrapper** (`mvnw` / `mvnw.cmd`): start.spring.io ships these scripts plus a tiny config under `.mvn/`. They download and run a *specific, pinned* Maven version, so every contributor (and CI) builds with the same toolchain regardless of what Maven is installed globally - or whether any is. Prefer `./mvnw` over `mvn` for reproducibility.
+About the **Maven wrapper** (`mvnw` / `mvnw.cmd`): start.spring.io ships these scripts plus a tiny config under `.mvn/`. They download and run a *specific, pinned* Maven version, so every contributor (and CI) builds with the same toolchain regardless of what Maven is installed globally - or whether any is.
+
+> [!TIP]
+> Prefer `./mvnw` over `mvn` for reproducibility.
 
 Whichever you use, you should see Tomcat report it is listening, ending with a line like `Tomcat started on port 8080`. Open [http://localhost:8080](http://localhost:8080).
 
-## End state
+## ✅ End state
 
-The app boots and serves HTTP on `http://localhost:8080`. There are no controllers and no static files yet, so the browser shows Spring Boot's **whitelabel error page** with a **404** - and that is exactly correct. A 404 here means the server is up and routing requests; it just has nothing to route them to. (A connection-refused error, by contrast, would mean it did not start.)
+The app boots and serves HTTP on `http://localhost:8080`. There are no controllers and no static files yet, so the browser shows Spring Boot's **whitelabel error page** with a **404** - and that is exactly correct.
+
+> [!IMPORTANT]
+> A 404 here means the server is up and routing requests; it just has nothing to route them to. (A connection-refused error, by contrast, would mean it did not start.)
 
 Files in play this step (all generated, none hand-edited):
 
@@ -302,7 +308,7 @@ Files in play this step (all generated, none hand-edited):
 
 The exact, runnable snapshot is in the checkpoint folder: [../../checkpoints/step-00-baseline/](../../checkpoints/step-00-baseline/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Copying a `spring-boot-starter-web` dependency from an old tutorial.** On Boot 4 the artifact does not exist under that name; Maven fails with "Could not find artifact". Use `spring-boot-starter-webmvc`.
 - **Looking for one `spring-boot-starter-test`.** It was split in Boot 4 into modular per-feature test starters (`-webmvc-test`, `-jdbc-test`, `-validation-test`). Don't add the old aggregate; add the slice you need.
@@ -312,7 +318,7 @@ The exact, runnable snapshot is in the checkpoint folder: [../../checkpoints/ste
 - **Putting a future class outside `com.ramishtaha.sahar`.** Component scanning only sees the base package and below. A `@RestController` in, say, `com.ramishtaha.controllers` is invisible and will 404 with no warning. Keep everything under the base package.
 - **Running `mvn` when only the wrapper is set up.** If you get "mvn: command not found", use `./mvnw` (or `mvnw.cmd` on Windows) instead - that is the whole point of the wrapper.
 
-## Check yourself
+## ❓ Check yourself
 
 1. What three annotations does `@SpringBootApplication` combine, and which one explains why every class must live under `com.ramishtaha.sahar`?
 2. Why do most dependencies in `pom.xml` have no `<version>` element?
@@ -322,4 +328,4 @@ The exact, runnable snapshot is in the checkpoint folder: [../../checkpoints/ste
 6. What problem does the Maven wrapper (`mvnw`) solve that plain `mvn` does not?
 
 ## ---
-Prev: [README](../../README.md) · [Setup](../00-setup.md) | Next: [01 - Serve static](./01-serve-static.md) | Checkpoint: [step-00-baseline](../../checkpoints/step-00-baseline/)
+⬅️ Prev: [README](../../README.md) · [Setup](../00-setup.md) · ➡️ Next: [01 - Serve static](./01-serve-static.md) · 📍 Checkpoint: [step-00-baseline](../../checkpoints/step-00-baseline/)

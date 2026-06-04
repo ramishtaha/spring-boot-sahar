@@ -4,17 +4,18 @@ _Beyond the core course: the browser side — theming, a weekly board, a live pr
 user-controlled location picker (device / search / map pin), an editable meal plan, and an installable,
 offline PWA._
 
+> [!IMPORTANT]
 > **Checkpoint:** [`step-16-ui-and-pwa`](../../checkpoints/step-16-ui-and-pwa/) — the finished, enhanced
 > app (identical to [`app/`](../../app/)). It builds on the [step 15](./15-geolocation-prayer-times.md)
 > backend.
 
-## Why this matters
+## 🎯 Why this matters
 
 A routine you open every morning has to be fast to scan and pleasant to use. This step is the "make it
 good software, not just correct software" pass, and it wires the [step 15](./15-geolocation-prayer-times.md)
 backend (calculation + geocoding + saved location) to a UI the user actually controls.
 
-## What changed, and the ideas
+## 🛠️ What changed, and the ideas
 
 ### 1. Light / dark theming, no flash
 Every colour is a CSS variable; `:root[data-theme="light"]` overrides the dark defaults. A tiny script in
@@ -69,13 +70,14 @@ comes from the seed.
 icons make it installable and offline-capable: **cache-first** for the app shell, **network-first** for
 `GET /api/*` (fresh online, last-known offline). Writes are never cached.
 
+> [!WARNING]
 > Geolocation, the service worker, and (for tiles) the map all want **HTTPS or `localhost`**.
 
-## Start from
+## 🚦 Start from
 [`step-15`](../../checkpoints/step-15-geolocation-prayer-times/) (the backend). This step is the frontend
 for it, plus the editable-diet-plan slice and the PWA files.
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Theme flashes on load** — the theme script must be inline in `<head>`, before the stylesheet.
 - **Old UI after deploy** — bump `CACHE` in `service-worker.js`; the `activate` handler clears old caches.
@@ -84,7 +86,7 @@ for it, plus the editable-diet-plan slice and the PWA files.
 - **`PUT /api/diet-plan/{day}` 404** — use a real day key (`Mon`..`Sun`).
 - **Manifest ignored** — serve it as JSON; we use `manifest.json` (`application/json`).
 
-## Check yourself
+## ❓ Check yourself
 
 1. How does theming avoid a flash of the wrong colours?
 2. What are the three ways the user can set location, and which endpoints back each?
@@ -92,4 +94,4 @@ for it, plus the editable-diet-plan slice and the PWA files.
 4. Why does the location picker keep working when the map or Nominatim is unavailable?
 
 ---
-Prev: [15 - Location-aware prayer times](./15-geolocation-prayer-times.md) | Next: [99 - Roadmap](./99-roadmap.md) | Checkpoint: [step-16](../../checkpoints/step-16-ui-and-pwa/) | See also: [the diet plan](../diet-plan.md), [Containers & DevOps](../theory/containers-and-devops.md)
+⬅️ Prev: [15 - Location-aware prayer times](./15-geolocation-prayer-times.md) · ➡️ Next: [99 - Roadmap](./99-roadmap.md) · 📦 Checkpoint: [step-16](../../checkpoints/step-16-ui-and-pwa/) · 🔗 See also: [the diet plan](../diet-plan.md), [Containers & DevOps](../theory/containers-and-devops.md)

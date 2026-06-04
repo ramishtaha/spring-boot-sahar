@@ -2,7 +2,7 @@
 
 *Every push and pull request gets built, tested, and Docker-image-checked on a clean Linux machine - so "works on my machine" stops being a thing.*
 
-## Why this matters
+## 🎯 Why this matters
 
 Up to step 12 you have been the only quality gate. You run `mvn verify` locally, you `docker build` locally, and if you forget - nobody catches it. The first time a teammate (or future-you) clones the repo on a different machine, a missing file or a stale assumption blows up.
 
@@ -14,7 +14,7 @@ Up to step 12 you have been the only quality gate. You run `mvn verify` locally,
 
 This step is deliberately small - it is a *taste* of DevOps, not a full pipeline. You will add one file, `.github/workflows/ci.yml`, that on every push and PR checks out the code, installs Java 25, runs `mvn verify`, and builds the Docker image. That is the backbone every larger pipeline grows from. The why-before-how matters here: see [containers-and-devops.md](../theory/containers-and-devops.md) for where CI sits in the build -> test -> package -> ship chain.
 
-## Theory
+## 🧠 Theory
 
 **CI vs CD.** *Continuous Integration* means: every change is automatically merged into a shared build and verified. *Continuous Delivery/Deployment* (CD) is the next stage - automatically shipping the verified artifact somewhere. This step is pure CI. Actually deploying Sahar is [step 14](./14-deploy.md).
 
@@ -43,9 +43,10 @@ flowchart LR
     G -->|no| I["red ✗ - logs show the failing step"]
 ```
 
-The rule the whole pipeline rests on: **a step fails the moment its command exits non-zero.** `mvn verify` returns non-zero if compilation or any test fails; `docker build` returns non-zero if the `Dockerfile` is broken. The runner stops at the first failure and the commit goes red.
+> [!IMPORTANT]
+> The rule the whole pipeline rests on: **a step fails the moment its command exits non-zero.** `mvn verify` returns non-zero if compilation or any test fails; `docker build` returns non-zero if the `Dockerfile` is broken. The runner stops at the first failure and the commit goes red.
 
-## Start from
+## 🚦 Start from
 
 Continue from the **step 12** checkpoint (Docker Compose). You already have a working `Dockerfile` and `docker-compose.yml`, and `mvn verify` passes locally - both are prerequisites for this step's two build commands.
 
@@ -54,7 +55,7 @@ Continue from the **step 12** checkpoint (Docker Compose). You already have a wo
 
 The only new file you add this step is `.github/workflows/ci.yml`. Nothing in `src/` changes.
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Confirm the build is green locally first
 
@@ -68,7 +69,8 @@ mvn -B -ntp verify
 - `-ntp` (`--no-transfer-progress`) - suppresses the per-file "Downloading..." lines that otherwise flood the log.
 - `verify` - a Maven lifecycle *phase*. Running it runs everything up to and including it: `compile`, `test`, `package`, and `verify`. So one word gives you compile + run tests + build the jar. (See [cheatsheet-maven.md](../../reference/cheatsheet-maven.md) for the lifecycle.)
 
-This was confirmed green locally before CI was added - the CI run is just the same command on a clean machine. If it does not pass on your laptop, fix that first; CI will only tell you the same thing, slower.
+> [!TIP]
+> This was confirmed green locally before CI was added - the CI run is just the same command on a clean machine. If it does not pass on your laptop, fix that first; CI will only tell you the same thing, slower.
 
 ### 2. Create the workflow file
 
@@ -206,7 +208,7 @@ git push
 
 Open the repo on GitHub, click the **Actions** tab, and watch the run. You will see the `build` job expand into its four steps, each with a live log. When `mvn verify` and `docker build` both exit 0, the commit shows a green check.
 
-## End state
+## ✅ End state
 
 Sahar now has continuous integration. On every push to `main` and every pull request, a fresh Ubuntu runner checks out the code, installs Temurin JDK 25, restores the Maven cache, runs `mvn -B -ntp verify` (compile + tests against in-memory H2 + package), and builds the Docker image to prove the `Dockerfile` still works. The commit gets a green check on success, a red cross on any failure - visible right next to the code.
 
@@ -218,7 +220,7 @@ Nothing under `src/`, the `pom.xml`, or the `Dockerfile` changed - this step onl
 
 Checkpoint for this step: [../../checkpoints/step-13-ci-with-github-actions/](../../checkpoints/step-13-ci-with-github-actions/)
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Workflow never runs / no Actions tab activity.** The file is not at the repository root. It must be `.github/workflows/ci.yml` in the directory that contains `.git`. A workflow under `app/.github/...` or any subfolder is invisible to GitHub. (See step 4 above.)
 - **YAML indentation errors.** YAML is whitespace-significant and forbids tabs. `with:` keys must be indented under their `uses:` step; `steps:` must be a list of `- name:` items. If the run fails to even start with a parsing error, check that every nested level is exactly two more spaces and that you used spaces, not tabs.
@@ -229,7 +231,7 @@ Checkpoint for this step: [../../checkpoints/step-13-ci-with-github-actions/](..
 - **`docker: command not found`.** Only on self-hosted or non-Ubuntu runners. `ubuntu-latest` ships Docker; if you switched runners, you must install it.
 - **Enabling `publish-image` fails with a permissions error.** GHCR push needs `packages: write` in that job's `permissions:` block. Without it the injected `GITHUB_TOKEN` is read-only and the push is rejected.
 
-## Check yourself
+## ❓ Check yourself
 
 1. What is the difference between a workflow, a job, a step, and an action - and which of `uses:` vs `run:` does each step use?
 2. Why does `mvn verify` need no Postgres on the runner, even though Sahar can run on Postgres?
@@ -240,6 +242,6 @@ Checkpoint for this step: [../../checkpoints/step-13-ci-with-github-actions/](..
 
 ## ---
 
-Prev: [12 - Docker Compose](./12-compose.md) | Next: [14 - Deploy](./14-deploy.md) | Checkpoint: [step-13-ci-with-github-actions](../../checkpoints/step-13-ci-with-github-actions/)
+⬅️ Prev: [12 - Docker Compose](./12-compose.md) · ➡️ Next: [14 - Deploy](./14-deploy.md) · 🏁 Checkpoint: [step-13-ci-with-github-actions](../../checkpoints/step-13-ci-with-github-actions/)
 
 See also: [Containers and DevOps theory](../theory/containers-and-devops.md) · [Maven cheatsheet](../../reference/cheatsheet-maven.md) · [Glossary](../../reference/glossary.md)

@@ -1,5 +1,6 @@
 # JdbcTemplate vs Spring Data JPA
 
+> [!NOTE]
 > A side-by-side of the two ways Spring teaches you to talk to a relational database, using real Sahar code as the JdbcTemplate side and a faithful sketch of the JPA side.
 
 **What you will get from this page:** a concrete feel for what each approach actually makes you write, where the boilerplate goes, who controls the SQL, and the traps (especially N+1) you trade for convenience. By the end you should be able to say *out loud* why Sahar uses `JdbcTemplate` and when you would reach for JPA instead — not as dogma, but as an engineering call.
@@ -8,7 +9,7 @@ This is a comparison page, not a how-to. The how-to for `JdbcTemplate` lives in 
 
 ---
 
-## TL;DR
+## 🔑 TL;DR
 
 | | JdbcTemplate | Spring Data JPA (Hibernate) |
 |---|---|---|
@@ -26,7 +27,7 @@ Sahar deliberately picks the left column. The rest of this page explains why tha
 
 ---
 
-## The two mental models
+## 🧠 The two mental models
 
 The single most important difference is not syntax — it is *where the SQL comes from*.
 
@@ -51,7 +52,7 @@ Keep that diagram in mind; almost every trade-off below falls out of it.
 
 ---
 
-## A representative Sahar operation: the block and its weeks
+## 🗄️ A representative Sahar operation: the block and its weeks
 
 Sahar's `BlockPlan` is an **aggregate** — one parent (`blocks` row) plus an ordered list of children (`weeks` rows). It is the most interesting shape in the app because it spans two tables, so it shows the relationship handling that JPA is famous for.
 
@@ -190,7 +191,7 @@ Notice three things you traded:
 
 ---
 
-## A second operation: CRUD a schedule item
+## 🔁 A second operation: CRUD a schedule item
 
 `ScheduleRepository` is plain CRUD over a single table — the case where JPA shines hardest. Here's the real Sahar `create`, which has to hand back the database-generated id:
 
@@ -255,7 +256,7 @@ The flip side: the moment your query is interesting (Sahar's `ORDER BY slot_time
 
 ---
 
-## The N+1 trap (the JPA tax everyone eventually pays)
+## 🐞 The N+1 trap (the JPA tax everyone eventually pays)
 
 This is the single most important reason to understand what JPA does under the hood.
 
@@ -287,7 +288,7 @@ None of these are *flaws* — they are the cost of the abstraction that also giv
 
 ---
 
-## Migrations vs `ddl-auto`
+## 🔧 Migrations vs `ddl-auto`
 
 Both approaches can (and in Sahar, do) use **Flyway** for versioned, reviewable schema migrations — `V1__init.sql`, `V2__seed.sql`, applied in order, tracked in `flyway_schema_history`. Owning your DDL as code is the same good idea regardless of how you read the rows.
 
@@ -304,7 +305,7 @@ The honest position: `ddl-auto=update` feels magical for the first week and beco
 
 ---
 
-## Boilerplate, honestly counted
+## 📋 Boilerplate, honestly counted
 
 A fair tally, not a hatchet job:
 
@@ -322,7 +323,7 @@ So JPA wins decisively on *repetitive* CRUD and loses its edge on *bespoke* quer
 
 ---
 
-## When each one wins
+## ⚖️ When each one wins
 
 **Reach for JdbcTemplate when:**
 - The schema is small and stable (Sahar: eight tables).
@@ -342,7 +343,7 @@ A pragmatic middle ground worth knowing: **Spring Data JDBC** and the newer **`J
 
 ---
 
-## Why Sahar uses JdbcTemplate (and where JPA fits)
+## 🎯 Why Sahar uses JdbcTemplate (and where JPA fits)
 
 Sahar is a teaching codealong, and the choice is pedagogical first:
 
@@ -353,11 +354,12 @@ Sahar is a teaching codealong, and the choice is pedagogical first:
 
 **JPA is on the [roadmap](../steps/99-roadmap.md)** — not because JdbcTemplate "ran out," but because re-implementing one slice (likely the block aggregate) as entities is the *best possible way to learn JPA*: you already know the exact SQL it should produce, so you can turn on `spring.jpa.show-sql=true`, watch Hibernate's queries, and immediately spot an N+1 or an extra UPDATE. Learning the abstraction *after* the fundamentals is the whole pedagogical bet of this repo.
 
+> [!TIP]
 > Rule of thumb: **learn JdbcTemplate to understand the database; reach for JPA to stop repeating yourself — once you can predict the SQL it will generate.**
 
 ---
 
-## Related
+## 🔗 Related
 
 - [Step 06 — JdbcTemplate + H2](../steps/06-jdbctemplate-h2.md) — the hands-on build of the repositories quoted here.
 - [Step 99 — Roadmap](../steps/99-roadmap.md) — where the JPA re-implementation slice lives.

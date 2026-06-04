@@ -3,12 +3,13 @@
 Keep this open while you build. When something is fuzzy — a concept, a decision, an error you don't
 fully understand — log it here instead of breaking flow. Bring the list to your mentor session.
 
-**A good entry has:** the step, the exact question, what you *think* the answer is (commit to a guess —
-it sharpens the discussion), and any code/error. Resolve entries inline so the list doubles as a study log.
+> [!TIP]
+> **A good entry has:** the step, the exact question, what you *think* the answer is (commit to a guess —
+> it sharpens the discussion), and any code/error. Resolve entries inline so the list doubles as a study log.
 
 ---
 
-## Template
+## 📝 Template
 
 ```
 ### [Step NN] One-line question
@@ -20,7 +21,7 @@ it sharpens the discussion), and any code/error. Resolve entries inline so the l
 
 ---
 
-## Open
+## ❓ Open
 
 ### [Step 04] Why constructor injection instead of field injection (`@Autowired` on a field)?
 - Context: the controllers take `RoutineService` as a constructor argument.
@@ -44,6 +45,6 @@ it sharpens the discussion), and any code/error. Resolve entries inline so the l
 
 ---
 
-## Resolved
+## ✅ Resolved
 
 _(move entries here once you've discussed and written the answer in your own words)_

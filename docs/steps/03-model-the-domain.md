@@ -2,7 +2,7 @@
 
 _Replace the untyped `Map` from step 02 with a typed tree of Java records, so the compiler guarantees the JSON shape and the code reads like the domain._
 
-## Why this matters
+## 🎯 Why this matters
 
 In [step 02](./02-first-rest-endpoint.md) the `/api/config` endpoint returned a giant `Map<String, Object>`. It worked, and the JSON looked right, but the code was lying to the compiler: every key was a `String`, every value was `Object`, and a typo like `"prayertimes"` instead of `"prayerTimes"`, or putting a number where a string belonged, would compile fine and only blow up (or silently produce wrong JSON) at runtime.
 
@@ -10,7 +10,7 @@ This step fixes that without changing a single byte of the JSON the client sees.
 
 This is the foundation for everything later: the service in [step 04](./04-in-memory-edit.md) edits these records, validation in step 05 constrains them, and the database in step 06 stores their structured parts. You only get to model the domain once and reuse it everywhere if it is typed.
 
-## Theory
+## 🧠 Theory
 
 ### What a record is
 
@@ -87,11 +87,11 @@ classDiagram
 
 `RoutineConfig` is the **aggregate root**: the single thing `GET /api/config` returns, composing all the smaller records.
 
-## Start from
+## 🚦 Start from
 
 Continue from the step 02 checkpoint (the working `Map`-based `/api/config`). If you want to compare, the step 02 endpoint is described in [02 - first REST endpoint](./02-first-rest-endpoint.md). You will be adding a new `domain` package and a `seed` package, and rewriting `ConfigController`. Nothing else moves.
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Create the leaf records in `com.ramishtaha.sahar.domain`
 
@@ -384,7 +384,7 @@ curl http://localhost:8080/api/config
 
 You should get the same shape as step 02 - `"title": "Sahar"`, a nested `"prayerTimes"` object, a `"block"` with a `"weeks"` array, and so on - now with an extra `"block": { ..., "length": 4 }` from the derived accessor. Same JSON, type-safe code.
 
-## End state
+## ✅ End state
 
 The app serves the full Sahar routine from a strongly typed domain model. `GET /api/config` returns a `RoutineConfig` record; the JSON is the same shape as step 02 (plus the derived `block.length`), but the compiler now guarantees the structure and the IDE autocompletes every field.
 
@@ -396,7 +396,7 @@ Files added or changed in this step:
 
 See the full, working source in [the step 03 checkpoint](../../checkpoints/step-03-model-the-domain/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Constructor argument order/count mismatch.** `new RoutineConfig(...)` takes 13 arguments in a fixed order. If you swap two `String`s of the same type (e.g. `title` and `tagline`), it compiles but the JSON is subtly wrong. Symptom: fields look shuffled in the response. Fix: read the component list top-to-bottom and match it; let your IDE show parameter hints.
 - **Adding a `get` prefix.** Record accessors are `fajr()`, not `getFajr()`. If you write `config.getMonth()` it will not compile. Use the bare component name.
@@ -406,7 +406,7 @@ See the full, working source in [the step 03 checkpoint](../../checkpoints/step-
 - **Expecting `length` to be settable.** `BlockPlan.length()` is derived from `weeks.size()`. Jackson serializes it but there is no field behind it; you cannot set it, and on deserialization (step 04) Jackson ignores it because it is not a constructor component.
 - **JSON shape changed unexpectedly.** If a field name in the response is wrong, check the record component name - the component name *is* the JSON key. Renaming the component renames the field.
 
-## Check yourself
+## ❓ Check yourself
 
 1. What four things does the compiler generate for you when you declare a `record`?
 2. Why are prayer times modelled as `String` instead of `LocalTime` in this app?
@@ -417,6 +417,6 @@ See the full, working source in [the step 03 checkpoint](../../checkpoints/step-
 
 ## ---
 
-Prev: [02 - first REST endpoint](./02-first-rest-endpoint.md) | Next: [04 - in-memory edit](./04-in-memory-edit.md) | Checkpoint: [step-03-model-the-domain](../../checkpoints/step-03-model-the-domain/)
+⬅️ Prev: [02 - first REST endpoint](./02-first-rest-endpoint.md) · ➡️ Next: [04 - in-memory edit](./04-in-memory-edit.md) · 📍 Checkpoint: [step-03-model-the-domain](../../checkpoints/step-03-model-the-domain/)
 
 See also: [Java refresher](../../reference/java-refresher.md) · [HTTP and REST](../theory/http-and-rest.md) · [Glossary](../../reference/glossary.md)

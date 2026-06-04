@@ -16,7 +16,7 @@ This is theory. The hands-on steps are [step 11 — Dockerize](../steps/11-docke
 
 ---
 
-## The problem containers solve
+## 🎯 The problem containers solve
 
 You ran Sahar locally and it worked. Then you tried to run it on a server and discovered: the server has Java 17, not Java 25; PostgreSQL is a different minor version; an environment variable you set in IntelliJ is missing; the working directory the app writes its H2 file into does not exist or is not writable. None of these are bugs in Sahar. They are bugs in the *gap between environments*.
 
@@ -26,7 +26,7 @@ Crucially, a container is **not** a virtual machine. A VM ships a whole guest op
 
 ---
 
-## Images vs containers
+## 🔑 Images vs containers
 
 This is the single most important distinction in the whole topic, and it trips up everyone at first.
 
@@ -52,7 +52,7 @@ A consequence worth internalising: **containers are disposable.** If a Sahar con
 
 ---
 
-## Why images are portable: the OCI standard
+## 🌐 Why images are portable: the OCI standard
 
 You build Sahar's image with Docker on your laptop. Your friend runs it with Podman. A cloud platform runs it under Kubernetes. None of them re-build anything, and it just works. That interoperability is not luck — it is a written standard.
 
@@ -68,7 +68,7 @@ Because Docker, Podman, containerd, and Kubernetes all read and write **OCI imag
 
 ---
 
-## Docker vs Podman
+## ⚖️ Docker vs Podman
 
 Both build and run OCI images. Both expose nearly identical command-line interfaces. The difference is architecture.
 
@@ -83,11 +83,12 @@ The daemonless, rootless model is Podman's headline security argument: there is 
 
 For the Sahar codealong, **either tool works.** The steps are written with `docker`/`docker compose`; if you are on Podman, substitute `podman`/`podman compose`. The Dockerfile and compose file are unchanged because both consume the same standard formats. See the [Docker / Podman cheatsheet](../../reference/cheatsheet-docker-podman.md) for the command-by-command mapping.
 
+> [!TIP]
 > Tip from the Sahar Dockerfile: it runs as a **non-root user** regardless of which engine you use (`useradd ... sahar`, then `USER sahar`). That is defence in depth — even under root-daemon Docker, the *process inside* the container is not root.
 
 ---
 
-## Image layers and build caching
+## 🗂️ Image layers and build caching
 
 An image is a **stack of layers**. Each instruction in a Dockerfile that changes the filesystem (`FROM`, `COPY`, `RUN`) produces a new layer on top of the previous ones. Layers are content-addressed and read-only; the final image is all the layers merged (a "union" filesystem) plus metadata.
 
@@ -119,7 +120,7 @@ RUN --mount=type=cache,target=/root/.m2 mvn -B -ntp -DskipTests clean package
 
 ---
 
-## Multi-stage builds: build image vs run image
+## 🏗️ Multi-stage builds: build image vs run image
 
 Here is the tension. To *build* Sahar you need a full JDK and Maven — together, hundreds of MB of compiler, build tool, and downloaded plugins. To *run* Sahar you need only a JRE and the jar. You do not want to ship the compiler to production: it bloats the image, slows pulls, and widens the attack surface (every tool in the image is something an attacker could use).
 
@@ -184,11 +185,12 @@ Things to notice, beyond the staging:
 - **Configuration via environment, not baked in.** The image contains no database password, no profile choice. That is the [twelve-factor](https://12factor.net/config) principle: the *same* image runs against H2 locally (no env set) or PostgreSQL in production (`SPRING_PROFILES_ACTIVE=postgres` plus the `SAHAR_DB_*` vars). One artifact, many environments — exactly the portability promise, now extended to config. (See [step 09 — Swap to PostgreSQL](../steps/09-swap-to-postgres.md) for where those profiles come from.)
 - **Non-root user.** `useradd` then `USER sahar` means the JVM runs as uid 10001. The `chown` is necessary so that non-root user can create `./data` for the default H2 file.
 
+> [!CAUTION]
 > A note that will age: base image tags like `maven:3.9-eclipse-temurin-25` and `eclipse-temurin:25-jre` move forward over time. Pin to the versions your project targets and re-check the official tags at <https://hub.docker.com/_/eclipse-temurin> and <https://hub.docker.com/_/maven>.
 
 ---
 
-## docker compose: the whole stack in one file
+## 🐳 docker compose: the whole stack in one file
 
 A single container is enough for the H2 build of Sahar. But the realistic deployment has **two** services that must start in the right order and talk to each other: the Sahar app and a PostgreSQL database. Wiring that by hand (`docker network create`, two `docker run` commands with the right flags, waiting for the DB) is tedious and easy to get wrong.
 
@@ -283,11 +285,12 @@ Starting the app before Postgres can accept connections gives you a crash on boo
 
 `${SAHAR_HOST_PORT:-8080}` means "use the `SAHAR_HOST_PORT` environment variable, or default to `8080`." If port 8080 is already taken on your machine, run `SAHAR_HOST_PORT=8086 docker compose up` and reach Sahar at `http://localhost:8086` — no file edit needed. The `:8080` after the colon is the container port and never changes.
 
+> [!IMPORTANT]
 > Modern Compose needs **no** top-level `version:` key — it is obsolete and current Compose warns about it. See <https://docs.docker.com/compose/>.
 
 ---
 
-## Why orchestration (Kubernetes) exists — and why Sahar does not need it
+## 🧭 Why orchestration (Kubernetes) exists — and why Sahar does not need it
 
 Compose is great for *one machine*. The moment you need many copies of a service across **many machines**, with automatic recovery and zero-downtime updates, you have crossed into **orchestration**, and the de-facto standard there is **Kubernetes**.
 
@@ -307,7 +310,7 @@ If you ever outgrow that — multiple users, high availability, several services
 
 ---
 
-## CI/CD: build/test/ship on every push
+## 🔁 CI/CD: build/test/ship on every push
 
 DevOps tooling above gives you a *reproducible artifact*. **CI/CD** gives you a *reproducible process* for producing and shipping it.
 
@@ -374,11 +377,12 @@ flowchart LR
 
 This workflow is pure **CI** plus an image-build sanity check. Turning it into **CD** means adding a step that pushes the image to a registry and tells a host to run the new version once the build is green — which is the subject of [step 14 — Deploy](../steps/14-deploy.md). The pattern is the same regardless of target: *green build produces an OCI image; deployment runs that exact image.*
 
+> [!NOTE]
 > Action versions like `actions/checkout@v4` and `actions/setup-java@v4` are pinned major versions and will advance over time; check the official docs at <https://docs.github.com/actions> when revisiting.
 
 ---
 
-## The through-line
+## 🧵 The through-line
 
 Every concept on this page is one idea applied at a different scale:
 
@@ -392,7 +396,7 @@ Build the artifact once, ship the same artifact everywhere, automate the path be
 
 ---
 
-## Related
+## 🔗 Related
 
 - Step: [11 — Dockerize](../steps/11-dockerize.md) — write and build the Sahar `Dockerfile`.
 - Step: [12 — Compose](../steps/12-compose.md) — bring up app + PostgreSQL with `docker compose`.

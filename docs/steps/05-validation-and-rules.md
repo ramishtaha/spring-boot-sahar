@@ -2,7 +2,7 @@
 
 *Reject bad edits at the door: well-formed prayer times, a 4-or-5-week block, and a deload that is always the last week - turned into clean HTTP 400s.*
 
-## Why this matters
+## 🎯 Why this matters
 
 In [step 04](./04-in-memory-edit.md) you made the routine editable: `PUT /api/prayer-times` and `PUT /api/block` accept a JSON body and replace the in-memory state. But they accepted *anything*. Send `"fajr": "25:99"` and the app shrugged and stored it. Send a 3-week block, or a block whose deload sits in the middle, and the routine quietly went wrong.
 
@@ -10,7 +10,7 @@ That is the gap this step closes. The point of Sahar is to be edited once a mont
 
 The lesson underneath the app: **validate at the boundary, in one place, with declarative rules.** You will see three layers of constraints - simple field rules (`@NotBlank`, `@Pattern`), a built-in collection rule (`@Size`), and a custom cross-field rule you write yourself (`@DeloadLast`) - all enforced automatically by Spring when the request body arrives, and all failures funnelled into one tidy `400` response shape. That is the standard, idiomatic way to do input validation in a Spring application, and you will reuse exactly this pattern in every controller from here on.
 
-## Theory
+## 🧠 Theory
 
 ### What Bean Validation is
 
@@ -49,7 +49,7 @@ But some rules span the whole object. "The deload is the *last* week" is not a f
 
 A `BlockPlan` holds a `List<Week>`. Validating the list's size does not validate the weeks inside it. Putting `@Valid` on the `weeks` field tells the engine to **cascade** - descend into every `Week` and run its field rules too. Without that, a `Week` with a blank `name` would slip through.
 
-## Start from
+## 🚦 Start from
 
 Continue from the [step 04 checkpoint](../../checkpoints/step-04-in-memory-edit/). At that point the domain records (`PrayerTimes`, `Week`, `BlockPlan`) had no annotations, and the controllers took a bare `@RequestBody`:
 
@@ -63,7 +63,7 @@ public PrayerTimes update(@RequestBody PrayerTimes prayerTimes) {
 
 The `spring-boot-starter-validation` dependency is already in the [pom](../../checkpoints/step-05-validation-and-rules/) from the baseline, so there is no Maven change in this step - only annotations and two new classes.
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Annotate the prayer times
 
@@ -321,7 +321,7 @@ What it does:
 - It pulls **field errors** (e.g. `fajr: Fajr must be a 24-hour time...`) and **global errors** (the class-level `@DeloadLast` message has no field, so it lands here) out of the binding result, flattens them to plain strings, and sorts them so the output order is stable and testable.
 - Returning the `ApiError` record means Jackson 3 (`tools.jackson` - transparent here, see [persistence/JSON notes](../theory/http-and-rest.md)) serializes it to JSON automatically, exactly like any other response body.
 
-## End state
+## ✅ End state
 
 The two editing endpoints now reject bad input with a clear `400` before any state changes; valid edits still succeed exactly as in step 04.
 
@@ -374,7 +374,7 @@ Files changed / added in this step (browse the full [step 05 checkpoint](../../c
 
 No pom change: `spring-boot-starter-validation` was already present from the baseline.
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Forgetting `@Valid` on the parameter.** The annotations are present but nothing rejects bad input - the symptom is "my `@Pattern` does nothing". Fix: every `@RequestBody` you want validated needs `@Valid` right before it.
 - **Putting `@DeloadLast` on a field instead of the type.** It is `@Target(TYPE)`, so the compiler rejects it on a field. It belongs on the `BlockPlan` record declaration, because the rule needs the whole object.
@@ -385,7 +385,7 @@ No pom change: `spring-boot-starter-validation` was already present from the bas
 - **A `415 Unsupported Media Type` instead of `400`.** That is not validation - you forgot `-H "Content-Type: application/json"` on the request, so Jackson never even built the object.
 - **Two errors when you expected one.** Usually a validator doing more than one job. Keep each rule single-purpose so messages stay precise.
 
-## Check yourself
+## ❓ Check yourself
 
 1. Why does `PrayerTimes.fajr` need *both* `@NotBlank` and `@Pattern`, rather than just one of them?
 2. What is the exact trigger that makes Hibernate Validator run on an incoming `PUT /api/block` body? What happens if it is missing?
@@ -396,4 +396,4 @@ No pom change: `spring-boot-starter-validation` was already present from the bas
 
 ## ---
 
-Prev: [04 - In-memory edit](./04-in-memory-edit.md) | Next: [06 - JdbcTemplate and H2](./06-jdbctemplate-h2.md) | Checkpoint: [step-05-validation-and-rules](../../checkpoints/step-05-validation-and-rules/)
+⬅️ Prev: [04 - In-memory edit](./04-in-memory-edit.md) · ➡️ Next: [06 - JdbcTemplate and H2](./06-jdbctemplate-h2.md) · 🏁 Checkpoint: [step-05-validation-and-rules](../../checkpoints/step-05-validation-and-rules/)

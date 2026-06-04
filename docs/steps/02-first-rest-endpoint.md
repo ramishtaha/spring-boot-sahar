@@ -2,7 +2,7 @@
 
 _Add `GET /api/config`, return JSON from Java, and let the server — not a bundled file — feed the page._
 
-## Why this matters
+## 🎯 Why this matters
 
 In [step 01](./01-serve-static.md) the page was a static site: `index.html` rendered a routine, but the routine itself lived in a hand-edited JavaScript file (`data.js`, exposed as `window.SAHAR`). That works for a brochure. It does **not** work for an app you intend to edit monthly — changing your prayer times or your training block would mean editing JavaScript and redeploying, and every visitor would receive a frozen copy baked into the download.
 
@@ -10,7 +10,7 @@ This step is the pivot. We add a single backend endpoint, `GET /api/config`, tha
 
 You will meet the three pieces that make almost every Spring web endpoint work: `@RestController`, `@GetMapping`, and the `DispatcherServlet` front controller. You will also see Jackson silently turn a Java object into JSON. And — on purpose — the data is returned as an untyped `Map<String, Object>` so you can feel exactly why we will reach for proper records in [step 03](./03-model-the-domain.md).
 
-## Theory
+## 🧠 Theory
 
 **A REST endpoint is just a Java method wired to an HTTP request.** When a request for `GET /api/config` arrives, Spring needs to (a) decide which of your methods should handle it, (b) call it, and (c) turn whatever the method returns into an HTTP response. That dispatch job is done by one object Spring Boot configures for you: the **`DispatcherServlet`**, the *front controller*. Every request to the app hits it first; it consults a handler mapping, finds the method annotated for that path, invokes it, then runs the result through a *message converter* on the way out.
 
@@ -42,7 +42,7 @@ sequenceDiagram
 
 Nothing in this diagram is custom: Tomcat is the embedded server Spring Boot starts, the `DispatcherServlet` and the handler mapping are auto-configured, and the JSON converter is registered because Jackson is on the classpath (pulled in by the web starter). Your code is only the `config()` method in the middle.
 
-## Start from
+## 🚦 Start from
 
 Continue from the step 01 checkpoint, [`step-01-serve-static`](../../checkpoints/step-01-serve-static/). At that point you have:
 
@@ -62,7 +62,7 @@ render(window.SAHAR);
 
 The full checkpoint for **this** step is [`step-02-first-rest-endpoint`](../../checkpoints/step-02-first-rest-endpoint/).
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Create the controller package and class
 
@@ -188,6 +188,7 @@ private List<Map<String, Object>> weeklyGrid() {
 
 The checkpoint's own Javadoc says it plainly:
 
+> [!CAUTION]
 > the data is hardcoded and modelled as an untyped `Map<String, Object>` on purpose. It works, but look how fragile it is — a typo in a key is invisible to the compiler, the shape is not guaranteed, and nesting maps-of-maps gets ugly fast.
 
 Concretely:
@@ -247,7 +248,7 @@ curl http://localhost:8080/api/config
 
 You should get JSON beginning `{"title":"Sahar","tagline":"recover, build, fight","month":"June 2026","prayerTimes":{...`. Open <http://localhost:8080/> and the page renders exactly as in step 01 — but now the bytes came from your Java method, not from a file in the browser.
 
-## End state
+## ✅ End state
 
 The app is now **server-driven**. The same page renders the same routine, but the data is produced by a Spring MVC endpoint and fetched at load time.
 
@@ -259,7 +260,7 @@ No `pom.xml` change is needed: `spring-boot-starter-webmvc` (already present fro
 
 Full code: [`step-02-first-rest-endpoint`](../../checkpoints/step-02-first-rest-endpoint/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Endpoint returns `404`.** The controller probably is not being component-scanned. `ConfigController` must live under the base package `com.ramishtaha.sahar` (here `com.ramishtaha.sahar.web`). `@SpringBootApplication` scans its own package and below — a class outside that tree is invisible. Also confirm the path is exactly `/api/config` (case-sensitive) and the verb is `GET`.
 - **JSON comes back HTML-wrapped or you get a "view not found" error.** You used `@Controller` instead of `@RestController` (or forgot `@ResponseBody`). Without it, the return value is treated as a *view name*, not body content.
@@ -268,7 +269,7 @@ Full code: [`step-02-first-rest-endpoint`](../../checkpoints/step-02-first-rest-
 - **`data.js 404` in the console.** You replaced `render(window.SAHAR)` but forgot to remove the `<script src="data.js">` tag (or vice versa, leaving `window.SAHAR` undefined). Both edits must happen together.
 - **Stale page after editing `index.html`.** Static resources are served from the classpath; a hard refresh (Ctrl/Cmd-Shift-R) and a restart of `spring-boot:run` rule out browser/build caching.
 
-## Check yourself
+## ❓ Check yourself
 
 1. What two annotations does `@RestController` combine, and what would change if you used a plain `@Controller` here?
 2. Which object decides that `GET /api/config` should be handled by `ConfigController.config()`, and where did it come from?
@@ -279,4 +280,4 @@ Full code: [`step-02-first-rest-endpoint`](../../checkpoints/step-02-first-rest-
 
 ## ---
 
-Prev: [01 - Serve static](./01-serve-static.md) | Next: [03 - Model the domain](./03-model-the-domain.md) | Checkpoint: [step-02-first-rest-endpoint](../../checkpoints/step-02-first-rest-endpoint/)
+⬅️ Prev: [01 - Serve static](./01-serve-static.md) · ➡️ Next: [03 - Model the domain](./03-model-the-domain.md) · 🏁 Checkpoint: [step-02-first-rest-endpoint](../../checkpoints/step-02-first-rest-endpoint/)

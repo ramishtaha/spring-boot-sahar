@@ -2,7 +2,7 @@
 
 _Same code, two databases: keep embedded H2 as the zero-setup default, and add a `postgres` profile that points the very same app at a real PostgreSQL server — with every connection detail coming from the environment._
 
-## Why this matters
+## 🎯 Why this matters
 
 Up to now Sahar has run on embedded H2: a database that lives **inside the app's own JVM process**. That is wonderful for learning — you clone the repo, run one command, and you have a working database with no install, no server, no credentials. But it is not what you deploy. A real deployment uses a **server database** that runs as its own process, survives the app restarting, and serves many clients at once.
 
@@ -10,7 +10,7 @@ The naive way to switch databases is to edit `application.properties` and change
 
 The payoff for Sahar specifically: the default profile still runs on H2 (anyone can run the course with zero setup), while `--spring.profiles.active=postgres` flips the same JAR onto Postgres for a real deploy. Crucially, **not one line of Java or SQL changes** — only configuration. That is the whole point of this step, and it only works because we kept [`schema.sql`](../../checkpoints/step-09-swap-to-postgres/) portable back in [step 06](./06-jdbctemplate-h2.md).
 
-## Theory
+## 🧠 Theory
 
 ### Embedded DB vs server DB
 
@@ -61,15 +61,16 @@ flowchart TD
     ENV --> PG[("PostgreSQL server<br/>separate process :5432")]
 ```
 
-The diagram's key insight: the box at the top — the compiled app — is **the same bytes** in both columns. Only the arrows (which config file, which data source) differ.
+> [!IMPORTANT]
+> The diagram's key insight: the box at the top — the compiled app — is **the same bytes** in both columns. Only the arrows (which config file, which data source) differ.
 
-## Start from
+## 🚦 Start from
 
 Continue from the [step 08 checkpoint](./08-editable-admin-ui.md) — the full editable admin UI on H2. Everything you built (controllers, `RoutineService`, the `JdbcTemplate` repositories, the static `index.html` and `admin.html`) stays exactly as it is. In this step you add **one new file** and make a tiny note about the driver that is already on the classpath.
 
 If you ever want the finished result to compare against, it is in [`checkpoints/step-09-swap-to-postgres/`](../../checkpoints/step-09-swap-to-postgres/).
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Confirm the PostgreSQL driver is already on the classpath
 
@@ -104,7 +105,8 @@ spring.sql.init.mode=always
 
 Notice the comment on `spring.sql.init.mode=always` was written with this step in mind. The default `embedded` mode only runs `schema.sql` for in-memory databases; pointing at a *server* database (even H2 in file mode, and definitely Postgres) needs `always` so the schema is created there too. Because it is already `always`, the schema will run on Postgres with no change.
 
-We are **not editing this file**. The default stays H2 so the course runs with zero setup.
+> [!NOTE]
+> We are **not editing this file**. The default stays H2 so the course runs with zero setup.
 
 ### 3. Create `application-postgres.properties`
 
@@ -210,7 +212,7 @@ docker exec -it sahar-pg psql -U sahar -d sahar -c "SELECT month_label FROM app_
 
 You should see your edited value. That round-trip — write through the app, read directly from the server with a different client — is proof that the data now lives in a separate, durable Postgres process, not inside the JVM. (This was verified live for the checkpoint.)
 
-## End state
+## ✅ End state
 
 Sahar now runs on **two databases from one codebase**:
 
@@ -226,7 +228,7 @@ Files changed in this step:
 
 Full result: [`checkpoints/step-09-swap-to-postgres/`](../../checkpoints/step-09-swap-to-postgres/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Forgot the profile flag.** Running plain `mvn spring-boot:run` uses the *default* H2 profile, so your Postgres edits "disappear." Check the startup log for `The following 1 profile is active: "postgres"`. No such line means you are on H2.
 - **`Connection refused` to `localhost:5432`.** The Postgres container is not running or the port is not published. `docker ps` should list `sahar-pg` with `0.0.0.0:5432->5432/tcp`. If it exited, `docker logs sahar-pg` shows why; `docker start sahar-pg` restarts a stopped one.
@@ -236,7 +238,7 @@ Full result: [`checkpoints/step-09-swap-to-postgres/`](../../checkpoints/step-09
 - **Leaked credentials.** Never replace the `${SAHAR_DB_PASSWORD:...}` placeholder with a real password committed to Git. Set the env var instead; the file should only ever contain the local default.
 - **Port already in use.** Another Postgres (or a previous container) holds 5432. Either stop it or map a different host port (`-p 5433:5432`) and set `SAHAR_DB_URL` to `...localhost:5433/sahar`.
 
-## Check yourself
+## ❓ Check yourself
 
 1. What is the practical difference between embedded H2 and a PostgreSQL server, and why do you deploy on the latter?
 2. When the `postgres` profile is active, which file is read first and which one wins on a conflicting key?
@@ -247,6 +249,6 @@ Full result: [`checkpoints/step-09-swap-to-postgres/`](../../checkpoints/step-09
 
 ## ---
 
-Prev: [08 - Editable admin UI](./08-editable-admin-ui.md) | Next: [10 - Seed and migrations](./10-seed-and-migrations.md) | Checkpoint: [step-09-swap-to-postgres](../../checkpoints/step-09-swap-to-postgres/)
+⬅️ Prev: [08 - Editable admin UI](./08-editable-admin-ui.md) · ➡️ Next: [10 - Seed and migrations](./10-seed-and-migrations.md) · 📍 Checkpoint: [step-09-swap-to-postgres](../../checkpoints/step-09-swap-to-postgres/)
 
 Related reading: [persistence-landscape.md](../theory/persistence-landscape.md) · [containers-and-devops.md](../theory/containers-and-devops.md) · [Docker/Podman cheatsheet](../../reference/cheatsheet-docker-podman.md) · [glossary.md](../../reference/glossary.md)

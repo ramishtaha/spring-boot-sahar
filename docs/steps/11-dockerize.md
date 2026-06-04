@@ -2,7 +2,7 @@
 
 _Package Sahar into a small, reproducible container image that anyone can run with one command - no Java, no Maven, no "works on my machine"._
 
-## Why this matters
+## 🎯 Why this matters
 
 Up to now you have been running Sahar with `mvn spring-boot:run` on your own laptop, against tools you installed by hand: a specific JDK, a specific Maven, your local file system. That is fine for development, but it does not travel. The day you want to run Sahar on a server, a teammate's machine, or next to a Postgres container (step [12](./12-compose.md)), you need a way to ship _the app and everything it needs to run_ as one unit.
 
@@ -10,7 +10,7 @@ A container image is that unit. It bundles a JRE, the built jar, and a tiny bit 
 
 The twist in this step is the **multi-stage build**. Building the app needs a full JDK plus Maven (hundreds of MB). _Running_ it needs only a JRE. A naive Dockerfile would ship all the build tooling and produce a bloated, attack-surface-heavy image. We will use two stages so the compiler and Maven stay behind, and only the jar plus a slim JRE ship.
 
-## Theory
+## 🧠 Theory
 
 ### Image vs container
 
@@ -61,13 +61,13 @@ spring.datasource.password=${SAHAR_DB_PASSWORD:sahar}
 
 `${SAHAR_DB_URL:default}` means "use the `SAHAR_DB_URL` env var, or this default if unset". `SPRING_PROFILES_ACTIVE` is just Spring's `spring.profiles.active` mapped to an env var name. So one image runs as H2-file by default, or as Postgres if you pass `-e SPRING_PROFILES_ACTIVE=postgres` and the `SAHAR_DB_*` vars.
 
-## Start from
+## 🚦 Start from
 
 Continue from the step 10 checkpoint (Flyway owns schema + seed). This step adds two new files at the project root - `Dockerfile` and `.dockerignore` - and changes no Java. The full result is in [`../../checkpoints/step-11-dockerize/`](../../checkpoints/step-11-dockerize/). If you are copying, start by reading [10 - Seed and migrations](./10-seed-and-migrations.md) so you understand what the container will run.
 
 You need Docker (or Podman) installed. Everything here works with Podman too - swap `docker` for `podman`; see [cheatsheet-docker-podman](../../reference/cheatsheet-docker-podman.md).
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Tell Docker to use BuildKit syntax
 
@@ -217,7 +217,7 @@ docker ps                      # grab the container id
 docker exec <id> id            # -> uid=10001(sahar) ...
 ```
 
-## End state
+## ✅ End state
 
 Sahar now ships as a self-contained image. `docker build` produces `sahar:step11` (~588MB - dominated by the JRE base, with Maven and the compiler excluded), and `docker run -d -p 8080:8080 sahar:step11` serves the full app on `http://localhost:8080` exactly as `mvn spring-boot:run` did - same endpoints, same Flyway-seeded data, but with zero local Java/Maven required. The container runs as the unprivileged uid `10001`, and config is driven entirely by environment variables, ready for Postgres in the next step.
 
@@ -228,9 +228,10 @@ Files added this step (no Java changed):
 
 Full checkpoint: [`../../checkpoints/step-11-dockerize/`](../../checkpoints/step-11-dockerize/).
 
-> Note - going smaller: the JRE base is the bulk of the image. If you want a smaller, harder-to-attack image you can swap the run stage for a Google **distroless** Java base (no shell, no package manager) or build a custom minimal runtime with **`jlink`** that includes only the modules Sahar uses, then run it on a tiny base. Both add complexity (debugging a shell-less image is harder), so they are an optimization, not a starting point. Keep the readable Temurin JRE for learning.
+> [!NOTE]
+> Going smaller: the JRE base is the bulk of the image. If you want a smaller, harder-to-attack image you can swap the run stage for a Google **distroless** Java base (no shell, no package manager) or build a custom minimal runtime with **`jlink`** that includes only the modules Sahar uses, then run it on a tiny base. Both add complexity (debugging a shell-less image is harder), so they are an optimization, not a starting point. Keep the readable Temurin JRE for learning.
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **`docker build` ignores `--mount=type=cache` / "unknown flag".** The `# syntax=docker/dockerfile:1` line is missing or not the first line of the file, so BuildKit is not active. Put it on line 1. On older Docker, prefix the build with `DOCKER_BUILDKIT=1`.
 - **App starts but the browser cannot reach it.** You relied on `EXPOSE`. `EXPOSE` is documentation only - you must publish with `-p 8080:8080` on `docker run`. Check `docker ps` shows `0.0.0.0:8080->8080/tcp`.
@@ -240,7 +241,7 @@ Full checkpoint: [`../../checkpoints/step-11-dockerize/`](../../checkpoints/step
 - **Container exits immediately, `docker ps` shows nothing.** Read the logs: `docker logs <id>`. A common cause is a bad `SPRING_PROFILES_ACTIVE` or `SAHAR_DB_URL` pointing at a database that is not reachable yet (that wiring is step [12](./12-compose.md)).
 - **Data "disappears" after `docker rm`.** The H2 file lives in the container's writable layer, which dies with the container. That is expected here; durable storage across container lifecycles (volumes / a real Postgres) comes in step [12](./12-compose.md).
 
-## Check yourself
+## ❓ Check yourself
 
 1. What is the difference between an image and a container, and which one does `docker build` produce?
 2. Why does the Dockerfile `COPY pom.xml` before `COPY src`? What breaks in the cache if you reverse them?
@@ -251,6 +252,6 @@ Full checkpoint: [`../../checkpoints/step-11-dockerize/`](../../checkpoints/step
 
 ## ---
 
-Prev: [10 - Seed and migrations](./10-seed-and-migrations.md) | Next: [12 - Compose](./12-compose.md) | Checkpoint: [step-11-dockerize](../../checkpoints/step-11-dockerize/)
+⬅️ Prev: [10 - Seed and migrations](./10-seed-and-migrations.md) · ➡️ Next: [12 - Compose](./12-compose.md) · 📍 Checkpoint: [step-11-dockerize](../../checkpoints/step-11-dockerize/)
 
-Theory: [containers-and-devops](../theory/containers-and-devops.md) - Cheatsheet: [docker / podman](../../reference/cheatsheet-docker-podman.md) - Reference: [glossary](../../reference/glossary.md)
+🔗 Theory: [containers-and-devops](../theory/containers-and-devops.md) · 🐳 Cheatsheet: [docker / podman](../../reference/cheatsheet-docker-podman.md) · 🗂️ Reference: [glossary](../../reference/glossary.md)

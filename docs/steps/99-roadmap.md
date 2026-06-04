@@ -2,7 +2,7 @@
 
 _You have a real, deployed Spring Boot 4 app. Here is the honest map of the seven things a production team would do next to Sahar, why each one matters for THIS app, and where the official docs live._
 
-## Why this matters
+## 🎯 Why this matters
 
 Sahar is finished as a codealong, but it is not finished as software. Right now it is a single-replica app, with `JdbcTemplate` repositories, validation that returns a hand-rolled error body, no tests beyond a context-load check, **no authentication at all**, a CI pipeline that builds but does not deploy, a flat Kubernetes manifest, and zero runtime visibility. None of that is wrong for a personal project that lives behind your own network — but every one of those is exactly where a production engineer's instinct goes next, and you are a working software engineer.
 
@@ -10,7 +10,7 @@ This doc is a map, not a tutorial. For each topic it answers three questions in 
 
 A word of honesty about ordering: of everything below, **Spring Security comes first in priority**, because the moment Sahar is reachable on the public internet, _anyone who can load `/admin.html` can rewrite your training block_. Everything else is improvement; that one is a hole.
 
-## Theory
+## 🧠 Theory
 
 You finished with a clean layered app: `web -> service -> repo -> database`. Each topic below either deepens one of those layers, wraps a cross-cutting concern around all of them, or changes what happens _around_ the running process (build, ship, run, observe).
 
@@ -50,11 +50,11 @@ mindmap
 
 Three of these (Security, Testing, Observability) are **cross-cutting** — they touch every layer. Three (CI/CD, Kubernetes, Observability-in-prod) are about the world _around_ the process. Only the first one (JPA) is a swap _inside_ a layer. Keep that distinction in mind; it tells you how disruptive each change is.
 
-## Start from
+## 🚦 Start from
 
 This is the closing doc, so there is nothing to copy. The thing you are extending is the final deploy checkpoint: [`checkpoints/step-14-deploy/`](../../checkpoints/step-14-deploy/) — the complete app with the `Dockerfile`, `docker-compose.yml`, the `.github/workflows/ci.yml` pipeline, and the `deploy/k8s/` manifests. Every code reference below is real code from that checkpoint.
 
-## Build it
+## 🛠️ Build it
 
 There is no code to build in this step. Each numbered item is a destination: what it is, why Sahar needs it, and the doc to open.
 
@@ -195,7 +195,7 @@ Start with the gate. The principle to internalize: **authentication** (who are y
 
 **Docs.** [Boot 4.0.6 Actuator](https://docs.spring.io/spring-boot/4.0.6/reference/actuator/index.html) · [Micrometer](https://docs.micrometer.io/micrometer/reference/) · [OpenTelemetry Java](https://opentelemetry.io/docs/languages/java/).
 
-## End state
+## ✅ End state
 
 Nothing in the repository changed — this is a reading map, not a code step. What changed is your **picture of the work ahead**. You now have, in priority order for a personal-but-public app:
 
@@ -209,7 +209,7 @@ Nothing in the repository changed — this is a reading map, not a code step. Wh
 
 The finished app this all extends lives at [`checkpoints/step-14-deploy/`](../../checkpoints/step-14-deploy/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Reaching for JPA on day one.** JPA is not "the grown-up version" of `JdbcTemplate`; it is a different tool with different failure modes (N+1, lazy-loading exceptions outside a transaction, surprise schema changes). Adopt it for a _reason_, and read [jdbc-vs-jpa.md](../theory/jdbc-vs-jpa.md) first.
 - **Deploying publicly before adding Security.** The single biggest real risk in this whole list. If `/admin.html` is reachable from the internet, your data is editable by anyone. Add the gate _before_ the public Ingress, not after.
@@ -219,7 +219,7 @@ The finished app this all extends lives at [`checkpoints/step-14-deploy/`](../..
 - **No health endpoint, then wondering why K8s never restarts a wedged pod.** Without Actuator's `/actuator/health` wired to the `livenessProbe`/`readinessProbe`, Kubernetes has no idea your app has hung. Add Actuator before you add probes.
 - **Skipping Testcontainers and trusting H2.** Tests that only run on H2 can pass while the Postgres production path is broken (dialect, types, reserved words). The portable DDL helps, but a real-Postgres integration test is the only proof.
 
-## Check yourself
+## ❓ Check yourself
 
 1. Sahar uses `JdbcTemplate`. Name one concrete thing Spring Data JPA would simplify in `BlockRepository`, and one new risk (footgun) it introduces.
 2. What standard does `ProblemDetail` implement, and why is a standardized error body better than the custom `ApiError` record for an API with many clients?
@@ -231,6 +231,6 @@ The finished app this all extends lives at [`checkpoints/step-14-deploy/`](../..
 
 ## ---
 
-Prev: [14 - Deploy](./14-deploy.md) | Next: _(none — this is the final doc)_ | Checkpoint: [step-14-deploy](../../checkpoints/step-14-deploy/)
+⬅️ Prev: [14 - Deploy](./14-deploy.md) · ➡️ Next: _(none — this is the final doc)_ · 📍 Checkpoint: [step-14-deploy](../../checkpoints/step-14-deploy/)
 
 Related reading: [jdbc-vs-jpa.md](../theory/jdbc-vs-jpa.md) · [persistence-landscape.md](../theory/persistence-landscape.md) · [containers-and-devops.md](../theory/containers-and-devops.md) · [glossary.md](../../reference/glossary.md) · [README](../../README.md) · [progress](../../progress.md) · [questions](../../questions.md)

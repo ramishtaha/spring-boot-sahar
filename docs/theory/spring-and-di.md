@@ -14,7 +14,7 @@ This is the conceptual foundation. The hands-on versions of everything here are 
 
 ---
 
-## 1. What is a servlet, and what is Tomcat doing?
+## 🧩 1. What is a servlet, and what is Tomcat doing?
 
 Long before Spring existed, the Java standard for "a thing that handles HTTP requests" was the **servlet** — an interface (today `jakarta.servlet.Servlet`, formerly `javax.servlet.Servlet`; the `javax` → `jakarta` rename happened in the Spring 2 → 3 / Jakarta EE transition and is unrelated to the Boot 3 → 4 move) with one method that matters:
 
@@ -46,13 +46,14 @@ public class SaharApplication {
 }
 ```
 
+> [!IMPORTANT]
 > **Why this matters.** "Run `main` and a web server starts" sounds trivial, but it inverts decades of Java tradition (build a WAR, hand it to an app server an ops team manages). The embedded model is why Sahar ships as one self-contained executable jar in [step 11 — dockerize](../steps/11-dockerize.md): the server is *inside* the artifact.
 
 You can swap the container — `spring-boot-starter-webmvc` lets you exclude Tomcat and pull in Jetty or Undertow instead — but Tomcat is the default and Sahar never changes it.
 
 ---
 
-## 2. The request lifecycle: from socket to your method and back
+## 🌐 2. The request lifecycle: from socket to your method and back
 
 Here is the part that confuses newcomers: in a Spring MVC app there is **exactly one servlet** doing the real routing. It is the `DispatcherServlet`, and it is a *front controller* — every request funnels through it, and it dispatches to the right handler. You write `ConfigController`, `PrayerTimesController`, and friends, but Tomcat never calls them directly; it calls the `DispatcherServlet`, which then calls *you*.
 
@@ -116,11 +117,12 @@ public class ConfigController {
 
 You build this endpoint for real in [step 02 — first REST endpoint](../steps/02-first-rest-endpoint.md). The `@RestController`-vs-`@Controller` distinction, and how `@RequestBody` / `@PathVariable` feed stage 4, are catalogued in the [Spring annotations cheatsheet](../../reference/cheatsheet-spring-annotations.md).
 
+> [!NOTE]
 > **One thread per request.** Each in-flight request occupies one Tomcat worker thread for its whole duration (this is the classic blocking model — fine for Sahar, a single-user personal app). It also means your singleton beans are shared across threads, which is why the step-04 service used `synchronized` on its read/write methods.
 
 ---
 
-## 3. Inversion of Control and Dependency Injection
+## 🔄 3. Inversion of Control and Dependency Injection
 
 Notice what `ConfigController` did **not** do: it never wrote `new RoutineService(...)`. It declared *"I need a `RoutineService"* as a constructor parameter, and one arrived. That is the whole idea.
 
@@ -208,7 +210,7 @@ public class RoutineService {
 
 ---
 
-## 4. Beans and the ApplicationContext
+## 🫘 4. Beans and the ApplicationContext
 
 A **bean** is just an object that Spring creates, configures, and manages for you. There is nothing magical about the object itself — `RoutineService` is an ordinary class. What makes its *instance* a bean is that Spring constructed it and holds a reference.
 
@@ -252,10 +254,11 @@ Read the arrows as "needs": `ConfigController` needs `RoutineService`, which nee
 
 ---
 
-## 5. Component scanning and stereotypes
+## 🔍 5. Component scanning and stereotypes
 
 How does the context *know* `RoutineService` should be a bean? You told it, with an annotation. `@SpringBootApplication` includes `@ComponentScan`, which at startup scans the package of `SaharApplication` (`com.ramishtaha.sahar`) **and every sub-package** for classes carrying a *stereotype* annotation, and registers each one as a bean definition.
 
+> [!WARNING]
 > **This is why the base package matters.** Component scanning starts at `com.ramishtaha.sahar` and goes down. Every Sahar class lives under that package, so it gets found. A class placed *outside* the base package would be silently ignored — a classic "why isn't my controller working?" trap.
 
 The stereotypes are all `@Component` under the hood; the specialised names document a class's role and, in some cases, add behaviour:
@@ -273,7 +276,7 @@ A fuller catalogue of these and their companions (`@GetMapping`, `@RequestBody`,
 
 ---
 
-## 6. Auto-configuration and starters
+## ⚙️ 6. Auto-configuration and starters
 
 Component scanning explains *your* beans. But you never wrote a `JdbcTemplate`, a `DataSource`, or a `DispatcherServlet` — yet they exist. That is **auto-configuration**, the second half of `@SpringBootApplication` (the `@EnableAutoConfiguration` part).
 
@@ -311,7 +314,7 @@ For the exact dependencies and the `@SpringBootApplication` breakdown, see [step
 
 ---
 
-## 7. The layered architecture — and why it pays off
+## 🏛️ 7. The layered architecture — and why it pays off
 
 Sahar is split into four layers, each a package, each with one job:
 
@@ -411,7 +414,7 @@ The same insulation pays off again in [step 09 — swap to Postgres](../steps/09
 
 ---
 
-## 8. Putting it all together
+## 🧩 8. Putting it all together
 
 For a single `GET /api/config`, here is the complete chain, with every concept on this page in play:
 
@@ -424,7 +427,7 @@ None of your classes called `new` on another bean, opened a socket, parsed HTTP,
 
 ---
 
-## Related
+## 🔗 Related
 
 - [00 — baseline](../steps/00-baseline.md) — the project skeleton, `@SpringBootApplication`, and the starters.
 - [02 — first REST endpoint](../steps/02-first-rest-endpoint.md) — `@RestController`, `@GetMapping`, and the request lifecycle in practice.
@@ -432,4 +435,4 @@ None of your classes called `new` on another bean, opened a socket, parsed HTTP,
 - [06 — JdbcTemplate + H2](../steps/06-jdbctemplate-h2.md) — the repository layer and the swap that proved layering (the "after").
 - [HTTP and REST](./http-and-rest.md) — methods, status codes, and resource design.
 - [Spring annotations cheatsheet](../../reference/cheatsheet-spring-annotations.md) — quick reference for every annotation named here.
-- Official: [Spring Boot 4.0.6 reference](https://docs.spring.io/spring-boot/4.0.6/) · [back to the README](../../README.md).
+- 📚 Official: [Spring Boot 4.0.6 reference](https://docs.spring.io/spring-boot/4.0.6/) · ⬆️ [back to the README](../../README.md).

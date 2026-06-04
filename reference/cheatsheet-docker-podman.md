@@ -8,7 +8,7 @@ For the *why* behind containers, layers, and 12-factor config, read [containers 
 
 ---
 
-## Image vs container, in one line
+## 🔑 Image vs container, in one line
 
 - **Image** = a read-only, baked template (your `Dockerfile`, built). Inert. You build it once, you can ship and re-run it anywhere.
 - **Container** = a running (or stopped) *instance* of an image, with its own writable layer, network, and lifecycle. You can start many containers from one image.
@@ -24,7 +24,7 @@ flowchart LR
 
 ---
 
-## Core Docker commands
+## 🐳 Core Docker commands
 
 | Command | One-line meaning |
 |---|---|
@@ -48,7 +48,7 @@ Handy extras: `docker run --rm ...` auto-deletes the container when it exits (gr
 
 ---
 
-## Sahar examples
+## ▶️ Sahar examples
 
 ```bash
 # Build the image. The trailing "." is the build CONTEXT (this folder); -t names it "sahar".
@@ -91,11 +91,12 @@ docker run -d -p 8080:8080 --name sahar \
   sahar
 ```
 
+> [!NOTE]
 > `host.docker.internal` is how a container reaches a service on *your host* (here, the separately-run Postgres). When both run under Compose, the app instead reaches the DB by its **service name** `db` (see below) — no host hop.
 
 ---
 
-## The Sahar Dockerfile, instruction by instruction
+## 📋 The Sahar Dockerfile, instruction by instruction
 
 Sahar uses a **multi-stage build**: a big `build` stage with the full JDK + Maven compiles the jar, and a slim `run` stage with just a JRE ships it. The compiler and Maven (hundreds of MB) never make it into the deployed image.
 
@@ -148,7 +149,7 @@ flowchart LR
 
 ---
 
-## `.dockerignore`
+## 🗂️ `.dockerignore`
 
 Keeps the **build context** (what gets sent to the engine) small and clean — anything rebuilt inside the image or irrelevant to the build is excluded. Sahar's:
 
@@ -170,7 +171,7 @@ Why it matters: without it, a stale local `target/` or a multi-MB `.git/` histor
 
 ---
 
-## Docker Compose
+## 🧩 Docker Compose
 
 Compose declares the **whole stack** (the app + its Postgres) in one YAML file and orchestrates them together. Use it instead of typing several long `docker run` lines.
 
@@ -185,7 +186,8 @@ Compose declares the **whole stack** (the app + its Postgres) in one YAML file a
 | `docker compose down -v` | Same, but **also delete named volumes** — wipes the Postgres data. |
 | `docker compose exec app sh` | Shell into the running `app` service. |
 
-> Note: `docker compose` (v2, a plugin) is the current form. The old standalone `docker-compose` (v1, hyphenated) is retired — use the space form.
+> [!IMPORTANT]
+> `docker compose` (v2, a plugin) is the current form. The old standalone `docker-compose` (v1, hyphenated) is retired — use the space form.
 
 ### What Sahar's `docker-compose.yml` declares
 
@@ -251,7 +253,7 @@ docker compose down -v           # stop AND wipe the DB volume
 
 ---
 
-## Podman: the equivalents
+## 🦭 Podman: the equivalents
 
 [Podman](https://podman.io/) is a drop-in alternative CLI. The headline differences:
 
@@ -290,7 +292,7 @@ Flags and provider plumbing can change between releases; check [podman.io](https
 
 ---
 
-## Quick troubleshooting
+## 🔧 Quick troubleshooting
 
 | Symptom | Likely cause / fix |
 |---|---|
@@ -303,11 +305,11 @@ Flags and provider plumbing can change between releases; check [podman.io](https
 
 ---
 
-## Related
+## 🔗 Related
 
 - Step: [11 — Dockerize](../docs/steps/11-dockerize.md)
 - Step: [12 — Compose](../docs/steps/12-compose.md)
 - Step: [09 — Swap to PostgreSQL](../docs/steps/09-swap-to-postgres.md)
 - Theory: [Containers and DevOps](../docs/theory/containers-and-devops.md)
 - Official docs: [docs.docker.com](https://docs.docker.com/) · [podman.io](https://podman.io/) · [postgresql.org](https://www.postgresql.org/)
-- [README](../README.md)
+- ↩️ Back to [README](../README.md)

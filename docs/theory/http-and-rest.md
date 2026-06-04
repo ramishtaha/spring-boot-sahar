@@ -17,7 +17,7 @@ This is theory you can act on. Every rule below is illustrated by a real Sahar c
 
 ---
 
-## 1. What HTTP actually is
+## 🌐 1. What HTTP actually is
 
 HTTP is a **request/response** protocol. A client (browser, `curl`, the Sahar admin UI's JavaScript) sends one request; the server sends back exactly one response; the conversation is over. The server does not "keep a line open" or remember you between requests (more on that under *statelessness*).
 
@@ -111,7 +111,7 @@ public class PrayerTimesController {
 
 ---
 
-## 2. The verbs and what they mean
+## 🔤 2. The verbs and what they mean
 
 A verb is a promise about *intent*. The server is free to do what it likes, but well-behaved REST APIs honour the conventional meaning so that clients, caches, and proxies can reason about them.
 
@@ -173,7 +173,7 @@ public BlockPlan dropWeek(@PathVariable int ordinal) {
 
 ---
 
-## 3. Status codes
+## 🚦 3. Status codes
 
 The status code is the first thing a client reads. It comes in **families**, and the leading digit tells you whose problem it is.
 
@@ -281,11 +281,12 @@ So a bad `PUT /api/prayer-times` returns exactly this body, with a `400` status:
 
 This is the contract: status code `400` *plus* a predictable body shape (`status`, `error`, `messages`) the admin UI can render. The full story of where these messages come from — including the class-level `@DeloadLast` rule that produces a *global* error rather than a field error — is in [step 05](../steps/05-validation-and-rules.md).
 
+> [!IMPORTANT]
 > **Why a `400` and not a `500`?** A malformed body is the *client's* mistake, so it belongs in the `4xx` family. Retrying the same bad body will fail the same way — the fix is to send valid data. Reserve `5xx` for "the server itself broke."
 
 ---
 
-## 4. Where does the data go: path vs query vs body
+## 🗺️ 4. Where does the data go: path vs query vs body
 
 Three places can carry data into a request. Choosing the right one is most of what "designing an endpoint" means.
 
@@ -305,7 +306,7 @@ A practical anti-pattern to avoid: **never put secrets or large blobs in the pat
 
 ---
 
-## 5. REST principles, pragmatically
+## 🔑 5. REST principles, pragmatically
 
 REST is an architectural style, not a spec you can fail a unit test against. Four ideas carry almost all the value:
 
@@ -336,7 +337,7 @@ Every resource is manipulated through the *same small, predictable* set of opera
 
 ---
 
-## 6. Safety and idempotency
+## ♻️ 6. Safety and idempotency
 
 Two formal properties decide whether a client, a cache, or a retry-on-failure layer can act on a request without thinking.
 
@@ -365,7 +366,7 @@ This is *the* reason creating uses `POST` and replacing uses `PUT`. It's not bur
 
 ---
 
-## 7. Content negotiation and JSON
+## 🤝 7. Content negotiation and JSON
 
 How does the server know to send JSON, and how does it turn a `PrayerTimes` record into `{"fajr":"04:37",...}` and back? Two headers and one library.
 
@@ -387,11 +388,12 @@ The library that does JSON ↔ Java in Spring Boot 4 is **Jackson 3** (package `
 
 That symmetry is why a `GET` then `PUT` round-trips: the JSON you read back has exactly the keys the `PUT` expects.
 
+> [!NOTE]
 > **Version note:** the Jackson-3-on-`tools.jackson` detail is specific to Spring Boot 4 / Spring Framework 7. If you read older tutorials referencing `com.fasterxml.jackson`, they're describing Boot 3.x. See the [Spring Boot 4.0.6 reference](https://docs.spring.io/spring-boot/4.0.6/) for the current state.
 
 ---
 
-## 8. curl recipes
+## 🧪 8. curl recipes
 
 Run Sahar locally (`./mvnw spring-boot:run`, default port `8080`) and try these. `-i` shows the response status line and headers; `-s` is quiet; `-X` sets the verb; `-d` sends a body.
 
@@ -473,7 +475,7 @@ Want a one-screen lookup of verbs, codes, and `curl` flags? Keep the [HTTP & RES
 
 ---
 
-## Related
+## 🔗 Related
 
 - [Step 02 — Your first REST endpoint](../steps/02-first-rest-endpoint.md) — `GET /api/config` and how `@RestController` returns JSON.
 - [Step 04 — In-memory edit](../steps/04-in-memory-edit.md) — the first `PUT`, and why in-process state is fragile.

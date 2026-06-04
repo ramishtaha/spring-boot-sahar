@@ -4,12 +4,13 @@ _Beyond the core course: compute the day's prayer times for any location with re
 place names into coordinates (and back) by calling an external service from Spring. The browser UI that
 drives all this is the next step._
 
+> [!IMPORTANT]
 > **Checkpoint:** [`step-15-geolocation-prayer-times`](../../checkpoints/step-15-geolocation-prayer-times/)
 > — the original course UI plus this new backend, so you can exercise everything over the API. The
 > polished UI, the map, and the search box arrive in [step 16](./16-ui-and-pwa.md) (and in [`app/`](../../app/)).
 > Package is `com.ramishtaha.sahar`.
 
-## Why this matters
+## 🎯 Why this matters
 
 The prayer times depend on **where you are** and **the date**. Step 04 let you type them; this step makes
 them *computable* and *location-aware*. Two backend skills come together:
@@ -18,7 +19,7 @@ them *computable* and *location-aware*. Two backend skills come together:
 2. **Calling another web service from Spring** (OpenStreetMap's geocoder) with the modern `RestClient`,
    plus persisting the chosen location so the app remembers it.
 
-## Theory
+## 🧠 Theory
 
 ### Computing prayer times
 
@@ -47,12 +48,12 @@ flowchart LR
   API --> DB[(app_meta: saved location)]
 ```
 
-## Start from
+## 🚦 Start from
 
 [`step-14`](../../checkpoints/step-14-deploy/). This step is backend-only; the original UI still runs (it
 just ignores the new fields), and you drive the new features over the API.
 
-## Build it
+## 🛠️ Build it
 
 ### 1. The calculator (pure domain service)
 
@@ -95,6 +96,7 @@ this.client = RestClient.builder()
 Exposed by [`GeocodeController`](../../checkpoints/step-15-geolocation-prayer-times/src/main/java/com/ramishtaha/sahar/web/GeocodeController.java):
 `GET /api/geocode?q=` and `GET /api/geocode/reverse?lat=&lng=`.
 
+> [!NOTE]
 > `RestClient.Builder` is auto-configured by Spring in some setups, but the **static `RestClient.builder()`**
 > keeps the service self-contained — handy, because in this project the auto-configured builder bean isn't
 > present.
@@ -113,7 +115,7 @@ exposes `GET/PUT /api/location`. It also rides along in `GET /api/config` as `lo
 pins the Thane numbers to the seed (within 10 min) and checks chronological order. Run just it:
 `./mvnw test -Dtest=PrayerTimeCalculatorTest`.
 
-## Try it (over the API)
+## ▶️ Try it (over the API)
 
 ```bash
 # compute for Thane today
@@ -125,19 +127,19 @@ curl -X PUT http://localhost:8080/api/location -H "Content-Type: application/jso
   -d '{"placeName":"Mecca","lat":21.4225,"lng":39.8262,"tzOffset":180}'
 ```
 
-## High-latitude caveat
+## ⚠️ High-latitude caveat
 
 Near the poles in summer the sun may never reach 18° below the horizon, so Fajr/Isha have no exact
 solution and the result degenerates. Fine for Thane (~19°N); real apps add a higher-latitude rule. A
 deliberate non-goal here — see the calculator's Javadoc.
 
-## End state
+## ✅ End state
 
 - `GET /api/prayer-times/calculate`, `GET /api/geocode[/reverse]`, and `GET/PUT /api/location` all work.
 - The location is persisted and returned in `/api/config`.
 - A unit test pins the math.
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Times off by hours** — timezone sign; `tz` is **minutes east of UTC** (IST = 330; browsers report
   `-getTimezoneOffset()`).
@@ -147,7 +149,7 @@ deliberate non-goal here — see the calculator's Javadoc.
   injected builder, unless the auto-config is on the classpath.
 - **Equal/garbage Fajr & Isha** — high latitude in summer (the caveat).
 
-## Check yourself
+## ❓ Check yourself
 
 1. Why is the calculator testable without starting Spring?
 2. Why call Nominatim from the backend instead of the browser?
@@ -155,4 +157,4 @@ deliberate non-goal here — see the calculator's Javadoc.
 4. What does `tz` mean and how does the browser provide it?
 
 ---
-Prev: [14 - Deploy](./14-deploy.md) | Next: [16 - UI, location picker & PWA](./16-ui-and-pwa.md) | Checkpoint: [step-15](../../checkpoints/step-15-geolocation-prayer-times/) | See also: [HTTP & REST](../theory/http-and-rest.md)
+⬅️ Prev: [14 - Deploy](./14-deploy.md) · ➡️ Next: [16 - UI, location picker & PWA](./16-ui-and-pwa.md) · 📍 Checkpoint: [step-15](../../checkpoints/step-15-geolocation-prayer-times/) · 🔗 See also: [HTTP & REST](../theory/http-and-rest.md)

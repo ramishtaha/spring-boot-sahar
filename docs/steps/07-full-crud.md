@@ -2,7 +2,7 @@
 
 _Every monthly-editable field now has working create / read / update / delete endpoints backed by the database._
 
-## Why this matters
+## 🎯 Why this matters
 
 Step 06 put the routine in a real H2 file and wired up `JdbcTemplate` repositories, but the app was still effectively read-only: you could `GET` config, and replace a couple of things wholesale. That is not enough for an app you actually live in. Each month you edit prayer times, swap a training week, add a slot to the daily timeline, drop one that no longer fits.
 
@@ -10,7 +10,7 @@ This step turns Sahar into something you can _operate_. We add the classic five 
 
 We will also confront a real design decision: when a write breaks a business rule ("a block must be 4 or 5 weeks, deload last"), _who_ rejects it, and as _what_ HTTP status? See [HTTP and REST](../theory/http-and-rest.md) for the verbs-and-status-codes background this step leans on.
 
-## Theory
+## 🧠 Theory
 
 ### A collection resource and its five verbs
 
@@ -46,15 +46,16 @@ The block has an invariant: **4 or 5 weeks, and the deload is always the last we
 
 When the rule is broken, this code throws a Spring `ResponseStatusException` straight from the service. That is a deliberate shortcut, and the class doc says so:
 
+> [!NOTE]
 > A service throwing a web-flavoured exception is a small shortcut. In a larger codebase you would throw a plain domain exception and let a `@RestControllerAdvice` translate it to an HTTP status, keeping the service ignorant of HTTP.
 
 The trade-off: `ResponseStatusException` is fewer moving parts and reads well in a course, but it couples your business layer to `org.springframework.web`. The cleaner pattern - a domain exception plus advice that maps it to a status - keeps the service testable without HTTP and reusable from a non-web caller. We will note where you'd refactor; for now, short wins.
 
-## Start from
+## 🚦 Start from
 
 Continue from the step 06 checkpoint, where persistence and `JdbcTemplate` repositories landed: [./06-jdbctemplate-h2.md](./06-jdbctemplate-h2.md). Your app already serves `GET /api/config` from H2 and has `RoutineService` assembling the response. This step adds `id` to `ScheduleItem`, fleshes out `ScheduleRepository`, builds `ScheduleController` and the new `BlockController` operations, and adds the `WeekUpdate` DTO.
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Give `ScheduleItem` an id
 
@@ -376,7 +377,7 @@ curl -X POST http://localhost:8080/api/block/weeks            # 400: "a block is
 curl -X DELETE http://localhost:8080/api/block/weeks/3        # drop week 3, back to 4
 ```
 
-## End state
+## ✅ End state
 
 Sahar is now fully editable over HTTP. Every monthly-editable field has working create/read/update/delete backed by the database, with correct status codes and validated, invariant-preserving block operations.
 
@@ -392,7 +393,7 @@ Files changed in this step:
 
 Checkpoint for this step: [step-07-full-crud/](../../checkpoints/step-07-full-crud/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **POST returns the row but `id` is `null`.** You used the plain `jdbc.update(sql, args...)` form, which cannot return keys. You must build a `PreparedStatement` with `Statement.RETURN_GENERATED_KEYS` and pass a `GeneratedKeyHolder`, as `create` does.
 - **PUT to a non-existent id returns 200, not 404.** Your service ignored the row-count. `update`/`delete` return an `int`; treat `== 0` as "no such id" and throw `ResponseStatusException(HttpStatus.NOT_FOUND, ...)`.
@@ -402,7 +403,7 @@ Checkpoint for this step: [step-07-full-crud/](../../checkpoints/step-07-full-cr
 - **`@PathVariable` name mismatch.** If the URL template is `/weeks/{ordinal}` the parameter must be `ordinal` (or you must name it explicitly, `@PathVariable("ordinal")`). A mismatch gives a `MissingPathVariableException`.
 - **404 vs 400 confusion.** Naming an id/ordinal that does not exist is **404**; supplying input that breaks a rule (full block, dropping the deload, bad time) is **400**. Mixing these up makes the API lie to its callers.
 
-## Check yourself
+## ❓ Check yourself
 
 1. Why does `ScheduleItem.id` have to be `Long` (boxed) rather than `long` (primitive)?
 2. What does `Statement.RETURN_GENERATED_KEYS` plus a `GeneratedKeyHolder` buy you that `jdbc.update(sql, args...)` cannot?
@@ -413,4 +414,4 @@ Checkpoint for this step: [step-07-full-crud/](../../checkpoints/step-07-full-cr
 
 ## ---
 
-Prev: [06 - JdbcTemplate and H2](./06-jdbctemplate-h2.md) | Next: [08 - Editable admin UI](./08-editable-admin-ui.md) | Checkpoint: [step-07-full-crud/](../../checkpoints/step-07-full-crud/)
+⬅️ Prev: [06 - JdbcTemplate and H2](./06-jdbctemplate-h2.md) · ➡️ Next: [08 - Editable admin UI](./08-editable-admin-ui.md) · 📍 Checkpoint: [step-07-full-crud/](../../checkpoints/step-07-full-crud/)

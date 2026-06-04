@@ -2,7 +2,7 @@
 
 _A browser editor that saves the month, prayer times, and the training block straight to the database over the same-origin REST API - and shows up on a second device._
 
-## Why this matters
+## 🎯 Why this matters
 
 This is **the core goal of the whole project**. Everything before this step was scaffolding: a static page that renders a config ([step 01](./00-baseline.md)), a server that owns the data and serves `/api/config` ([step 02](./00-baseline.md)), real persistence ([step 06](./07-full-crud.md)), and a full read/write API ([step 07](./07-full-crud.md)). None of that is useful to the human running Sahar until they can **open a browser, change a value, and have it stick**.
 
@@ -10,7 +10,7 @@ Step 08 builds that editor with nothing but an HTML file and a plain `.js` file 
 
 A second, sneaky reason this matters: because Spring serves `admin.html` from the **same origin** as `/api/prayer-times`, you get to learn what **CORS** is by _not needing it_. That contrast (same-origin vs cross-origin) is one of the most misunderstood topics in web development, and you will understand it by the end of this page.
 
-## Theory
+## 🧠 Theory
 
 ### One server, two kinds of file
 
@@ -35,7 +35,10 @@ flowchart LR
     end
 ```
 
-We serve the page and the API from the same Spring app, so we are permanently in the left box. **We do not need CORS, and we do not configure it.**
+We serve the page and the API from the same Spring app, so we are permanently in the left box.
+
+> [!IMPORTANT]
+> **We do not need CORS, and we do not configure it.**
 
 When _would_ you? If you later split the frontend out - say a React app deployed to `https://sahar.vercel.app` calling this API on `https://api.sahar.win` - those are different origins and the browser would block the responses until the API opts in. In Spring you would enable it one of two ways:
 
@@ -89,11 +92,11 @@ sequenceDiagram
 
 "Optimistic UI" means giving the user instant feedback _before_ the server has fully confirmed, then **reconciling** with whatever the server actually returns. Sahar's version is intentionally modest: we show a toast on success, but we never lie - if the server returns a `400` we surface its real validation messages instead of pretending the save worked. The block endpoints go one step further: they **return the new block**, so the page re-renders straight from the response with no extra `GET`.
 
-## Start from
+## 🚦 Start from
 
 Continue from the [step 07 checkpoint](../../checkpoints/step-07-full-crud/) - the full CRUD API. That step gave you the endpoints this page calls: `PUT /api/month`, `PUT /api/prayer-times`, and the block operations `POST /api/block/roll-forward`, `POST /api/block/weeks`, `PUT /api/block/weeks/{ordinal}`, `DELETE /api/block/weeks/{ordinal}`. We add no Java in this step - only two static files and one link.
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Create `admin.html` - the form shell
 
@@ -153,7 +156,8 @@ Finally, the toast element and the script tag at the end of `<body>`:
 <script src="admin.js"></script>
 ```
 
-Note `admin.js` is loaded with a **relative** path (no leading slash). Since the page is at `/admin.html`, the browser resolves it to `/admin.js` - same origin again.
+> [!NOTE]
+> `admin.js` is loaded with a **relative** path (no leading slash). Since the page is at `/admin.html`, the browser resolves it to `/admin.js` - same origin again.
 
 ### 2. Create `admin.js` - the wiring
 
@@ -368,7 +372,7 @@ The read-only page already had this in its header - confirm it is present so a r
 
 Open `http://localhost:8080/admin.html`, change Fajr to `04:40`, click **Save prayer times**, see the toast. Now open `http://localhost:8080/` on your phone (same Wi-Fi, using your machine's LAN IP, e.g. `http://192.168.1.20:8080/`) and the new Fajr is there. The value lives in the database, not in the browser - **that is the whole project working**.
 
-## End state
+## ✅ End state
 
 The app now has a working editor:
 
@@ -382,7 +386,7 @@ Files changed this step: `src/main/resources/static/admin.html` (new), `src/main
 
 See the full code in the [step 08 checkpoint](../../checkpoints/step-08-editable-admin-ui/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **"It saved but the page still shows the old value."** You forgot to reconcile. The block handlers call `afterBlock(res.body)` to re-render; if you skip that, the inputs keep the value _you_ typed even after a server-side normalisation. Open DevTools - Network and inspect the response body to see what the server actually stored.
 - **Chasing a CORS error that is not there.** If a request fails, check it is actually going to `localhost:8080` and not, say, `127.0.0.1:8080` (a _different_ origin to the browser, even though it is the same machine). Same-origin requires the host strings to match exactly. The fix is to load the page and call the API from the identical host:port - not to add CORS.
@@ -392,7 +396,7 @@ See the full code in the [step 08 checkpoint](../../checkpoints/step-08-editable
 - **`data-f` typo.** `saveWeek` reads inputs by `card.querySelector('[data-f="name"]')`. If the attribute name in `renderWeeks` and the `get(...)` key disagree, you silently send `null`/empty. Keep the names in lockstep.
 - **Phone cannot reach the app.** `localhost` on your phone is the _phone_. Use the machine's LAN IP and make sure both devices are on the same network and the firewall allows port 8080.
 
-## Check yourself
+## ❓ Check yourself
 
 1. Why does Sahar need **no** CORS configuration, and what single change would suddenly require it?
 2. What is an "origin", precisely, and why is `localhost:8080` a different origin from `127.0.0.1:8080` to the browser?
@@ -403,6 +407,6 @@ See the full code in the [step 08 checkpoint](../../checkpoints/step-08-editable
 
 ## ---
 
-Prev: [07 - Full CRUD](./07-full-crud.md) | Next: [09 - Swap to Postgres](./09-swap-to-postgres.md) | Checkpoint: [step-08-editable-admin-ui](../../checkpoints/step-08-editable-admin-ui/)
+⬅️ Prev: [07 - Full CRUD](./07-full-crud.md) · ➡️ Next: [09 - Swap to Postgres](./09-swap-to-postgres.md) · 🏁 Checkpoint: [step-08-editable-admin-ui](../../checkpoints/step-08-editable-admin-ui/)
 
 _See also: [HTTP and REST](../theory/http-and-rest.md) · [HTTP/REST cheatsheet](../../reference/cheatsheet-http-rest.md)_

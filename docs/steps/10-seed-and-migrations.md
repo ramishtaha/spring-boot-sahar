@@ -2,7 +2,7 @@
 
 _Stop running `schema.sql` and a Java seeder on every boot. Move both the schema and the routine into versioned Flyway migrations that run exactly once and are tracked in a history table._
 
-## Why this matters
+## 🎯 Why this matters
 
 Up to step 09 your schema lived in a `schema.sql` file that Spring re-ran on every startup (which is why every `CREATE TABLE` needed `IF NOT EXISTS`), and your data was inserted by a Java `DataSeeder` that checked "is the table empty? then insert." That works for one developer on one laptop. It falls apart the moment the schema starts to _evolve_:
 
@@ -12,7 +12,7 @@ Up to step 09 your schema lived in a `schema.sql` file that Spring re-ran on eve
 
 Flyway solves exactly this: numbered migration scripts that each run once, in order, recorded in a `flyway_schema_history` table. This is the standard way real Spring apps manage their database. After this step, a brand-new database comes up already filled with the June 2026 routine, and a restart re-validates the history but does not re-seed.
 
-## Theory
+## 🧠 Theory
 
 ### The simple built-in option (and why we are leaving it)
 
@@ -48,7 +48,7 @@ First run on a fresh database: Flyway finds an empty (or absent) history table, 
 
 For the bigger picture of where Flyway sits among migration tools and ORMs, see [the persistence landscape](../theory/persistence-landscape.md) and [JDBC vs JPA](../theory/jdbc-vs-jpa.md).
 
-## Start from
+## 🚦 Start from
 
 Continue from the previous step, [09 - Swap to Postgres](./09-swap-to-postgres.md). At that point you had:
 
@@ -58,7 +58,7 @@ Continue from the previous step, [09 - Swap to Postgres](./09-swap-to-postgres.m
 
 We will retire `schema.sql` and the Java seeder and hand both jobs to Flyway. The full result is in the checkpoint folder: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-and-migrations/).
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Add the Flyway dependencies (Spring Boot 4 specifics)
 
@@ -184,6 +184,7 @@ INSERT INTO diet_sections (ordinal, title, body) VALUES
 
 This is a standard SQL gotcha (it is the same in H2, Postgres, and most other engines). Get it wrong and you get a syntax error or a truncated string. See the [SQL + JDBC cheatsheet](../../reference/cheatsheet-sql-jdbc.md) for the quick reference.
 
+> [!NOTE]
 > Note on JSON, not SQL: when the service later reads these rows and serializes the config to JSON, Spring Boot 4 uses **Jackson 3** (package `tools.jackson`). Your records serialize automatically and you never import Jackson, so this is transparent here — it only matters that the strings you seeded are exactly what shows up in the `/api/config` response.
 
 ### 4. Delete `schema.sql` and the Java `DataSeeder`
@@ -245,7 +246,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=postgres
 
 This was verified on **both** engines: Flyway applied versions 1 and 2, and a fresh Postgres came up with exactly **17** `schedule_items` rows.
 
-## End state
+## ✅ End state
 
 A brand-new database — H2 file or Postgres — now comes up **pre-filled** with the June 2026 routine, with no Java seeding code path. Flyway records every applied migration in `flyway_schema_history`; a restart re-validates that history and re-seeds nothing. The same `V1`/`V2` scripts run unchanged on both engines.
 
@@ -259,7 +260,7 @@ Files changed in this step:
 
 Full checkpoint: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-and-migrations/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Leaving `IF NOT EXISTS` in `V1`.** It will still work, but it defeats the point and hides ordering bugs. Flyway runs each migration once; write plain `CREATE TABLE`.
 - **Editing an already-applied migration.** Flyway stores a checksum of each migration in `flyway_schema_history`. Change `V1` after it has run on a database and the next boot fails with a **"Migration checksum mismatch"** validation error. The rule: once a migration has shipped/run, it is immutable — fix things by adding a **new** `V3__…` migration. While developing locally on a throwaway DB, just delete the database (e.g. `rm -rf ./data`) and let Flyway rebuild.
@@ -270,7 +271,7 @@ Full checkpoint: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-an
 - **Missing `flyway-database-postgresql` when running the `postgres` profile.** Flyway refuses to run against Postgres without its Postgres module and errors at startup. H2 needs no equivalent — it is in the starter.
 - **Old H2 file still on disk.** If you did not delete `./data`, your "fresh" run reuses the existing database, so it looks like Flyway did nothing new. Remove the folder to test a true cold start.
 
-## Check yourself
+## ❓ Check yourself
 
 1. Why does `V1__init_schema.sql` drop the `IF NOT EXISTS` that `schema.sql` needed? What guarantees the file is not run twice?
 2. What does Flyway store in `flyway_schema_history`, and how does that change behavior between the first run and a later run?
@@ -281,4 +282,4 @@ Full checkpoint: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-an
 
 ## ---
 
-Prev: [09 - Swap to Postgres](./09-swap-to-postgres.md) | Next: [11 - Dockerize](./11-dockerize.md) | Checkpoint: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-and-migrations/)
+⬅️ Prev: [09 - Swap to Postgres](./09-swap-to-postgres.md) · ➡️ Next: [11 - Dockerize](./11-dockerize.md) · 📍 Checkpoint: [step-10-seed-and-migrations](../../checkpoints/step-10-seed-and-migrations/)

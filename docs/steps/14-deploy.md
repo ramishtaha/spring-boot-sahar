@@ -2,7 +2,7 @@
 
 _Put Sahar on the public internet with one command - or stop at a clean local stack and call it done._
 
-## Why this matters
+## 🎯 Why this matters
 
 You have built a real Spring Boot 4 app: layered web -> service -> repo, Flyway migrations, a Docker image, and CI that builds it on every push ([step 13](./13-ci-with-github-actions.md)). The honest last question is: **how does it actually run somewhere other than your laptop?**
 
@@ -13,7 +13,7 @@ This step answers that twice, at two very different scales:
 
 The deploy is a victory lap, not a gate. `docker compose up` on your own machine is already a complete, production-shaped result. If you never push to the cloud, you have still finished the course.
 
-## Theory
+## 🧠 Theory
 
 ### Why Kubernetes exists at all
 
@@ -60,11 +60,11 @@ flowchart LR
 
 For the containers/orchestration background, see [containers-and-devops](../theory/containers-and-devops.md).
 
-## Start from
+## 🚦 Start from
 
 Continue from your working tree after [step 13 - CI with GitHub Actions](./13-ci-with-github-actions.md). You need the `Dockerfile` and `compose.yaml` from earlier steps and the `application.properties` that reads `PORT` (step 10). The reference checkpoint for this step is in [`checkpoints/step-14-deploy/`](../../checkpoints/step-14-deploy/); it adds a `deploy/` folder (`deploy/cloud-run.md`, `deploy/k8s/deployment.yaml`, `deploy/k8s/service.yaml`) and changes nothing in the running app.
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Confirm the app already binds the platform port
 
@@ -230,6 +230,7 @@ The command prints a URL like `https://sahar-xxxxx-uc.a.run.app`. Open it - that
 
 With no database configured, Sahar uses the in-container H2 file (`./data/sahar.mv.db`). On Cloud Run that file lives in the container's ephemeral disk, so:
 
+> [!WARNING]
 > With no database configured it uses the in-container H2 file, which is **ephemeral** on Cloud Run - fine for a quick public demo, but data resets when the instance is recycled.
 
 Fine for showing the app off; useless for keeping real data. For durable data, point at a managed Postgres using the **same env vars** the `postgres` profile already reads:
@@ -255,7 +256,7 @@ docker compose up
 
 This runs Sahar in production-shaped infrastructure (a container, against Postgres in another container) on your own machine. From `deploy/cloud-run.md`: that is "a complete, honest 'it runs in production-shaped infrastructure' result. The deploy is a victory lap, not a gate."
 
-## End state
+## ✅ End state
 
 After this step you can do one of:
 
@@ -270,7 +271,7 @@ Files that this step adds (none of the app's Java or `application.properties` ch
 
 See the full reference in [`checkpoints/step-14-deploy/`](../../checkpoints/step-14-deploy/). Hands-on Kubernetes is intentionally a **later block** - see the [roadmap](./99-roadmap.md).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **Hard-coding the port.** If you set `server.port=8080` literally and remove the `${PORT:8080}` placeholder, Cloud Run's injected `PORT` is ignored, the container never binds the expected port, and the deploy fails the startup probe with "container failed to start and listen on the port". Keep `server.port=${PORT:8080}`.
 - **Expecting H2 data to persist on Cloud Run.** It won't - the container disk is ephemeral and resets when the instance recycles. If you need durable data, switch to managed Postgres via `--set-env-vars SPRING_PROFILES_ACTIVE=postgres,...`. Don't file a "bug" for data loss that is by design.
@@ -279,7 +280,7 @@ See the full reference in [`checkpoints/step-14-deploy/`](../../checkpoints/step
 - **Applying the K8s YAML for Sahar.** The files say `# ILLUSTRATIVE ONLY` in the first line for a reason. `kubectl apply` needs a real cluster, a pushed image at `ghcr.io/YOUR_USER/sahar`, and a `sahar-db` Postgres Service plus a Secret named `sahar-db` - none of which this codealong provisions. Read them; don't run them yet.
 - **Probe path returns non-200.** The probes hit `GET /api/config`. If that endpoint errors (e.g. Flyway failed, or the DB is unreachable), K8s marks the Pod unready/not-alive and either holds traffic or restarts it. Check the app logs first; the probe is reporting a real problem, not causing one.
 
-## Check yourself
+## ❓ Check yourself
 
 1. In Kubernetes, what is the difference between a **Pod**, a **Deployment**, and a **Service** - and which one keeps a crashed container alive?
 2. Why is Kubernetes overkill for Sahar, and what does Cloud Run give you that makes it a better fit?
@@ -289,6 +290,6 @@ See the full reference in [`checkpoints/step-14-deploy/`](../../checkpoints/step
 6. The probes in `deployment.yaml` point at `/api/config`. Why that endpoint and not `/actuator/health`?
 
 ## ---
-Prev: [13 - CI with GitHub Actions](./13-ci-with-github-actions.md) | Next: [99 - Roadmap](./99-roadmap.md) | Checkpoint: [step-14-deploy](../../checkpoints/step-14-deploy/)
+⬅️ Prev: [13 - CI with GitHub Actions](./13-ci-with-github-actions.md) · ➡️ Next: [99 - Roadmap](./99-roadmap.md) · 📍 Checkpoint: [step-14-deploy](../../checkpoints/step-14-deploy/)
 
-See also: [containers and DevOps](../theory/containers-and-devops.md) | [Docker/Podman cheatsheet](../../reference/cheatsheet-docker-podman.md)
+🔗 See also: [containers and DevOps](../theory/containers-and-devops.md) · [Docker/Podman cheatsheet](../../reference/cheatsheet-docker-podman.md)

@@ -8,7 +8,7 @@ We target **Java 25** (the current LTS; Spring Boot 4 needs Java 17 as a minimum
 
 ---
 
-## Why this page exists
+## 🔑 Why this page exists
 
 Spring Boot does not invent its own language; it is "just" a library of annotated classes you wire together. So the more comfortable you are with modern Java, the less of Spring feels like magic. Two themes recur:
 
@@ -25,7 +25,7 @@ flowchart LR
 
 ---
 
-## Annotations
+## 🏷️ Annotations
 
 **What they are.** An annotation is metadata you attach to code — a class, method, field, parameter, or another annotation. By itself an annotation *does nothing*. Something else has to read it and act on it: the compiler, a framework at startup, or a validator at runtime.
 
@@ -73,11 +73,12 @@ public PrayerTimes update(@Valid @RequestBody PrayerTimes prayerTimes) {
 
 `@RequestBody` says "deserialize the JSON body into this record"; `@Valid` says "and check its constraints first — reject with a 400 if they fail."
 
+> [!NOTE]
 > First seen: **step 02** (`@RestController`), then everywhere. Custom annotation: **step 05**.
 
 ---
 
-## Generics
+## 📐 Generics
 
 **Why they exist.** Generics let a type or method be parameterized by another type, so the compiler can guarantee what is inside a container. `List<Week>` is "a list that holds `Week` and nothing else." Before generics you had a raw `List` of `Object` and cast on the way out, hoping you were right. Generics move that hope to compile time.
 
@@ -110,7 +111,7 @@ Sahar supplies `RowMapper<Week>` and `RowMapper<ScheduleItem>` — same interfac
 
 ---
 
-## Lambdas and functional interfaces
+## λ Lambdas and functional interfaces
 
 **The idea.** A *functional interface* is an interface with exactly one abstract method (a SAM — Single Abstract Method). A *lambda* is a compact literal for an instance of such an interface. Instead of a five-line anonymous class, you write the parameters and the body.
 
@@ -153,7 +154,7 @@ Read it as: "given a database row `rs`, build a `Week` from these columns." `Jdb
 
 ---
 
-## The Streams API
+## 🌊 The Streams API
 
 **Why.** A stream is a pipeline over a sequence of elements: you describe *what* you want (filter these, transform those, collect the rest) rather than writing the index-fiddling loop. Streams are lazy until a *terminal* operation (`toList()`, `findFirst()`, `collect(...)`) runs them.
 
@@ -197,7 +198,7 @@ public Optional<ScheduleItem> findById(Long id) {
 
 ---
 
-## Records — the star of the domain model
+## ⭐ Records — the star of the domain model
 
 **Why records exist.** A record is a transparent carrier for an immutable group of values. You declare the *components* once, and the compiler generates the constructor, the accessors, `equals`, `hashCode`, and `toString`. No Lombok, no 60-line POJO. Sahar's entire domain is records — `RoutineConfig`, `PrayerTimes`, `BlockPlan`, `Week`, `ScheduleItem`, and the rest.
 
@@ -262,11 +263,12 @@ public record BlockPlan(String label, List<Week> weeks) {
 
 That table explains Sahar's split exactly: everything in `domain` is a record (data); `RoutineService` and the repositories are classes (they hold collaborators and behaviour).
 
+> [!IMPORTANT]
 > First seen: **step 03** — *model the domain.* This is the conceptual centre of the app.
 
 ---
 
-## Sealed types (brief)
+## 🔒 Sealed types (brief)
 
 A *sealed* type restricts which classes may extend or implement it, listed in a `permits` clause. The payoff is exhaustiveness: the compiler knows the complete set of subtypes, so a `switch` over them needs no `default`.
 
@@ -278,7 +280,7 @@ Sahar models `category` as a plain `String` rather than a sealed hierarchy (it i
 
 ---
 
-## `Optional` — making "absent" a value
+## 🎁 `Optional` — making "absent" a value
 
 **Why.** `null` is a landmine: nothing in the type system warns you that a method might return it, so you forget the check and get an NPE in production. `Optional<T>` makes "might be absent" explicit in the return type, forcing the caller to deal with it.
 
@@ -308,11 +310,12 @@ Common operations:
 
 The rule of thumb in Sahar: **return `Optional` from repositories, decide what "absent" means in the service.** Sometimes it is a 404 (client error), sometimes an `IllegalStateException` (the database was never seeded). The type forces that decision instead of letting a null slip through.
 
+> [!NOTE]
 > First seen: **step 06** (repository reads return `Optional`); used decisively in the service in **step 07**.
 
 ---
 
-## `var` — local type inference
+## 🔤 `var` — local type inference
 
 `var` lets the compiler infer the type of a *local* variable from its initializer. It is still statically typed — `var keys = new GeneratedKeyHolder();` makes `keys` exactly a `GeneratedKeyHolder`, just without repeating the name. Use it where the right-hand side already makes the type obvious:
 
@@ -324,7 +327,7 @@ Limits worth knowing: `var` is **locals only** (not fields, not method parameter
 
 ---
 
-## Enhanced switch and pattern matching (brief)
+## 🔀 Enhanced switch and pattern matching (brief)
 
 Modern `switch` is an *expression* (it returns a value), uses arrow labels with no fall-through, and can match on type:
 
@@ -346,7 +349,7 @@ Pattern matching for `switch` (finalized in Java 21) and *record patterns* let y
 
 ---
 
-## Text blocks — readable multi-line strings
+## 📝 Text blocks — readable multi-line strings
 
 A *text block* is a string literal delimited by triple double-quotes (`"""`). It preserves newlines and strips common leading indentation, which makes embedded SQL legible instead of a `+`-glued mess. Sahar's repositories use them for every multi-line statement:
 
@@ -375,7 +378,7 @@ A few rules: the opening `"""` must be followed by a line break (the content sta
 
 ---
 
-## The build / classpath model
+## 🏗️ The build / classpath model
 
 You can write perfect modern Java and still be confused about *how it runs*. Here is the pipeline Maven drives every time you build Sahar.
 
@@ -407,11 +410,12 @@ flowchart LR
 
 **The fat jar.** `mvn package` produces an *executable* jar under `target/` that bundles your classes, your resources (including Flyway's `V1__*.sql` migrations), and all dependency jars, plus a small launcher. `java -jar target/sahar-*.jar` then needs nothing but a JVM — which is exactly why the Docker image in [step 11](../docs/steps/11-dockerize.md) is so small. See the [Maven cheatsheet](./cheatsheet-maven.md) for the day-to-day commands.
 
+> [!NOTE]
 > Build basics appear in **step 00** (baseline) and recur through Dockerizing in **step 11**.
 
 ---
 
-## A note on versions
+## 🗓️ A note on versions
 
 Everything above is stable on **Java 25** and has been finalized for several releases:
 
@@ -423,7 +427,7 @@ So none of this is bleeding-edge; it is just "modern Java" that accumulated whil
 
 ---
 
-## Related
+## 🔗 Related
 
 - Step: [03 — Model the domain](../docs/steps/03-model-the-domain.md) — records in practice
 - Step: [06 — JdbcTemplate & H2](../docs/steps/06-jdbctemplate-h2.md) — lambdas (`RowMapper`), text blocks, `Optional`

@@ -8,7 +8,7 @@ A quick mental model first: annotations in Spring are mostly *markers and metada
 
 ---
 
-## The map: which annotation belongs to which layer
+## 🗺️ The map: which annotation belongs to which layer
 
 ```mermaid
 flowchart TD
@@ -34,7 +34,7 @@ Sahar's flow is `web -> service -> repo -> database`. The annotations below foll
 
 ---
 
-## 1. Bootstrap
+## 🚀 1. Bootstrap
 
 | Annotation | What it does | Where it goes | Real Sahar example |
 |---|---|---|---|
@@ -54,7 +54,7 @@ public class SaharApplication {
 
 ---
 
-## 2. Web / MVC
+## 🌐 2. Web / MVC
 
 These annotations turn a plain class into HTTP endpoints. The piece that reads them is Spring MVC's `DispatcherServlet`, which matches an incoming request to a handler method and converts return values to JSON.
 
@@ -114,6 +114,7 @@ public class ScheduleController {
 }
 ```
 
+> [!TIP]
 > **Why these verbs?** `BlockController` is the clearest illustration: replacing the block is `PUT /api/block` (idempotent), but "roll forward to next month" and "add a week" *create new state*, so they are `POST /api/block/roll-forward` and `POST /api/block/weeks`. Editing one named week is `PUT /api/block/weeks/{ordinal}`; removing it is `DELETE`. The HTTP method *is* the API design. See [http-and-rest theory](../docs/theory/http-and-rest.md) (and steps [02](../docs/steps/02-first-rest-endpoint.md), [07](../docs/steps/07-full-crud.md)).
 
 ### Pulling data out of the request
@@ -150,7 +151,7 @@ See step [04-in-memory-edit](../docs/steps/04-in-memory-edit.md) (first PUTs) an
 
 ---
 
-## 3. Dependency injection (stereotypes + wiring)
+## 🔌 3. Dependency injection (stereotypes + wiring)
 
 A *bean* is an object Spring creates and manages in its application context. Stereotype annotations tell the component scan "create a bean from this class". They are functionally near-identical to `@Component`; the specific names document the layer and let tooling/aspects target a layer.
 
@@ -205,7 +206,7 @@ See the [Spring & DI theory page](../docs/theory/spring-and-di.md) for the full 
 
 ---
 
-## 4. Validation
+## ✅ 4. Validation
 
 Bean Validation (the `jakarta.validation` standard, implemented by Hibernate Validator and pulled in by the validation starter) lets you *describe* rules with annotations on a record's components. They do nothing on their own — they are enforced when something marked `@Valid` is validated, which in Sahar happens when a controller receives a `@Valid @RequestBody`.
 
@@ -244,6 +245,7 @@ public record BlockPlan(
 ) { }
 ```
 
+> [!NOTE]
 > **Cascade vs trigger.** `@Valid` on the controller parameter *triggers* validation of the body. `@Valid` on `List<Week> weeks` *cascades* it into each `Week`, so the `@Min`/`@NotBlank` rules on `Week` also run. Without the cascade, the nested weeks would be ignored.
 
 ### Writing a custom constraint: `@DeloadLast`
@@ -297,7 +299,7 @@ See step [05-validation-and-rules](../docs/steps/05-validation-and-rules.md) for
 
 ---
 
-## 5. Turning failures into clean responses
+## 🧹 5. Turning failures into clean responses
 
 When a `@Valid @RequestBody` fails, Spring throws `MethodArgumentNotValidException`. Left alone you get a verbose default 400 body. A controller advice intercepts it and shapes one tidy response for the whole API.
 
@@ -332,7 +334,7 @@ public class ApiExceptionHandler {
 
 ---
 
-## 6. Data / transactions
+## 🗄️ 6. Data / transactions
 
 | Annotation | What it does | Where it goes | Real Sahar example |
 |---|---|---|---|
@@ -350,6 +352,7 @@ public BlockPlan replaceBlock(BlockPlan block) {
 }
 ```
 
+> [!WARNING]
 > **Why `@Transactional` on the service, not the repository?** A single business action (replace a block, add a week) may touch several rows or tables. The transaction boundary belongs where the *unit of work* is decided — the service method — so all of `replaceBlock`'s statements commit or roll back together. `rollForward`, `addWeek`, `dropWeek`, and `updateWeek` are all annotated for the same reason. A method that does one simple read/write (like `updatePrayerTimes`) does not need it.
 >
 > **Gotcha:** `@Transactional` works through a Spring proxy, so it only applies when the call comes *from outside* the bean. A `this.someTransactionalMethod()` self-call bypasses the proxy and the transaction does not start. Call across beans (controller -> service) to be safe.
@@ -358,7 +361,7 @@ See step [06-jdbctemplate-h2](../docs/steps/06-jdbctemplate-h2.md) for the repos
 
 ---
 
-## At-a-glance summary
+## 📋 At-a-glance summary
 
 | Concern | Annotations |
 |---|---|
@@ -375,7 +378,7 @@ See step [06-jdbctemplate-h2](../docs/steps/06-jdbctemplate-h2.md) for the repos
 
 ---
 
-## Related
+## 🔗 Related
 
 - Theory: [Spring & dependency injection](../docs/theory/spring-and-di.md) — why beans, the container, and DI exist
 - Theory: [HTTP & REST](../docs/theory/http-and-rest.md) — why GET/POST/PUT/DELETE map the way they do

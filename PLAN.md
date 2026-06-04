@@ -12,11 +12,12 @@ Your main study windows (from the routine): the **05:00 deep-work sprint (~120 m
 **Saturday** (applied only — build/debug/ship, no new theory), and **Sunday** (4–5 h of real focus, then build).
 Each step below is sized to fit one or two morning sprints. Don't rush; a step you can *explain* beats two you copied.
 
-> Tip: tick boxes in [progress.md](progress.md) as you go, and drop anything fuzzy into [questions.md](questions.md).
+> [!TIP]
+> Tick boxes in [progress.md](progress.md) as you go, and drop anything fuzzy into [questions.md](questions.md).
 
 ---
 
-## Week 1 — Foundation · "Spring Boot core" → steps 00–05
+## 🏗️ Week 1 — Foundation · "Spring Boot core" → steps 00–05
 
 | Session | Focus | Step(s) | Outcome |
 |--------|-------|---------|---------|
@@ -29,7 +30,7 @@ Each step below is sized to fit one or two morning sprints. Don't rush; a step y
 
 **Read alongside:** [Spring, servlets & DI](docs/theory/spring-and-di.md), [HTTP & REST](docs/theory/http-and-rest.md), the [Java refresher](reference/java-refresher.md), and the [Spring annotations cheatsheet](reference/cheatsheet-spring-annotations.md).
 
-## Week 2 — Build · "Persistence" → steps 06–08 (+ start 09)
+## 🗄️ Week 2 — Build · "Persistence" → steps 06–08 (+ start 09)
 
 | Session | Focus | Step(s) | Outcome |
 |--------|-------|---------|---------|
@@ -40,7 +41,7 @@ Each step below is sized to fit one or two morning sprints. Don't rush; a step y
 
 **Read alongside:** [The persistence landscape](docs/theory/persistence-landscape.md), [JdbcTemplate vs JPA](docs/theory/jdbc-vs-jpa.md), the [SQL & JdbcTemplate cheatsheet](reference/cheatsheet-sql-jdbc.md).
 
-## Week 3 — Peak · "Docker & DevOps" → steps 09–13
+## 🐳 Week 3 — Peak · "Docker & DevOps" → steps 09–13
 
 | Session | Focus | Step(s) | Outcome |
 |--------|-------|---------|---------|
@@ -53,7 +54,7 @@ Each step below is sized to fit one or two morning sprints. Don't rush; a step y
 
 **Read alongside:** [Containers & DevOps](docs/theory/containers-and-devops.md), the [Docker & Podman cheatsheet](reference/cheatsheet-docker-podman.md).
 
-## Week 4 — Deload · "Ship it" → step 14 (+ refactor, docs, roadmap)
+## 🚀 Week 4 — Deload · "Ship it" → step 14 (+ refactor, docs, roadmap)
 
 | Session | Focus | Step(s) | Outcome |
 |--------|-------|---------|---------|
@@ -63,7 +64,7 @@ Each step below is sized to fit one or two morning sprints. Don't rush; a step y
 
 **Read alongside:** [99 Roadmap](docs/steps/99-roadmap.md).
 
-## Beyond the course (extra blocks)
+## 🧭 Beyond the course (extra blocks)
 
 Once the 14-step course is done, these extend the real app — each with its own runnable checkpoint, and
 `app/` equals the last one:
@@ -76,7 +77,7 @@ Once the 14-step course is done, these extend the real app — each with its own
 
 ---
 
-## If you only have a weekend
+## ⏱️ If you only have a weekend
 
 Do **00 → 02** Saturday morning (you'll have a server-driven page), then **03 → 06** across Saturday
 afternoon and Sunday (typed model, editing, validation, and persistence). You'll have a real, saving app

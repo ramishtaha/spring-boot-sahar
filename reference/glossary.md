@@ -1,5 +1,6 @@
 # Glossary
 
+> [!NOTE]
 > Every term the Sahar codealong uses, defined in plain language, with a pointer to where it first earns its keep.
 
 **What you will get from this page:** a single alphabetical lookup for the jargon that shows up across the steps and theory pages. Each entry is one to three sentences, grounded in the Sahar app where that helps, and links to the step or theory page where the term appears. Read it cover-to-cover once, then keep it open in a tab.
@@ -8,7 +9,7 @@ Sahar itself is a layered Spring Boot app: REST **controllers** in the `web` pac
 
 ---
 
-## A
+## 🅰️ A
 
 **Application context**
 Spring's runtime container: the object that holds every bean, knows how they depend on one another, and wires them together at startup. In Sahar, when `SaharApplication.main` runs, Spring builds one application context, discovers `ConfigController`, `RoutineService`, `PrayerTimesRepository`, and friends, and connects them. See [Spring and dependency injection](../docs/theory/spring-and-di.md).
@@ -19,7 +20,7 @@ Spring Boot's "look at the classpath and configure sensible defaults" mechanism:
 **API (HTTP API)**
 The set of HTTP endpoints a client can call to use the app. Sahar's API lives under `/api/*` (for example `GET /api/config`, `PUT /api/prayer-times`). See [Your first REST endpoint](../docs/steps/02-first-rest-endpoint.md).
 
-## B
+## 🅱️ B
 
 **Bean**
 Any object that Spring creates, wires, and manages for you inside the application context. `RoutineService` is a bean; so is every `@Repository` and `@RestController`. You ask for beans (usually via the constructor) rather than calling `new` yourself. See [Spring and dependency injection](../docs/theory/spring-and-di.md).
@@ -30,7 +31,7 @@ The Java standard (in the `jakarta.validation` namespace) for declaring constrai
 **BOM (Bill of Materials)**
 A special Maven POM that pins a curated, mutually-tested set of dependency versions so you do not have to. Sahar inherits `spring-boot-starter-parent` (version `4.0.6`), whose BOM is why almost every dependency in `pom.xml` omits its own `<version>`. See [Baseline](../docs/steps/00-baseline.md) and [the Maven cheatsheet](./cheatsheet-maven.md).
 
-## C
+## 🔤 C
 
 **Classpath**
 The list of places (jars and compiled-class folders) where the JVM looks for classes at runtime. Spring Boot's auto-configuration is driven by "what is on the classpath": adding `spring-boot-starter-webmvc` puts embedded Tomcat on the classpath, which is why a web server appears. See [Baseline](../docs/steps/00-baseline.md).
@@ -53,7 +54,7 @@ The browser rule that a page from one origin (scheme+host+port) may only call an
 **CRUD**
 Create, Read, Update, Delete — the four basic operations on stored data, which map naturally onto HTTP `POST`, `GET`, `PUT`, `DELETE`. Sahar's `/api/schedule` endpoints are a full CRUD set. See [Full CRUD](../docs/steps/07-full-crud.md).
 
-## D
+## 🗄️ D
 
 **DataSource**
 The Java standard (`javax`-now-`jakarta`-era `javax.sql.DataSource`) factory for database connections; everything above it (`JdbcTemplate`, repositories) asks the `DataSource` for connections. Spring Boot auto-configures one from `spring.datasource.url`, `.username`, and `.password`, backed by a HikariCP pool. See [JdbcTemplate and H2](../docs/steps/06-jdbctemplate-h2.md).
@@ -70,7 +71,7 @@ The most common toolchain for building OS-container images and running container
 **DTO (Data Transfer Object)**
 A small, purpose-built object that carries exactly the data a request or response needs, kept separate from your domain/storage shapes. Sahar's `MonthUpdate` and `WeekUpdate` are request DTOs (the JSON bodies of `PUT /api/month` and the block-week endpoints). See [In-memory edit](../docs/steps/04-in-memory-edit.md).
 
-## E
+## 🧩 E
 
 **Embedded database**
 A database that runs *inside* your application process rather than as a separate server. Sahar's default is H2 in file mode, so there is nothing extra to install or start for development. See [JdbcTemplate and H2](../docs/steps/06-jdbctemplate-h2.md).
@@ -84,12 +85,12 @@ A thing your app stores and identifies (a row, conceptually): in Sahar a `Schedu
 **Executable jar (fat jar / uber jar)**
 A single `.jar` that bundles your code, all dependencies, *and* an embedded web server, so `java -jar sahar.jar` starts the whole app with no external server. The Spring Boot Maven plugin's `repackage` goal produces it. See [Baseline](../docs/steps/00-baseline.md) and [Dockerize](../docs/steps/11-dockerize.md).
 
-## F
+## 🦅 F
 
 **Flyway**
 A database migration tool that runs versioned SQL scripts (`V1__...`, `V2__...`) in order and records what it has applied, so every environment converges on the same schema. In Boot 4 you add `spring-boot-starter-flyway` plus `flyway-database-postgresql` (not `flyway-core`). Sahar uses `V1`/`V2` after seeding. See [Seed and migrations](../docs/steps/10-seed-and-migrations.md), [Migrations theory](../docs/steps/10-seed-and-migrations.md), and [flywaydb.org](https://flywaydb.org/).
 
-## H
+## 🛢️ H
 
 **H2**
 A fast, pure-Java SQL database that can run embedded (in-process) or in-memory; Sahar's default datastore for development. Boot 4 exposes its web console via the dedicated `spring-boot-h2console` module. See [JdbcTemplate and H2](../docs/steps/06-jdbctemplate-h2.md).
@@ -97,7 +98,7 @@ A fast, pure-Java SQL database that can run embedded (in-process) or in-memory; 
 **HikariCP**
 The high-performance JDBC connection pool that Spring Boot uses by default; it manages the pool of live database connections behind the `DataSource`. You rarely name it directly — it is auto-configured. See [JdbcTemplate and H2](../docs/steps/06-jdbctemplate-h2.md).
 
-## I
+## 🔁 I
 
 **Idempotent**
 An operation that has the same effect whether you do it once or many times. `PUT /api/prayer-times` is idempotent (re-sending the same body leaves the same single row), whereas `POST /api/schedule` is not (each call creates a new item). Flyway migrations are also designed to be safely re-runnable. See [Full CRUD](../docs/steps/07-full-crud.md) and [HTTP and REST](../docs/theory/http-and-rest.md).
@@ -108,7 +109,7 @@ The immutable, layered package that a container is started from: filesystem + me
 **Inversion of Control (IoC)**
 The principle that the framework, not your code, controls object creation and the calling of your code. You write beans and declare needs; Spring decides when to instantiate them and what to pass in. Dependency injection is the concrete technique that implements IoC. See [Spring and dependency injection](../docs/theory/spring-and-di.md).
 
-## J
+## ☕ J
 
 **Jackson**
 The library Spring MVC uses to convert between Java objects and JSON. When `ConfigController` returns a `RoutineConfig`, Jackson serializes it to the JSON the browser receives, and deserializes request bodies back into records. Boot 4 ships **Jackson 3** under the `tools.jackson` package. See [HTTP and REST](../docs/theory/http-and-rest.md).
@@ -132,7 +133,7 @@ public Optional<PrayerTimes> find() {
 **JPA (Jakarta Persistence API)**
 The Java standard for object-relational mapping; its reference implementation is Hibernate. Sahar deliberately does **not** use JPA — it uses `JdbcTemplate` so you see the SQL plainly and understand what the database does before reaching for an ORM. Mentioned for contrast. See [JdbcTemplate and H2](../docs/steps/06-jdbctemplate-h2.md).
 
-## L
+## 🧱 L
 
 **Layer (web / service / repository)**
 The three-tier split that keeps Sahar maintainable: the **web** layer (controllers) handles HTTP, the **service** layer (`RoutineService`) holds business rules, and the **repository** layer (the `*Repository` classes) is the only place that knows SQL. Each layer depends only on the one below it, so swapping H2 for Postgres touches only wiring, not controllers. See [Model the domain](../docs/steps/03-model-the-domain.md) and [Layers theory](../docs/theory/spring-and-di.md).
@@ -145,7 +146,7 @@ flowchart LR
     Repo --> DB[("H2 / PostgreSQL")]
 ```
 
-## M
+## 🏗️ M
 
 **Maven**
 Sahar's build tool: it reads `pom.xml`, downloads dependencies, compiles, runs tests, and packages the executable jar. The wrapper scripts `mvnw` / `mvnw.cmd` let teammates build with the exact pinned Maven version. See [Baseline](../docs/steps/00-baseline.md) and [the Maven cheatsheet](./cheatsheet-maven.md).
@@ -156,12 +157,12 @@ A single, versioned, ordered change to the database schema (or seed data) applie
 **Multi-stage build**
 A Dockerfile technique that uses one stage (with the full JDK + Maven) to build the jar and a second, slim stage (JRE only) to run it, so the final image stays small and contains no build tools. Sahar's `Dockerfile` is multi-stage. See [Dockerize](../docs/steps/11-dockerize.md).
 
-## O
+## 🔗 O
 
 **ORM (Object-Relational Mapping)**
 A library that maps database rows to objects and back automatically (JPA/Hibernate is the Java example). Sahar avoids an ORM in favor of explicit SQL via `JdbcTemplate`; the `RowMapper` is the hand-written, transparent version of what an ORM would do for you. See [JdbcTemplate and H2](../docs/steps/06-jdbctemplate-h2.md).
 
-## P
+## 🐘 P
 
 **Podman**
 A daemonless, drop-in alternative to Docker for building images and running containers; most `docker` commands work as `podman` commands. Sahar's image and compose file run under either. See [Dockerize](../docs/steps/11-dockerize.md) and [podman.io](https://podman.io/).
@@ -172,7 +173,7 @@ A mature, production-grade open-source relational database; Sahar's "real" datas
 **Profile (Spring)**
 A named set of configuration that can be switched on per environment, e.g. activate `postgres` to use PostgreSQL instead of the default H2. Beans and `application-{profile}.properties` files can be profile-specific. See [Swap to PostgreSQL](../docs/steps/09-swap-to-postgres.md) and [Configuration and profiles theory](../docs/steps/09-swap-to-postgres.md).
 
-## R
+## 🌐 R
 
 **Record (Java)**
 A concise, immutable data class introduced in modern Java: `record PrayerTimes(String fajr, ...)` auto-generates the constructor, accessors (`fajr()`), `equals`, `hashCode`, and `toString`. Sahar's whole domain (`RoutineConfig`, `PrayerTimes`, `Week`, `ScheduleItem`, …) is records, which pairs perfectly with Jackson JSON and read-only data. See [Model the domain](../docs/steps/03-model-the-domain.md) and [Modern Java for Spring](../reference/java-refresher.md).
@@ -186,7 +187,7 @@ An architectural style for HTTP APIs: resources have URLs (`/api/schedule/{id}`)
 **RowMapper**
 A small function you give `JdbcTemplate` that turns one result-set row into one Java object. Sahar's `PrayerTimesRepository` uses a `RowMapper<PrayerTimes>` lambda `(rs, rowNum) -> new PrayerTimes(rs.getString("fajr"), ...)`. See [JdbcTemplate and H2](../docs/steps/06-jdbctemplate-h2.md) and [the SQL/JDBC cheatsheet](./cheatsheet-sql-jdbc.md).
 
-## S
+## 🌱 S
 
 **Seed data**
 The initial rows an app needs to be usable on a fresh database (Sahar's starting routine, prayer times, blocks). Sahar seeds via `RoutineSeed` and then evolves the schema with Flyway `V1`/`V2`. See [Seed and migrations](../docs/steps/10-seed-and-migrations.md).
@@ -203,7 +204,7 @@ A curated "umbrella" dependency that pulls in everything needed for one capabili
 **Stereotype annotation**
 A marker that tells Spring "this class is a bean, and here is its role": `@Component`, `@Service`, `@Repository`, `@RestController`. They drive component scanning so the application context picks the class up automatically. Sahar tags `RoutineService` with `@Service` and each repository with `@Repository`. See [Spring and dependency injection](../docs/theory/spring-and-di.md).
 
-## T
+## 🐱 T
 
 **Tomcat (embedded)**
 The default web server Spring Boot embeds inside your jar (via `spring-boot-starter-webmvc`), so the app *contains* its server instead of being deployed into an external one. This is what makes `java -jar sahar.jar` serve HTTP on its own. See [Baseline](../docs/steps/00-baseline.md) and [HTTP and REST](../docs/theory/http-and-rest.md).
@@ -211,7 +212,7 @@ The default web server Spring Boot embeds inside your jar (via `spring-boot-star
 **Transaction**
 A group of database operations that succeed or fail as one unit (all-or-nothing), so a partial update never leaves the data inconsistent. In Spring you typically mark a service method `@Transactional`; relevant for Sahar's multi-row block/week operations. See [Full CRUD](../docs/steps/07-full-crud.md) and [Layers theory](../docs/theory/spring-and-di.md).
 
-## V
+## ✅ V
 
 **Validation**
 Checking that incoming data obeys the rules before you act on it. Sahar validates request DTOs with Bean Validation annotations plus a custom `@DeloadLast` constraint (enforced by `DeloadLastValidator`), and the controller triggers it with `@Valid`. See [Validation and rules](../docs/steps/05-validation-and-rules.md) and [Validation theory](../docs/steps/05-validation-and-rules.md).
@@ -219,16 +220,16 @@ Checking that incoming data obeys the rules before you act on it. Sahar validate
 **Volume (Docker)**
 A storage mechanism that lives outside a container's writable layer so data survives container restarts and rebuilds. Sahar uses a volume for PostgreSQL's data (and can persist the H2 file) so your routine is not wiped when the container is recreated. See [Compose](../docs/steps/12-compose.md).
 
-## Numbers
+## 🔢 Numbers
 
 **12-factor**
 A set of twelve guidelines for building portable, cloud-friendly apps (config in the environment, stateless processes, dev/prod parity, logs as streams, etc.). Sahar leans on several: externalized config via Spring profiles and environment variables, an executable jar as a single deployable, and a container as the unit of deploy. See [Deploy](../docs/steps/14-deploy.md) and [Configuration and profiles theory](../docs/steps/09-swap-to-postgres.md), and the canonical [12factor.net](https://12factor.net/).
 
 ---
 
-## Related
+## 🔗 Related
 
-- Steps index: [Setup](../docs/00-setup.md), then [Baseline](../docs/steps/00-baseline.md) onward
+- 🚦 Steps index: [Setup](../docs/00-setup.md) → then [Baseline](../docs/steps/00-baseline.md) onward
 - [HTTP and REST](../docs/theory/http-and-rest.md) · [Spring and dependency injection](../docs/theory/spring-and-di.md) · [Layers](../docs/theory/spring-and-di.md) · [Validation](../docs/steps/05-validation-and-rules.md) · [Migrations](../docs/steps/10-seed-and-migrations.md) · [Containers](../docs/theory/containers-and-devops.md) · [Configuration and profiles](../docs/steps/09-swap-to-postgres.md)
 - Cheatsheets: [Maven](./cheatsheet-maven.md) · [SQL/JDBC](./cheatsheet-sql-jdbc.md)
 - [Project README](../README.md)

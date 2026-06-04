@@ -15,7 +15,7 @@ This is the only step with no code to write. Once `java -version` says `25` and 
 
 ---
 
-## 1. What you need and how to install it
+## 🔧 1. What you need and how to install it
 
 Here is the whole toolchain. The first two are required to write and run any code; the rest you can add when the steps that use them arrive.
 
@@ -27,6 +27,7 @@ Here is the whole toolchain. The first two are required to write and run any cod
 | **IntelliJ IDEA Community** | A free IDE that understands Maven and Spring out of the box. | From step 00 | Recommended (any editor works) |
 | **Docker Desktop** *(or Podman)* | Runs PostgreSQL and packages the app as a container. | From step 09/11 | Only for the production half |
 
+> [!IMPORTANT]
 > **The big one: you do not need to install Maven.** Every Maven project in this repo (`app/` and each `checkpoints/step-NN-…/`) ships the **Maven Wrapper** — `mvnw` (macOS/Linux) and `mvnw.cmd` (Windows). The wrapper downloads the exact Maven version the project expects on first run, so everyone builds with the same tool. Wherever you see `mvn` in a tutorial, prefer `./mvnw` (or `.\mvnw.cmd`) here. You only install standalone Maven if you want a system-wide `mvn` command.
 
 ### JDK 25
@@ -50,6 +51,7 @@ The Java SE 25 documentation lives at [docs.oracle.com/en/java/javase/25](https:
 - SDKMAN! is the least painful across distros: `curl -s "https://get.sdkman.io" | bash`, then `sdk install java 25-tem`.
 - Or your distro's package (`apt`, `dnf`, …) — just make sure it is JDK **25**, not 17 or 21.
 
+> [!NOTE]
 > **Heads-up — what `LTS` means here.** Java 25 is the current Long-Term-Support release. Spring Boot 4 only *requires* Java 17, so if your employer pins you to 17 or 21 the app will still compile and run — but the docs assume 25, and a few examples use newer language niceties. Install 25 if you can.
 
 ### Git
@@ -69,11 +71,12 @@ You only need this from step 09 onward (PostgreSQL) and step 11 (containerizing 
 - **Docker Desktop:** [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) — Windows/macOS/Linux. On Windows it runs on WSL 2; the installer walks you through enabling it.
 - **Podman** as a drop-in alternative: [podman.io](https://podman.io/). `podman` mirrors the `docker` CLI, and `podman compose` reads the same `compose.yml`. Where the docs say `docker …`, `podman …` almost always works. See the Docker & Podman cheatsheet for the gotchas.
 
+> [!TIP]
 > You can complete steps 00–08 (the entire learning core, up to the editable admin UI) with **zero Docker** — the app uses an embedded H2 database that needs no install.
 
 ---
 
-## 2. Verify your toolchain
+## ✅ 2. Verify your toolchain
 
 Run these in a terminal **before** starting step 00. Each block shows a real command and the *shape* of the expected output — your exact patch versions and dates will differ, but the headline numbers should match.
 
@@ -123,6 +126,7 @@ Docker Compose version v2.x.x
 
 (With Podman: `podman --version` and `podman compose version`.)
 
+> [!IMPORTANT]
 > **Sanity check before you continue:** in a *fresh* terminal, `java -version` says **25** and (from inside `app/`) `./mvnw -version` runs and reports **Java version: 25**. That is the whole bar for steps 00–08.
 
 ### Troubleshooting the basics
@@ -137,7 +141,7 @@ Docker Compose version v2.x.x
 
 ---
 
-## 3. Version notes: this course targets Spring Boot 4.0.6 + Java 25
+## ⚖️ 3. Version notes: this course targets Spring Boot 4.0.6 + Java 25
 
 Sahar is built on **Spring Boot 4.0.6** ([docs.spring.io/spring-boot/4.0.6](https://docs.spring.io/spring-boot/4.0.6/)), which sits on **Spring Framework 7**, **Jakarta EE 11** (the `jakarta.*` namespace), and **Jackson 3** for JSON. Spring Boot 4 is a major release, and most tutorials, Stack Overflow answers, and blog posts written **before 2026 target Spring Boot 3.x**.
 
@@ -163,7 +167,7 @@ You can see every one of these renames, with the explaining comment, in Sahar's 
 
 ---
 
-## 4. How the codealong works
+## 🧭 4. How the codealong works
 
 Sahar is a **course and a real app at the same time**. You learn Spring Boot by building one application — your personal training / prayer / nutrition routine — one small, runnable increment at a time.
 
@@ -218,7 +222,7 @@ The full table of contents — every step, theory deep-dive, and reference — i
 
 ---
 
-## 5. How to use the checkpoints safely
+## 🗂️ 5. How to use the checkpoints safely
 
 The number-one way people get lost in a codealong is by editing checkpoint folders and forgetting which copy is "theirs." The rule that prevents this:
 
@@ -244,6 +248,7 @@ cd checkpoints\step-06-jdbctemplate-h2
 
 Or open the folder in **IntelliJ** (File → Open → pick the `step-NN` folder), let it import the Maven project, and click the green run arrow on the `SaharApplication` class. Then visit `http://localhost:8080`.
 
+> [!WARNING]
 > **Only run one app at a time.** Every checkpoint binds port 8080 by default. If you start a second one without stopping the first, you will get *"port 8080 already in use."* Stop the running app (Ctrl+C in the terminal, or the red stop button in IntelliJ) before starting another, or set a different port: `SAHAR_HOST_PORT`/`--server.port=8081`.
 
 ### Diffing two steps to see exactly what changed
@@ -292,7 +297,7 @@ cd /tmp/sahar-try-06
 
 ---
 
-## 6. Running the finished app
+## ▶️ 6. Running the finished app
 
 When you just want to *use* Sahar (or see the finished target before you build it), run `app/`. There are two ways, and the first needs nothing but the JDK.
 
@@ -358,13 +363,13 @@ flowchart LR
 
 ---
 
-## You are ready
+## 🎉 You are ready
 
 If `java -version` says **25** and `./mvnw -version` runs from inside `app/`, you have everything you need to start. Next stop: **[step 00 — baseline](./steps/00-baseline.md)**, where you generate the project and dissect the `pom.xml` line by line — including every Spring Boot 4 artifact name from §3.
 
 ---
 
-## Related
+## 🔗 Related
 
 - [README](../README.md) — full table of contents and the project overview.
 - [Step 00 — baseline: generate & dissect the project](./steps/00-baseline.md) — your first real step.

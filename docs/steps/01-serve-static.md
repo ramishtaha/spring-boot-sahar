@@ -2,7 +2,7 @@
 
 _Drop a hand-written HTML/CSS/JS site into Spring Boot and watch it render at `http://localhost:8080` with zero controllers._
 
-## Why this matters
+## 🎯 Why this matters
 
 Before we write a single line of Java, we are going to make Spring Boot serve a real, good-looking web page. That sounds almost too easy — and that is the point. One of Spring Boot's strongest "batteries included" defaults is that **any file you put under `src/main/resources/static/` is served at the web root, automatically, with no code.**
 
@@ -14,7 +14,7 @@ For a working engineer new to Spring, this is the cheapest possible way to inter
 
 This step is deliberately the "wrong" architecture: the data lives in the browser (`data.js`). [Step 02](./02-first-rest-endpoint.md) deletes that file and moves the data behind a real `GET /api/config` endpoint. Seeing the bad version first makes the reason for the good version obvious.
 
-## Theory
+## 🧠 Theory
 
 ### Where do static files come from?
 
@@ -29,6 +29,7 @@ classpath:/META-INF/resources/
 
 `src/main/resources/static/styles.css` ends up on the classpath as `/static/styles.css`, so a browser request for `GET /styles.css` is matched and the file is streamed back. No annotation, no `@Controller`, no mapping that you wrote.
 
+> [!IMPORTANT]
 > Spring Boot 4 note: the web starter was **renamed**. In Boot 3.x it was `spring-boot-starter-web`; in Boot 4.x the servlet (MVC) starter is `spring-boot-starter-webmvc` (the reactive one is `spring-boot-starter-webflux`). The static-resource behaviour described here is identical — only the starter's coordinates changed. See the [Boot 4.0.6 docs](https://docs.spring.io/spring-boot/4.0.6/reference/web/servlet.html).
 
 ### Why does `/` show `index.html`?
@@ -59,11 +60,11 @@ The browser asks for `/`, gets `index.html`. That HTML's `<link>` and `<script>`
 
 In this step the routine data is a plain JavaScript object, `window.SAHAR`, defined in `data.js` and loaded by a `<script>` tag. `index.html` renders it. This *works*, but it is a static site, not an app: changing your prayer times means editing a file and redeploying, and every visitor downloads a hardcoded copy. The file even says so in its own comment. Keep this temporary arrangement in mind — dismantling it is the whole job of step 02.
 
-## Start from
+## 🚦 Start from
 
 Continue from the baseline checkpoint: a freshly generated Spring Boot 4.0.6 project that builds and starts but serves nothing. See [00 - Baseline](./00-baseline.md). You are adding files only; you will not touch any Java in this step.
 
-## Build it
+## 🛠️ Build it
 
 ### 1. Create the static folder
 
@@ -306,7 +307,7 @@ Started SaharApplication in 1.2 seconds
 
 Open `http://localhost:8080`. You should see the Sahar header with the **June 2026** badge, the six prayer-time tiles, the four-week training block (Deload week outlined in green), and the weekly grid. View source or open the Network tab and you will see the browser fetched `/`, `/styles.css`, and `/data.js` — three static files, no JSON, no controller.
 
-## End state
+## ✅ End state
 
 The app now serves a complete, styled, read-only Sahar site at `http://localhost:8080`, with all data living in the browser.
 
@@ -320,7 +321,7 @@ No Java changed. No controller exists. The whole step rides on Spring Boot's sta
 
 Checkpoint for this step: [step-01-serve-static](../../checkpoints/step-01-serve-static/).
 
-## Common mistakes and how to debug them
+## 🐞 Common mistakes and how to debug them
 
 - **404 at `http://localhost:8080/`.** Almost always the folder is wrong. It must be `src/main/resources/static/` (singular `static`, under `resources`), not `src/main/static` or `src/main/resources/public/index.html` mis-typed. Confirm the file is on the classpath: after a build, look for `target/classes/static/index.html`. If it is not there, your IDE did not copy resources — re-run `./mvnw spring-boot:run` from the command line.
 - **Page loads but is unstyled / blank.** Open the browser **Network** tab and reload. A red `404` on `/styles.css` or `/data.js` means the filename or relative path in `index.html` does not match the actual file. The links are relative (`href="styles.css"`, `src="data.js"`), so the files must sit next to `index.html` in the same folder.
@@ -329,7 +330,7 @@ Checkpoint for this step: [step-01-serve-static](../../checkpoints/step-01-serve
 - **Port 8080 already in use.** The log shows `Web server failed to start. Port 8080 was already in use.` Another app (or a previous run you forgot to stop) holds the port. Stop it, or set `server.port` in `application.properties`.
 - **Reaching for a controller.** If your instinct was to write a `@GetMapping("/")` returning the HTML — resist it. That is the step-02 mindset applied too early. For *static* files, the resource handler is already doing the job.
 
-## Check yourself
+## ❓ Check yourself
 
 1. Which directory does Spring Boot serve at the web root by default, and what is the full classpath path of `styles.css` once built?
 2. Why does `http://localhost:8080/` return `index.html` even though no route maps `/` to it? Name the component responsible.
@@ -340,6 +341,6 @@ Checkpoint for this step: [step-01-serve-static](../../checkpoints/step-01-serve
 
 ## ---
 
-Prev: [00 - Baseline](./00-baseline.md) | Next: [02 - First REST endpoint](./02-first-rest-endpoint.md) | Checkpoint: [step-01-serve-static](../../checkpoints/step-01-serve-static/)
+⬅️ Prev: [00 - Baseline](./00-baseline.md) · ➡️ Next: [02 - First REST endpoint](./02-first-rest-endpoint.md) · 🚩 Checkpoint: [step-01-serve-static](../../checkpoints/step-01-serve-static/)
 
 _See also: [HTTP and REST](../theory/http-and-rest.md) · [Spring and DI](../theory/spring-and-di.md) · [HTTP/REST cheatsheet](../../reference/cheatsheet-http-rest.md)_
