@@ -2,6 +2,9 @@
 
 _Add `GET /api/config`, return JSON from Java, and let the server — not a bundled file — feed the page._
 
+> [!TIP]
+> **IntelliJ IDEA Ultimate** — open the **Endpoints** tool window to see and call `/api/config`, or run [`app/requests.http`](../../app/requests.http) in the built-in **HTTP Client** instead of curl. [More →](../../reference/intellij-ultimate.md)
+
 ## 🎯 Why this matters
 
 In [step 01](./01-serve-static.md) the page was a static site: `index.html` rendered a routine, but the routine itself lived in a hand-edited JavaScript file (`data.js`, exposed as `window.SAHAR`). That works for a brochure. It does **not** work for an app you intend to edit monthly — changing your prayer times or your training block would mean editing JavaScript and redeploying, and every visitor would receive a frozen copy baked into the download.

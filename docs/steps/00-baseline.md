@@ -2,6 +2,9 @@
 
 _The empty-but-runnable Spring Boot 4 project from start.spring.io, taken apart piece by piece so nothing later is magic._
 
+> [!TIP]
+> **IntelliJ IDEA Ultimate** — run `SaharApplication` from the green gutter ▶ (a saved Spring Boot config), and explore the **Beans** diagram + `application.properties` key completion. The Database tools you'll want from step 06 are free now. See [IntelliJ IDEA for Sahar](../../reference/intellij-ultimate.md).
+
 ## 🎯 Why this matters
 
 Most Spring tutorials hand you a finished `pom.xml` and a `@RestController` and tell you to "just run it." You end up with a working app and no mental model. When something breaks three steps later, you have no idea which moving part is responsible.

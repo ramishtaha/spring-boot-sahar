@@ -2,6 +2,9 @@
 
 _The day Sahar grows a memory: edit a prayer time, restart the app, and the change is still there._
 
+> [!TIP]
+> **IntelliJ IDEA** — the **Database** tool window (free since 2025.3) connects to the H2 file `jdbc:h2:file:./data/sahar`, so you can browse tables and run SQL; **SQL support** even completes column names inside `schema.sql` and your `JdbcTemplate` strings. [Setup →](../../reference/intellij-ultimate.md)
+
 ## 🎯 Why this matters
 
 Up to step 05, Sahar forgot everything on restart. The whole routine lived in one field, `private RoutineConfig config = RoutineSeed.defaultConfig();`, inside `RoutineService`. Edit Fajr to `04:35`, stop the app, start it again, and you are back to the seed. For a notebook that is fine; for a real personal app it is useless.

@@ -2,6 +2,9 @@
 
 _Same code, two databases: keep embedded H2 as the zero-setup default, and add a `postgres` profile that points the very same app at a real PostgreSQL server — with every connection detail coming from the environment._
 
+> [!TIP]
+> **IntelliJ IDEA** — point the **Database** tool window at the compose Postgres (`jdbc:postgresql://localhost:5432/sahar`, `sahar`/`sahar`) to confirm the same data, and set the `postgres` profile in your Spring Boot run config. [Setup →](../../reference/intellij-ultimate.md)
+
 ## 🎯 Why this matters
 
 Up to now Sahar has run on embedded H2: a database that lives **inside the app's own JVM process**. That is wonderful for learning — you clone the repo, run one command, and you have a working database with no install, no server, no credentials. But it is not what you deploy. A real deployment uses a **server database** that runs as its own process, survives the app restarting, and serves many clients at once.

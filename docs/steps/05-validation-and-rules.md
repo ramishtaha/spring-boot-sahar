@@ -2,6 +2,9 @@
 
 *Reject bad edits at the door: well-formed prayer times, a 4-or-5-week block, and a deload that is always the last week - turned into clean HTTP 400s.*
 
+> [!TIP]
+> **IntelliJ IDEA Ultimate** — run the malformed requests from the **HTTP Client** ([`app/requests.http`](../../app/requests.http)) to watch the `400`s and read the JSON error inline. [More →](../../reference/intellij-ultimate.md)
+
 ## 🎯 Why this matters
 
 In [step 04](./04-in-memory-edit.md) you made the routine editable: `PUT /api/prayer-times` and `PUT /api/block` accept a JSON body and replace the in-memory state. But they accepted *anything*. Send `"fajr": "25:99"` and the app shrugged and stored it. Send a 3-week block, or a block whose deload sits in the middle, and the routine quietly went wrong.

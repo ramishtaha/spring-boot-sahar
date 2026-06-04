@@ -10,6 +10,9 @@ drives all this is the next step._
 > polished UI, the map, and the search box arrive in [step 16](./16-ui-and-pwa.md) (and in [`app/`](../../app/)).
 > Package is `com.ramishtaha.sahar`.
 
+> [!TIP]
+> **IntelliJ IDEA Ultimate** — the calculate and geocode requests are in [`app/requests.http`](../../app/requests.http); run them in the **HTTP Client** and tweak `lat` / `lng` / `tz` inline. [More →](../../reference/intellij-ultimate.md)
+
 ## 🎯 Why this matters
 
 The prayer times depend on **where you are** and **the date**. Step 04 let you type them; this step makes

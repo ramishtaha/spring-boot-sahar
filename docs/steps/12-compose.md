@@ -2,6 +2,9 @@
 
 _One file, two containers: the Sahar app plus a real PostgreSQL database, wired together and persisting data._
 
+> [!TIP]
+> **IntelliJ IDEA Ultimate** — run `docker-compose.yml` from the IDE (▶ on the `services:` line) and watch `db` + `app` come up, healthcheck and all, in the **Services** tool window. [More →](../../reference/intellij-ultimate.md)
+
 ## 🎯 Why this matters
 
 In [step 11](./11-dockerize.md) you put the app in a container. That image runs fine on its own, but with no environment set it falls back to its **default H2 file database inside the container** - which means the moment the container is recreated, the data is gone. That is fine for a demo, but Sahar is a real app: you edit prayer times once a month and expect them to still be there next month.

@@ -24,7 +24,7 @@ Here is the whole toolchain. The first two are required to write and run any cod
 | **JDK 25** | Compiles and runs Java. Sahar targets Java 25; Spring Boot 4 needs Java 17 minimum. | From step 00 | **Yes** |
 | **Maven** | Builds the project, runs tests, packages the jar. | From step 00 | **No** — use the bundled `mvnw` wrapper (see below) |
 | **Git** | Version control; lets you `diff` and tag checkpoints. | From step 00 | Strongly recommended |
-| **IntelliJ IDEA Community** | A free IDE that understands Maven and Spring out of the box. | From step 00 | Recommended (any editor works) |
+| **IntelliJ IDEA** | A free IDE that understands Maven and Spring out of the box; an optional Ultimate subscription adds extras. | From step 00 | Recommended (any editor works) |
 | **Docker Desktop** *(or Podman)* | Runs PostgreSQL and packages the app as a container. | From step 09/11 | Only for the production half |
 
 > [!IMPORTANT]
@@ -60,9 +60,12 @@ The Java SE 25 documentation lives at [docs.oracle.com/en/java/javase/25](https:
 - **macOS:** comes with the Xcode Command Line Tools (`xcode-select --install`), or `brew install git`.
 - **Linux:** `sudo apt install git` / `sudo dnf install git`.
 
-### IntelliJ IDEA Community Edition
+### IntelliJ IDEA (free tier or Ultimate)
 
-The free Community Edition is enough for everything in this course (you do **not** need Ultimate). Download from [jetbrains.com/idea/download](https://www.jetbrains.com/idea/download/) and pick **Community**. When you first open `app/` (or a checkpoint), IntelliJ detects the `pom.xml`, imports it as a Maven project, and offers to download JDK 25 for you if it is missing.
+Since the **2025.3** release, IntelliJ IDEA is **one product**: a free tier — plenty for this whole course — plus an optional **Ultimate** subscription that unlocks advanced tooling. Download from [jetbrains.com/idea/download](https://www.jetbrains.com/idea/download/). When you first open `app/` (or a checkpoint), IntelliJ detects the `pom.xml`, imports it as a Maven project, and offers to download JDK 25 if it's missing.
+
+> [!TIP]
+> Good news for this course: the **Database tools and full SQL support are now free** — very handy from [step 06](./steps/06-jdbctemplate-h2.md). If you have **Ultimate**, you also get the Spring Beans/Endpoints tooling, the built-in **HTTP Client**, and **Docker** integration. See **[IntelliJ IDEA for Sahar](../reference/intellij-ultimate.md)** for exactly what helps at which step (and a ready-to-run `requests.http`).
 
 ### Docker Desktop (or Podman)
 

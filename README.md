@@ -39,7 +39,7 @@ and teaches you modern backend engineering, _why before how_, as you go.
 > [!TIP]
 > **New here?** Read **[docs/00-setup.md](docs/00-setup.md)** to set up your toolchain, then open **[step 00](docs/steps/00-baseline.md)** and build alongside the checkpoints. Track yourself in **[progress.md](progress.md)**.
 
-- **Stack:** Spring Boot **4.0.6** · Java **25** (LTS; 17 minimum) · Maven · IntelliJ IDEA Community.
+- **Stack:** Spring Boot **4.0.6** · Java **25** (LTS; 17 minimum) · Maven · IntelliJ IDEA (free tier or **Ultimate** — see the [IDE guide](reference/intellij-ultimate.md)).
 - **The domain** is the real "Sahar" routine — a Sunnah + 5-prayer baseline, an MMA block that waves **Foundation → Build → Peak → Deload**, supplements, nutrition, and bullet-journal prompts — seeded so the app boots with real content and lets you edit what changes each month.
 
 > [!IMPORTANT]
@@ -130,6 +130,7 @@ Steps 00–14 stay frozen as the curriculum; **15–17 add their own runnable ch
 ### 📑 Reference — [`reference/`](reference/)
 - [Glossary](reference/glossary.md) · [Modern Java refresher](reference/java-refresher.md)
 - Cheatsheets: [Maven](reference/cheatsheet-maven.md) · [Spring annotations](reference/cheatsheet-spring-annotations.md) · [HTTP & REST](reference/cheatsheet-http-rest.md) · [SQL & JdbcTemplate](reference/cheatsheet-sql-jdbc.md) · [Docker & Podman](reference/cheatsheet-docker-podman.md)
+- 💡 [IntelliJ IDEA for Sahar](reference/intellij-ultimate.md) — Ultimate's useful extras (and what's now free) mapped to each step, plus a ready-to-run `requests.http`.
 
 ---
 

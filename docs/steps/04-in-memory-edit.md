@@ -2,6 +2,9 @@
 
 *Introduce a `@Service` bean that holds the routine in a field, add `PUT` endpoints that edit it, and watch those edits survive between requests but vanish on restart.*
 
+> [!TIP]
+> **IntelliJ IDEA Ultimate** — fire the PUTs from the **HTTP Client** ([`app/requests.http`](../../app/requests.http)), and use the **Spring Beans** diagram + the autowiring gutter icons to *see* the dependency injection you wired. [More →](../../reference/intellij-ultimate.md)
+
 ## 🎯 Why this matters
 
 Up to step 03 the app is a glorified read-only printout. Every request to `GET /api/config` calls `RoutineSeed.defaultConfig()` and builds a brand-new tree from scratch. There is nowhere to *put* an edit, because there is no object that outlives a single request.

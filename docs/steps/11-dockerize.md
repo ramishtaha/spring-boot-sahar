@@ -2,6 +2,9 @@
 
 _Package Sahar into a small, reproducible container image that anyone can run with one command - no Java, no Maven, no "works on my machine"._
 
+> [!TIP]
+> **IntelliJ IDEA Ultimate** — build and run the image from a ▶ gutter icon on the `Dockerfile`; the **Services** tool window shows the container, its logs, and a shell — no terminal needed. [More →](../../reference/intellij-ultimate.md)
+
 ## 🎯 Why this matters
 
 Up to now you have been running Sahar with `mvn spring-boot:run` on your own laptop, against tools you installed by hand: a specific JDK, a specific Maven, your local file system. That is fine for development, but it does not travel. The day you want to run Sahar on a server, a teammate's machine, or next to a Postgres container (step [12](./12-compose.md)), you need a way to ship _the app and everything it needs to run_ as one unit.

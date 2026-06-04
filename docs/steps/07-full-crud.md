@@ -2,6 +2,9 @@
 
 _Every monthly-editable field now has working create / read / update / delete endpoints backed by the database._
 
+> [!TIP]
+> **IntelliJ IDEA Ultimate** — exercise all five CRUD verbs from the **HTTP Client** ([`app/requests.http`](../../app/requests.http)) or the **Endpoints** tool window. [More →](../../reference/intellij-ultimate.md)
+
 ## 🎯 Why this matters
 
 Step 06 put the routine in a real H2 file and wired up `JdbcTemplate` repositories, but the app was still effectively read-only: you could `GET` config, and replace a couple of things wholesale. That is not enough for an app you actually live in. Each month you edit prayer times, swap a training week, add a slot to the daily timeline, drop one that no longer fits.

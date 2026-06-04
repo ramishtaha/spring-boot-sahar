@@ -2,6 +2,9 @@
 
 _Stop running `schema.sql` and a Java seeder on every boot. Move both the schema and the routine into versioned Flyway migrations that run exactly once and are tracked in a history table._
 
+> [!TIP]
+> **IntelliJ IDEA** — **SQL support** gives completion in your `V1`/`V2` migrations, and the **Database** tool window shows the `flyway_schema_history` table so you can see exactly which migrations Flyway applied. [More →](../../reference/intellij-ultimate.md)
+
 ## 🎯 Why this matters
 
 Up to step 09 your schema lived in a `schema.sql` file that Spring re-ran on every startup (which is why every `CREATE TABLE` needed `IF NOT EXISTS`), and your data was inserted by a Java `DataSeeder` that checked "is the table empty? then insert." That works for one developer on one laptop. It falls apart the moment the schema starts to _evolve_:
