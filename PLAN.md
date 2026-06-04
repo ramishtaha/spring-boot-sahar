@@ -61,6 +61,19 @@ Each step below is sized to fit one or two morning sprints. Don't rush; a step y
 | Tue–Thu (lighter) | Refactor & document | — | Tidy names, comments, your own README notes. Deload week = lower volume, more sleep. |
 | Sun | Plan the next block | [99 Roadmap](docs/steps/99-roadmap.md) | Pick your next topic: JPA, testing, Spring Security, K8s, observability. |
 
+**Read alongside:** [99 Roadmap](docs/steps/99-roadmap.md).
+
+## Beyond the course (extra blocks)
+
+Once the 14-step course is done, these extend the real app — each with its own runnable checkpoint, and
+`app/` equals the last one:
+
+| Block | Focus | Step | Checkpoint |
+|-------|-------|------|-----------|
+| Location | Compute prayer times for any place; geocoding + a persisted, user-set location | [15](docs/steps/15-geolocation-prayer-times.md) | [step-15](checkpoints/step-15-geolocation-prayer-times/) |
+| Location UI + PWA | The picker (device / search / map), theming, the weekly board, installable offline | [16](docs/steps/16-ui-and-pwa.md) | [step-16](checkpoints/step-16-ui-and-pwa/) |
+| Visual polish | A tokens-first design system (CSS only) | [17](docs/steps/17-visual-polish.md) | [step-17](checkpoints/step-17-visual-polish/) |
+
 ---
 
 ## If you only have a weekend
