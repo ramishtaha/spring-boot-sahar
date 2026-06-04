@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sahar - pom.xml (Project Object Model)
+
+  This is the single source of truth for HOW the project is built and WHAT it
+  depends on. Maven reads this file to download libraries, compile the code,
+  run the tests, and package an executable jar.
+
+  Read this top-to-bottom once; every line is explained in docs/steps/00-baseline.md.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      The Spring Boot "starter parent" is itself a pom. We inherit from it so we
+      get a curated, version-tested set of dependency versions (the "BOM" / bill
+      of materials) and sensible plugin defaults. Because of it, almost every
+      Spring dependency below omits its <version> - the parent decides it.
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.6</version>
+        <relativePath/> <!-- look the parent up from the Maven repository, not a local folder -->
+    </parent>
+
+    <!-- The "coordinates" that uniquely identify THIS artifact. -->
+    <groupId>com.ramishtaha.sahar</groupId>
+    <artifactId>sahar</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>sahar</name>
+    <description>Sahar - a personal training/prayer/nutrition routine app (Spring Boot codealong)</description>
+
+    <properties>
+        <!-- Compile and run against Java 25 (current LTS). Spring Boot 4 needs Java 17+. -->
+        <java.version>25</java.version>
+    </properties>
+
+    <dependencies>
+        <!--
+          NEW in step 10 - Flyway database migrations.
+          NOTE (Spring Boot 4 change): in 3.x you added 'org.flywaydb:flyway-core' directly.
+          In 4.x Spring Boot ships a dedicated starter, 'spring-boot-starter-flyway', which pulls
+          Flyway and auto-configures it. Postgres support is its own Flyway module,
+          'flyway-database-postgresql' (needed since Flyway 10); H2 support comes with the starter.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <!--
+          spring-boot-starter-webmvc: embedded Tomcat + Spring MVC + Jackson (JSON).
+          NOTE (Spring Boot 4 change): in Spring Boot 3.x this artifact was called
+          'spring-boot-starter-web'. In 4.x the blocking servlet stack is
+          'spring-boot-starter-webmvc' (and the reactive one is 'spring-boot-starter-webflux').
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+
+        <!-- Bean Validation (jakarta.validation) - used from step 05 onwards. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- JDBC + HikariCP connection pool + JdbcTemplate - used from step 06 onwards. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <!--
+          Spring Data JPA + Hibernate (step 23): used ONLY for the new 'journal' module, to contrast the
+          repository-by-hand JdbcTemplate style with the repository-by-interface Spring Data style. Both talk
+          to the same datasource; Flyway still owns the schema (JPA is set to 'validate', never to create).
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Actuator (step 20): production-readiness endpoints (health, info, metrics) + Micrometer. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Caching (step 21): Spring's cache abstraction + Caffeine, to cache geocoding lookups. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
+        <!-- Lets the IDE/compiler generate metadata for our @ConfigurationProperties (step 21). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!--
+          The H2 web console as a Spring Boot module.
+          NOTE (Spring Boot 4 change): in 3.x the console came bundled with the h2
+          driver and was switched on with a property. In 4.x it is its own module:
+          'spring-boot-h2console'. Used from step 06.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-h2console</artifactId>
+        </dependency>
+
+        <!-- The H2 database engine (embedded). Only needed at runtime. -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- The PostgreSQL JDBC driver. Only needed at runtime; used from step 09. -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!--
+          DevTools: automatic restart on code change, sensible dev defaults.
+          'optional' so it never leaks into anyone who depends on us; 'runtime'
+          because it is a development convenience, not a compile-time API.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!--
+          Modular test starters (Spring Boot 4 change): in 3.x there was a single
+          'spring-boot-starter-test'. In 4.x the test support is split per feature.
+          Each pulls JUnit 5 + AssertJ + the matching Spring test slice.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+              The Spring Boot Maven plugin. Its 'repackage' goal turns the plain jar
+              into an executable "fat jar" with an embedded server, and 'spring-boot:run'
+              lets you start the app straight from Maven.
+            -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

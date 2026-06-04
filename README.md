@@ -17,7 +17,7 @@ and teaches you modern backend engineering, _why before how_, as you go.
 &nbsp;![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
 &nbsp;![PWA](https://img.shields.io/badge/PWA-installable-5A0FC8?logo=pwa&logoColor=white)
 
-<sub>18 runnable checkpoints · 19 step docs · 5 theory deep-dives · 7 cheatsheets · all green ✅</sub>
+<sub>26 runnable checkpoints · 27 step docs · 5 theory deep-dives · interview-prep bank · all green ✅</sub>
 
 </div>
 
@@ -33,8 +33,12 @@ and teaches you modern backend engineering, _why before how_, as you go.
 | 🌐 **REST API** with Spring MVC + Jackson | 🧩 **Domain modelling** with Java records |
 | 🧱 **Layered architecture** (web → service → repo) | 🛡️ **Bean Validation** + custom business rules |
 | 🗄️ **JdbcTemplate** on H2, then **PostgreSQL** | 🪶 **Flyway** versioned migrations & seeding |
-| 🐳 **Docker** multi-stage image + **compose** | 🔁 **GitHub Actions** CI |
+| 🐳 **Docker** multi-stage image + **compose** | 🔁 **GitHub Actions** CI **→ CD** (publish on green) |
 | 📍 **Location-aware prayer times** (geolocation + a real solar-math calculator + OpenStreetMap geocoding) | 🎨 **Light/dark themed, installable PWA** |
+| 🧪 **The testing pyramid** (`@WebMvcTest` slices, `@SpringBootTest`, MockMvc) | 🩺 **Observability** with Actuator (health, liveness/readiness, custom indicator) |
+| 🚨 **RFC 9457 ProblemDetail** error model + `@RestControllerAdvice` | ⚡ **Caching & resilience** (Caffeine, timeouts, retry, typed config) |
+| 📣 **Domain events** (`@TransactionalEventListener`) | 🧬 **Spring Data JPA** alongside JdbcTemplate (when each wins) |
+| 🔐 **Spring Security** (public reads, Basic-auth writes, CSRF reasoning) | 📜 **OpenAPI / Swagger UI** (springdoc) + an **interview-prep** Q&A bank |
 
 > [!TIP]
 > **Never written Java or Spring Boot?** Start with **[Foundations — from zero](docs/foundations/)**: ten short primers (~1 hour total) that ramp you up with nothing assumed. Already comfortable? Set up your toolchain in **[docs/00-setup.md](docs/00-setup.md)**, then open **[step 00](docs/steps/00-baseline.md)** and build alongside the checkpoints, ticking [progress.md](progress.md) as you go.
@@ -123,17 +127,32 @@ flowchart LR
 | 12 | docker compose: the whole stack | [📖](docs/steps/12-compose.md) | [📂](checkpoints/step-12-compose/) |
 | 13 | A taste of DevOps: GitHub Actions CI | [📖](docs/steps/13-ci-with-github-actions.md) | [📂](checkpoints/step-13-ci-with-github-actions/) |
 | 14 | Deploy (optional) & orchestration overview | [📖](docs/steps/14-deploy.md) | [📂](checkpoints/step-14-deploy/) |
-| 99 | Roadmap: where to go next | [📖](docs/steps/99-roadmap.md) | — |
 
 ### 🌟 Beyond the core course
 
-Steps 00–14 stay frozen as the curriculum; **15–17 add their own runnable checkpoints**, and **`app/` equals step 17**.
+Steps 00–14 stay frozen as the curriculum; **15–25 each add their own runnable checkpoint**, and **`app/` equals step 25**.
 
 | # | Step | Doc | Checkpoint |
 |:-:|------|:---:|:---:|
 | 15 | Location-aware prayer times (calculator + geocoding) | [📖](docs/steps/15-geolocation-prayer-times.md) | [📂](checkpoints/step-15-geolocation-prayer-times/) |
 | 16 | Location picker (device / search / map), UI & PWA | [📖](docs/steps/16-ui-and-pwa.md) | [📂](checkpoints/step-16-ui-and-pwa/) |
 | 17 | Visual polish (a tokens-first design system) | [📖](docs/steps/17-visual-polish.md) | [📂](checkpoints/step-17-visual-polish/) |
+
+### 🧗 Advanced track — production-grade Spring (interview-ready)
+
+Eight deeper steps that turn the working app into something you'd actually ship — and the topics interviewers love to probe. Each is its own runnable checkpoint, each builds and tests green, and each pairs with the [interview-prep Q&A bank](reference/interview-prep.md).
+
+| # | Step | Doc | Checkpoint |
+|:-:|------|:---:|:---:|
+| 18 | Testing: the pyramid, for real | [📖](docs/steps/18-testing.md) | [📂](checkpoints/step-18-testing/) |
+| 19 | A clean error model (RFC 9457 ProblemDetail) | [📖](docs/steps/19-error-handling.md) | [📂](checkpoints/step-19-error-handling/) |
+| 20 | Observability with Actuator | [📖](docs/steps/20-observability.md) | [📂](checkpoints/step-20-observability/) |
+| 21 | Hardening an outbound call (config, timeouts, retry, cache) | [📖](docs/steps/21-resilient-geocoder.md) | [📂](checkpoints/step-21-resilient-geocoder/) |
+| 22 | Domain events (decoupling with the event bus) | [📖](docs/steps/22-domain-events.md) | [📂](checkpoints/step-22-domain-events/) |
+| 23 | Spring Data JPA (a second persistence style) | [📖](docs/steps/23-spring-data-jpa.md) | [📂](checkpoints/step-23-spring-data-jpa/) |
+| 24 | Spring Security (open reads, guarded writes) | [📖](docs/steps/24-security.md) | [📂](checkpoints/step-24-security/) |
+| 25 | OpenAPI docs + continuous delivery | [📖](docs/steps/25-openapi-cicd.md) | [📂](checkpoints/step-25-openapi-cicd/) |
+| 99 | Roadmap: where to go next | [📖](docs/steps/99-roadmap.md) | — |
 
 ### 🧠 Theory deep-dives — [`docs/theory/`](docs/theory/)
 - [Spring, servlets & dependency injection](docs/theory/spring-and-di.md)
@@ -143,6 +162,7 @@ Steps 00–14 stay frozen as the curriculum; **15–17 add their own runnable ch
 - [Containers and DevOps](docs/theory/containers-and-devops.md)
 
 ### 📑 Reference — [`reference/`](reference/)
+- 💼 [**Interview-prep Q&A bank**](reference/interview-prep.md) — every concept you build in Sahar, framed as the questions an interviewer actually asks (DI, REST, persistence, testing, security, observability, CI/CD…).
 - [Glossary](reference/glossary.md) · [Modern Java refresher](reference/java-refresher.md)
 - Cheatsheets: [Maven](reference/cheatsheet-maven.md) · [Spring annotations](reference/cheatsheet-spring-annotations.md) · [HTTP & REST](reference/cheatsheet-http-rest.md) · [SQL & JdbcTemplate](reference/cheatsheet-sql-jdbc.md) · [Docker & Podman](reference/cheatsheet-docker-podman.md)
 - 💡 [IntelliJ IDEA for Sahar](reference/intellij-ultimate.md) — Ultimate's useful extras (and what's now free) mapped to each step, plus a ready-to-run `requests.http`.
@@ -158,10 +178,12 @@ flowchart LR
     P --> Pr["Production<br/>09 · 10 · 11 · 12"]
     Pr --> D["DevOps<br/>13 · 14"]
     D --> B["Beyond<br/>15 · 16 · 17"]
+    B --> A["Advanced track<br/>18 · 19 · 20 · 21<br/>22 · 23 · 24 · 25"]
     classDef core fill:#1c2330,stroke:#4ea1d3,color:#e6edf3;
     classDef goal fill:#1f3a26,stroke:#2ea043,color:#e6edf3;
     classDef beyond fill:#2a2030,stroke:#a06cd5,color:#e6edf3;
-    class F,E,Pr,D core; class P goal; class B beyond;
+    classDef adv fill:#2a1f1f,stroke:#d39a4e,color:#e6edf3;
+    class F,E,Pr,D core; class P goal; class B beyond; class A adv;
 ```
 
 > ★ = the **core goal** lands at step 08: edit your routine in the browser, it saves to the DB, and shows on a second device. Track your own progress in [progress.md](progress.md).

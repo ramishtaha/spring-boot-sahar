@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahar</title>
+    <meta name="description" content="Sahar — recover, build, fight. Your training, prayer and nutrition routine.">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0d13">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f3ee">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Theme: apply saved/system choice before paint to avoid a flash of the wrong theme. -->
+    <script>
+        (function () {
+            const saved = localStorage.getItem('sahar-theme');
+            const theme = saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+        function syncThemeIcons() {
+            const dark = document.documentElement.getAttribute('data-theme') !== 'light';
+            document.querySelectorAll('.theme-toggle').forEach(b => b.textContent = dark ? '☀' : '☾');
+        }
+        function toggleTheme() {
+            const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('sahar-theme', next);
+            syncThemeIcons();
+        }
+        document.addEventListener('DOMContentLoaded', syncThemeIcons);
+    </script>
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">
+        <h1 id="title">Sahar</h1>
+        <p class="tagline" id="tagline"></p>
+    </div>
+    <div class="nav">
+        <span class="month-badge"><span id="month"></span></span>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Light / dark" aria-label="Toggle theme">☀</button>
+        <a href="/admin.html">Edit</a>
+    </div>
+</header>
+
+<main id="app">
+    <p class="loading">Loading your routine…</p>
+</main>
+
+<footer class="footer">
+    <span>Sahar &mdash; the pre-dawn hours, when the day is won. · <a href="https://github.com/ramishtaha/spring-boot-sahar" target="_blank" rel="noopener">source</a></span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

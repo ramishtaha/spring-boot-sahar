@@ -48,7 +48,6 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done.
 ## 🧭 Week 4 — Deload
 - [ ] **14 Deploy & orchestration overview** — [doc](docs/steps/14-deploy.md) · [checkpoint](checkpoints/step-14-deploy/)
   - [ ] read  - [ ] deployed a public URL **or** finished a clean local stack  - [ ] understand the K8s mental model
-- [ ] **99 Roadmap** — [doc](docs/steps/99-roadmap.md) — picked my next topic: ______________________
 
 ## 🌟 Beyond the core course
 - [ ] **15 Location-aware prayer times** — [doc](docs/steps/15-geolocation-prayer-times.md) · [checkpoint](checkpoints/step-15-geolocation-prayer-times/) — prayer-time calculator + geocoding + persisted location (API)
@@ -56,6 +55,18 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done.
 - [ ] **16 Location picker, UI polish & PWA** — [doc](docs/steps/16-ui-and-pwa.md) · [checkpoint](checkpoints/step-16-ui-and-pwa/) — theming, board, countdown, location picker (device/search/map), editable meals, installable offline
   - [ ] read  - [ ] set location by search/map/device  - [ ] light/dark  - [ ] installed as PWA
 - [ ] **17 Visual polish** — [doc](docs/steps/17-visual-polish.md) · [checkpoint](checkpoints/step-17-visual-polish/) — design-system pass (tokens, type, depth, motion), CSS-only
+
+## 🧗 Advanced track — production-grade Spring (interview-ready)
+Tick each when you can **explain it in an interview**, not just run it. Pair with the [interview-prep bank](reference/interview-prep.md).
+- [ ] **18 Testing the pyramid** — [doc](docs/steps/18-testing.md) · [checkpoint](checkpoints/step-18-testing/) — unit + `@WebMvcTest` slice + `@SpringBootTest` integration + repo test
+- [ ] **19 ProblemDetail errors** — [doc](docs/steps/19-error-handling.md) · [checkpoint](checkpoints/step-19-error-handling/) — domain exceptions + `@RestControllerAdvice` → RFC 9457
+- [ ] **20 Observability** — [doc](docs/steps/20-observability.md) · [checkpoint](checkpoints/step-20-observability/) — Actuator health/info/metrics + custom `HealthIndicator` + k8s probes
+- [ ] **21 Resilient outbound call** — [doc](docs/steps/21-resilient-geocoder.md) · [checkpoint](checkpoints/step-21-resilient-geocoder/) — `@ConfigurationProperties` + Caffeine cache + timeouts/retry
+- [ ] **22 Domain events** — [doc](docs/steps/22-domain-events.md) · [checkpoint](checkpoints/step-22-domain-events/) — `ApplicationEventPublisher` + `@TransactionalEventListener(AFTER_COMMIT)`
+- [ ] **23 Spring Data JPA** — [doc](docs/steps/23-spring-data-jpa.md) · [checkpoint](checkpoints/step-23-spring-data-jpa/) — a journal module (entity + `JpaRepository`) beside JdbcTemplate
+- [ ] **24 Spring Security** — [doc](docs/steps/24-security.md) · [checkpoint](checkpoints/step-24-security/) — public reads, Basic-auth writes, stateless, CSRF reasoning
+- [ ] **25 OpenAPI + CD** — [doc](docs/steps/25-openapi-cicd.md) · [checkpoint](checkpoints/step-25-openapi-cicd/) — springdoc `/swagger-ui` + GHCR publish-on-green
+- [ ] **99 Roadmap** — [doc](docs/steps/99-roadmap.md) — picked my next topic: ______________________
 
 ## ✅ Done?
 - [ ] The app serves and **edits** my routine, persisted in a database, runnable in Docker.

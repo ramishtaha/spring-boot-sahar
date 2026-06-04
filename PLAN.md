@@ -77,16 +77,33 @@ Then install your toolchain ([00-setup](docs/00-setup.md)) and start Week 1.
 
 **Read alongside:** [99 Roadmap](docs/steps/99-roadmap.md).
 
-## 🧭 Beyond the course (extra blocks)
+## 🧭 Beyond the course — app features (15–17)
 
-Once the 14-step course is done, these extend the real app — each with its own runnable checkpoint, and
-`app/` equals the last one:
+Once the 14-step course is done, these extend the real app — each with its own runnable checkpoint:
 
 | Block | Focus | Step | Checkpoint |
 |-------|-------|------|-----------|
 | Location | Compute prayer times for any place; geocoding + a persisted, user-set location | [15](docs/steps/15-geolocation-prayer-times.md) | [step-15](checkpoints/step-15-geolocation-prayer-times/) |
 | Location UI + PWA | The picker (device / search / map), theming, the weekly board, installable offline | [16](docs/steps/16-ui-and-pwa.md) | [step-16](checkpoints/step-16-ui-and-pwa/) |
 | Visual polish | A tokens-first design system (CSS only) | [17](docs/steps/17-visual-polish.md) | [step-17](checkpoints/step-17-visual-polish/) |
+
+## 🧗 Advanced track — production-grade Spring (18–25)
+
+This is the **interview-prep block**: eight deeper steps that turn the working app into something you'd ship, each its own green checkpoint. Pace them like a new training block — one topic per morning sprint, and *explain it aloud* before ticking it. Pair every step with the [interview-prep Q&A bank](reference/interview-prep.md). `app/` equals **step 25**.
+
+| Sprint | Focus | Step | Checkpoint |
+|--------|-------|------|-----------|
+| 1 | The testing pyramid (unit · slice · integration) | [18](docs/steps/18-testing.md) | [step-18](checkpoints/step-18-testing/) |
+| 2 | A standards-based error model (RFC 9457 ProblemDetail) | [19](docs/steps/19-error-handling.md) | [step-19](checkpoints/step-19-error-handling/) |
+| 3 | Observability with Actuator (health · probes · metrics) | [20](docs/steps/20-observability.md) | [step-20](checkpoints/step-20-observability/) |
+| 4 | Hardening an outbound call (config · timeouts · retry · cache) | [21](docs/steps/21-resilient-geocoder.md) | [step-21](checkpoints/step-21-resilient-geocoder/) |
+| 5 | Domain events (decoupling with the event bus) | [22](docs/steps/22-domain-events.md) | [step-22](checkpoints/step-22-domain-events/) |
+| 6 | Spring Data JPA beside JdbcTemplate (when each wins) | [23](docs/steps/23-spring-data-jpa.md) | [step-23](checkpoints/step-23-spring-data-jpa/) |
+| 7 | Spring Security (open reads, guarded writes) | [24](docs/steps/24-security.md) | [step-24](checkpoints/step-24-security/) |
+| 8 | OpenAPI docs + continuous delivery | [25](docs/steps/25-openapi-cicd.md) | [step-25](checkpoints/step-25-openapi-cicd/) |
+| — | Roadmap: what's *still* beyond | [99](docs/steps/99-roadmap.md) | — |
+
+**Read alongside:** the [interview-prep bank](reference/interview-prep.md), [JdbcTemplate vs JPA](docs/theory/jdbc-vs-jpa.md), [Containers & DevOps](docs/theory/containers-and-devops.md).
 
 ---
 

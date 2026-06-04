@@ -1,0 +1,87 @@
+### Sahar API — IntelliJ IDEA HTTP Client (Ultimate).
+### Start the app (./mvnw spring-boot:run), then click the green ▶ next to any request.
+### On the free tier you can still read this file as a map of the whole API.
+### Docs: see reference/intellij-ultimate.md in the repo.
+
+@host = http://localhost:8080
+
+### The whole routine (everything the home page renders)
+GET {{host}}/api/config
+Accept: application/json
+
+### Current prayer times
+GET {{host}}/api/prayer-times
+
+### Replace prayer times (idempotent PUT)
+PUT {{host}}/api/prayer-times
+Content-Type: application/json
+
+{
+  "fajr": "04:37", "sunrise": "05:59", "dhuhr": "12:37",
+  "asr": "17:12", "maghrib": "19:13", "isha": "20:36",
+  "methodNote": "edited in the HTTP Client"
+}
+
+### Validation demo — a malformed time should return HTTP 400 with a clear message
+PUT {{host}}/api/prayer-times
+Content-Type: application/json
+
+{ "fajr": "24:99", "sunrise": "05:59", "dhuhr": "12:37", "asr": "17:12", "maghrib": "19:13", "isha": "20:36" }
+
+### Calculate prayer times for a location (Karachi 18°, Hanafi Asr) — does NOT save
+### tz is MINUTES east of UTC (IST = 330). Tweak lat/lng/tz and re-run.
+GET {{host}}/api/prayer-times/calculate?lat=19.22&lng=72.98&tz=330
+
+### Geocode: search a place name
+GET {{host}}/api/geocode?q=Thane
+
+### Reverse geocode: name for a point
+GET {{host}}/api/geocode/reverse?lat=19.22&lng=72.98
+
+### Current location
+GET {{host}}/api/location
+
+### Set the location (used to compute prayer times)
+PUT {{host}}/api/location
+Content-Type: application/json
+
+{ "placeName": "Thane, Maharashtra, India", "lat": 19.22, "lng": 72.98, "tzOffset": 330 }
+
+### Change the month label
+PUT {{host}}/api/month
+Content-Type: application/json
+
+{ "month": "July 2026" }
+
+### The training block
+GET {{host}}/api/block
+
+### Roll the block forward to next month's template
+POST {{host}}/api/block/roll-forward
+
+### Add an accumulation week (kept before the deload; max 5 weeks)
+POST {{host}}/api/block/weeks
+
+### Edit one week (deload stays positional, so it isn't in the body)
+PUT {{host}}/api/block/weeks/1
+Content-Type: application/json
+
+{ "name": "Foundation", "startDate": "1 Jul", "endDate": "7 Jul", "trainingFocus": "easy week", "backendFocus": "Spring core" }
+
+### The daily timeline
+GET {{host}}/api/schedule
+
+### Create a timeline slot (201 Created; id is assigned by the DB)
+POST {{host}}/api/schedule
+Content-Type: application/json
+
+{ "id": null, "time": "06:30", "title": "Test slot", "detail": "added via HTTP Client", "category": "work", "dayType": "weekday" }
+
+### The weekly meal plan
+GET {{host}}/api/diet-plan
+
+### Edit one day's meals (Mon..Sun)
+PUT {{host}}/api/diet-plan/Mon
+Content-Type: application/json
+
+{ "lunch": "Mutton keema + greens", "dinner": "Grilled bangda", "note": "edited via HTTP Client" }

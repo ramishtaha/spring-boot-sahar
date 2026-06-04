@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahar — edit</title>
+    <!-- Leaflet for the location map (loads from CDN; the picker degrades to search + manual entry offline). -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Same theme handling as the main page: apply saved/system choice before paint. -->
+    <script>
+        (function () {
+            const saved = localStorage.getItem('sahar-theme');
+            const theme = saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+        function syncThemeIcons() {
+            const dark = document.documentElement.getAttribute('data-theme') !== 'light';
+            document.querySelectorAll('.theme-toggle').forEach(b => b.textContent = dark ? '☀' : '☾');
+        }
+        function toggleTheme() {
+            const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('sahar-theme', next);
+            syncThemeIcons();
+        }
+        document.addEventListener('DOMContentLoaded', syncThemeIcons);
+    </script>
+</head>
+<body>
+<!--
+  Sahar admin (step 08).
+
+  These forms call the SAME REST API the read-only page uses - PUT /api/prayer-times,
+  PUT /api/month, and the /api/block/* operations. Because Spring serves this page from the
+  same origin (same scheme + host + port) as the API, the browser makes plain same-origin
+  fetches and CORS never enters the picture. (CORS only matters when a page on origin A calls
+  an API on origin B; then the API must opt in with Access-Control-* headers. See the step doc.)
+
+  The "optimistic" touch: on save we immediately show feedback, then reconcile with the server's
+  response - and if the server returns a 400, we show its validation messages instead of pretending
+  it worked.
+-->
+<header class="topbar">
+    <div class="brand">
+        <h1>Sahar · edit</h1>
+        <p class="tagline">change what the month changes</p>
+    </div>
+    <nav class="nav">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Light / dark" aria-label="Toggle theme">☀</button>
+        <a href="/">&larr; back to routine</a>
+    </nav>
+</header>
+
+<main id="app">
+    <!-- Month -->
+    <section class="card">
+        <h2>Month label</h2>
+        <div class="field">
+            <label for="month">Month</label>
+            <input id="month" type="text" placeholder="June 2026">
+        </div>
+        <button id="saveMonth">Save month</button>
+    </section>
+
+    <!-- Location -->
+    <section class="card">
+        <h2>Location</h2>
+        <p class="subtle">Used to compute prayer times. Search a place, use your device, or drag the pin — your choice.</p>
+        <div class="field">
+            <label for="locSearch">Search a place</label>
+            <div class="nav">
+                <input id="locSearch" type="text" placeholder="e.g. Thane, Mecca, London" style="flex:1;">
+                <button id="locSearchBtn" class="secondary" type="button">Search</button>
+                <button id="locGeo" class="secondary" type="button">📍 My location</button>
+            </div>
+        </div>
+        <div id="locResults" class="loc-results"></div>
+        <div id="map" class="map"></div>
+        <div class="grid-2">
+            <div class="field"><label for="locName">Place</label><input id="locName" type="text"></div>
+            <div class="field"><label for="locLat">Latitude</label><input id="locLat" type="number" step="any"></div>
+            <div class="field"><label for="locLng">Longitude</label><input id="locLng" type="number" step="any"></div>
+            <div class="field"><label for="locTz">UTC offset (minutes)</label><input id="locTz" type="number"></div>
+        </div>
+        <div class="nav">
+            <button id="locSave">Save location</button>
+            <button id="locCalc" class="secondary" type="button">Calculate prayer times from here ↓</button>
+        </div>
+        <div id="locErr" class="err-text"></div>
+    </section>
+
+    <!-- Prayer times -->
+    <section class="card">
+        <h2>Prayer times</h2>
+        <div class="grid-2">
+            <div class="field"><label for="fajr">Fajr</label><input id="fajr" type="text" placeholder="04:37"></div>
+            <div class="field"><label for="sunrise">Sunrise</label><input id="sunrise" type="text" placeholder="05:59"></div>
+            <div class="field"><label for="dhuhr">Dhuhr</label><input id="dhuhr" type="text" placeholder="12:37"></div>
+            <div class="field"><label for="asr">Asr</label><input id="asr" type="text" placeholder="17:12"></div>
+            <div class="field"><label for="maghrib">Maghrib</label><input id="maghrib" type="text" placeholder="19:13"></div>
+            <div class="field"><label for="isha">Isha</label><input id="isha" type="text" placeholder="20:36"></div>
+        </div>
+        <div class="field"><label for="methodNote">Method note</label><textarea id="methodNote" rows="2"></textarea></div>
+        <div class="nav">
+            <button id="savePrayer">Save prayer times</button>
+            <button id="locatePrayer" class="secondary" type="button">📍 Calculate from my location</button>
+        </div>
+        <div id="prayerErr" class="err-text"></div>
+        <p class="subtle small" id="prayerCalcNote"></p>
+    </section>
+
+    <!-- Block -->
+    <section class="card">
+        <h2>Training block</h2>
+        <p class="subtle" id="blockLabel"></p>
+        <div class="nav" style="margin-bottom: 1rem;">
+            <button id="rollForward" class="secondary">Roll forward (new month)</button>
+            <button id="addWeek" class="secondary">+ Add week</button>
+        </div>
+        <div id="weeks"></div>
+        <div id="blockErr" class="err-text"></div>
+    </section>
+
+    <!-- Diet plan -->
+    <section class="card">
+        <h2>Diet plan</h2>
+        <p class="subtle">Edit each day's lunch, dinner and cue. Breakfast is the same every morning.</p>
+        <div id="dietPlan"></div>
+        <div id="dietErr" class="err-text"></div>
+    </section>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>

@@ -1,11 +1,13 @@
-# CI for the spring-boot-sahar teaching repository.
+# CI/CD for the spring-boot-sahar teaching repository.
 #
-# This repo bundles many things (docs + 15 checkpoint projects + the main app/). The real, running
-# app is in app/, so this workflow builds and tests THAT. Each checkpoint also carries its own
-# .github/workflows/ci.yml as a teaching snapshot, but GitHub only runs workflows from the repo root -
-# this file.
+# This repo bundles many things (docs + the step-00..step-25 checkpoint projects + the main app/). The real,
+# running app is in app/, so this workflow builds and tests THAT. Each checkpoint also carries its own
+# .github/workflows/ci.yml as a teaching snapshot, but GitHub only runs workflows from the repo root - this file.
 #
-# This is the "green CI on push" the codealong's step 13 is about, pointed at app/.
+# Two jobs, in a deliberate pipeline (step 13 introduced the first; step 25 added the second):
+#   1. build-app    - compile + test + build the image. Runs on every push and every PR (the quality gate).
+#   2. publish-image - push the image to GHCR. Runs ONLY after build-app is green AND only on main.
+# That ordering is the point of "continuous delivery": nothing ships unless the tests pass first.
 
 name: CI
 
@@ -16,6 +18,7 @@ on:
 
 jobs:
   build-app:
+    name: Build & test app/
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,5 +37,38 @@ jobs:
       - name: Build and test app/
         run: mvn -B -ntp verify
 
-      - name: Build the Docker image
+      - name: Build the Docker image (validation only - no push)
         run: docker build -t sahar:ci .
+
+  publish-image:
+    name: Publish image to GHCR (only on green main)
+    needs: build-app                                   # gate: waits for build-app to pass
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write                                  # least privilege: just enough to push to GHCR
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Compute lowercase image name
+        id: img
+        # GHCR requires a lowercase path; ${VAR,,} lowercases in bash.
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/spring-boot-sahar" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}         # the built-in, short-lived token - no secret to manage
+
+      - name: Build and push the image
+        uses: docker/build-push-action@v6
+        with:
+          context: app
+          push: true
+          tags: |
+            ${{ steps.img.outputs.name }}:latest
+            ${{ steps.img.outputs.name }}:${{ github.sha }}

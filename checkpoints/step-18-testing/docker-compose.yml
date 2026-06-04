@@ -1,0 +1,46 @@
+# Sahar - the whole stack in one file: the app PLUS its PostgreSQL database.
+#
+# `docker compose up` builds the app image, starts Postgres, waits until the database is healthy,
+# then starts the app pointed at it. `docker compose down` stops everything. The named volume keeps
+# the database's files between runs, so your data survives `down` then `up` again.
+#
+# (Modern Compose needs no top-level "version:" key - it is obsolete and Compose warns about it.)
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: sahar
+      POSTGRES_USER: sahar
+      POSTGRES_PASSWORD: sahar
+    volumes:
+      # Named volume -> Postgres data lives OUTSIDE the container, so it persists across restarts,
+      # recreation, and image upgrades. Without it, `down` would wipe the database.
+      - sahar-db-data:/var/lib/postgresql/data
+    healthcheck:
+      # Compose uses this to know when the DB is actually ready to accept connections, not just "started".
+      test: ["CMD-SHELL", "pg_isready -U sahar -d sahar"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .                     # build the image from the Dockerfile in this folder
+    depends_on:
+      db:
+        condition: service_healthy   # wait for the DB healthcheck before starting the app
+    environment:
+      # Container networking: Compose gives every service a DNS name equal to its service name,
+      # so the app reaches Postgres at host "db" on the internal network - no localhost, no ports needed
+      # between them. Only the app publishes a port to YOUR machine (below).
+      SPRING_PROFILES_ACTIVE: postgres
+      SAHAR_DB_URL: jdbc:postgresql://db:5432/sahar
+      SAHAR_DB_USERNAME: sahar
+      SAHAR_DB_PASSWORD: sahar
+    ports:
+      # hostPort:containerPort - open http://localhost:8080. The host port defaults to 8080 but can be
+      # overridden (handy if 8080 is taken): SAHAR_HOST_PORT=8086 docker compose up
+      - "${SAHAR_HOST_PORT:-8080}:8080"
+
+volumes:
+  sahar-db-data:

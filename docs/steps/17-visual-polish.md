@@ -62,4 +62,4 @@ JS still finds the same class names; it just looks better. That's the payoff of 
 4. Why load the web font with a system-font fallback?
 
 ---
-⬅️ Prev: [16 - Location picker, UI & PWA](./16-ui-and-pwa.md) · ➡️ Next: [99 - Roadmap](./99-roadmap.md) · 📍 Checkpoint: [step-17](../../checkpoints/step-17-visual-polish/)
+⬅️ Prev: [16 - Location picker, UI & PWA](./16-ui-and-pwa.md) · ➡️ Next: [18 - Testing the pyramid](./18-testing.md) · 📍 Checkpoint: [step-17](../../checkpoints/step-17-visual-polish/) · 🧭 Then: the **Advanced track** (18–25)
